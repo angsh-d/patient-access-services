@@ -34,3 +34,19 @@ structlog>=24.1.0
 
 # Utilities
 tenacity>=8.2.3
+aiosqlite
+anthropic
+asyncpg
+fastapi
+google-generativeai
+httpx
+langgraph
+openai
+pydantic
+pydantic-settings
+python-dotenv
+python-multipart
+sqlalchemy[asyncio]
+structlog
+uvicorn[standard]
+websockets
