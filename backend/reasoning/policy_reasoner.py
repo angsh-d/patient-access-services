@@ -210,7 +210,7 @@ class PolicyReasoner:
         )
 
         # Parse response into CoverageAssessment (pass digitized policy for criterion_id validation)
-        assessment = self._parse_assessment(
+        assessment = await self._parse_assessment(
             result=result,
             payer_name=payer_name,
             policy_text=policy_text,
@@ -449,7 +449,93 @@ class PolicyReasoner:
         # Fallback: return empty (caller falls back to all known criteria)
         return set()
 
-    def _parse_assessment(
+    async def _remap_criterion_ids_via_llm(
+        self,
+        unmatched_criteria: List[Dict[str, Any]],
+        known_criteria: Dict[str, str],
+        payer_name: str,
+    ) -> Dict[str, str]:
+        """Use an LLM to map unmatched criterion IDs to known policy IDs.
+
+        Returns a dict mapping LLM criterion_id -> correct policy criterion_id.
+        """
+        if not unmatched_criteria or not known_criteria:
+            return {}
+
+        known_list = "\n".join(
+            f"- {kid}: {kname}" for kid, kname in sorted(known_criteria.items())
+        )
+        unmatched_list = "\n".join(
+            f"- {c['llm_id']}: name=\"{c['llm_name']}\", description=\"{c.get('llm_description', '')}\""
+            for c in unmatched_criteria
+        )
+
+        prompt = (
+            "You are a clinical policy criterion matching assistant.\n\n"
+            "## Known Policy Criterion IDs\n"
+            "These are the ONLY valid criterion IDs in the digitized policy:\n"
+            f"{known_list}\n\n"
+            "## Unmatched LLM Criteria\n"
+            "The following criteria were returned by an AI analysis but their IDs "
+            "do not match any known policy criterion. Map each to the best matching "
+            "known criterion ID based on semantic similarity of names and descriptions.\n"
+            f"{unmatched_list}\n\n"
+            "## Rules\n"
+            "1. Each unmatched criterion should map to exactly ONE known criterion ID, "
+            "or \"NONE\" if there is genuinely no match.\n"
+            "2. Focus on semantic meaning, not string similarity.\n"
+            "3. Return ONLY a JSON object mapping LLM IDs to known IDs.\n\n"
+            "## Output Format\n"
+            "Return ONLY valid JSON:\n"
+            '{"LLM_ID_1": "KNOWN_ID_1", "LLM_ID_2": "KNOWN_ID_2", "LLM_ID_3": "NONE"}\n'
+        )
+
+        try:
+            from backend.reasoning.llm_gateway import TaskCategory
+            result = await self.llm_gateway.generate(
+                task_category=TaskCategory.DATA_EXTRACTION,
+                prompt=prompt,
+                temperature=0.0,
+                response_format="json",
+            )
+
+            mapping_raw = result
+            if isinstance(mapping_raw, dict) and "response" in mapping_raw:
+                mapping_raw = mapping_raw["response"]
+            if isinstance(mapping_raw, str):
+                mapping_raw = json.loads(mapping_raw)
+
+            mapping: Dict[str, str] = {}
+            known_id_set = set(known_criteria.keys())
+            for llm_id, policy_id in mapping_raw.items():
+                if llm_id in ("provider", "task_category"):
+                    continue
+                if isinstance(policy_id, str) and policy_id in known_id_set:
+                    mapping[llm_id] = policy_id
+                    logger.info(
+                        "LLM remapped criterion_id",
+                        llm_id=llm_id,
+                        policy_id=policy_id,
+                        payer=payer_name,
+                    )
+                elif policy_id == "NONE":
+                    logger.info(
+                        "LLM confirmed no match for criterion",
+                        llm_id=llm_id,
+                        payer=payer_name,
+                    )
+
+            return mapping
+
+        except Exception as e:
+            logger.warning(
+                "LLM criterion remapping failed, proceeding without",
+                error=str(e),
+                payer=payer_name,
+            )
+            return {}
+
+    async def _parse_assessment(
         self,
         result: Dict[str, Any],
         payer_name: str,
@@ -460,7 +546,6 @@ class PolicyReasoner:
         """Parse LLM response into CoverageAssessment with criterion_id validation."""
         from uuid import uuid4
 
-        # Validate the LLM returned usable data
         if not result.get("criteria_assessments") and not result.get("coverage_status"):
             logger.error(
                 "LLM returned no usable assessment data",
@@ -469,62 +554,82 @@ class PolicyReasoner:
             )
             raise ValueError(f"LLM response missing required assessment fields for {payer_name}")
 
-        # Build set of known criterion_ids and name→id mapping from digitized policy
         known_criterion_ids = set()
+        known_criteria_names: Dict[str, str] = {}
         name_to_known_id: Dict[str, str] = {}
         if digitized_policy and hasattr(digitized_policy, 'atomic_criteria'):
             known_criterion_ids = set(digitized_policy.atomic_criteria.keys())
             for kid, kc in digitized_policy.atomic_criteria.items():
-                # Normalize name for fuzzy matching: lowercase, strip whitespace
+                known_criteria_names[kid] = kc.name
                 norm_name = kc.name.strip().lower()
                 name_to_known_id[norm_name] = kid
 
-        # Parse criteria assessments with ID validation + name-based normalization
-        criteria = []
         raw_criteria = result.get("criteria_assessments", [])
         matched_ids = set()
+        unmatched_entries: List[Dict[str, Any]] = []
+
         for c in raw_criteria:
             cid = c.get("criterion_id", "")
-
-            # Validate criterion_id against known policy criteria
             if known_criterion_ids and cid:
                 if cid in known_criterion_ids:
                     matched_ids.add(cid)
                 else:
-                    # Try name-based matching — Claude often renames IDs
-                    # (e.g., CD_STEP_STEROIDS instead of STEP_CD_STEROIDS)
                     llm_name = c.get("criterion_name", "").strip().lower()
                     matched_by_name = name_to_known_id.get(llm_name)
                     if matched_by_name and matched_by_name not in matched_ids:
                         logger.info(
-                            "Normalized LLM criterion_id via name match",
+                            "Normalized LLM criterion_id via exact name match",
                             llm_id=cid,
                             policy_id=matched_by_name,
                             name=c.get("criterion_name", ""),
                             payer=payer_name,
                         )
-                        cid = matched_by_name
-                        matched_ids.add(cid)
-                    elif c.get("confidence", 0.5) < 0.7:
-                        # Filter low-confidence unknown criteria (likely hallucinated)
+                        c["criterion_id"] = matched_by_name
+                        matched_ids.add(matched_by_name)
+                    else:
+                        unmatched_entries.append({
+                            "llm_id": cid,
+                            "llm_name": c.get("criterion_name", ""),
+                            "llm_description": c.get("criterion_description", ""),
+                            "entry": c,
+                        })
+
+        if unmatched_entries and known_criteria_names:
+            available_for_remap = {
+                kid: kname for kid, kname in known_criteria_names.items()
+                if kid not in matched_ids
+            }
+            if available_for_remap:
+                llm_mapping = await self._remap_criterion_ids_via_llm(
+                    unmatched_entries, available_for_remap, payer_name
+                )
+                for entry_info in unmatched_entries:
+                    llm_id = entry_info["llm_id"]
+                    remapped_id = llm_mapping.get(llm_id)
+                    if remapped_id and remapped_id not in matched_ids:
+                        entry_info["entry"]["criterion_id"] = remapped_id
+                        matched_ids.add(remapped_id)
+                    elif entry_info["entry"].get("confidence", 0.5) < 0.7:
                         logger.warning(
-                            "Filtering low-confidence unknown criterion",
-                            criterion_id=cid,
+                            "Filtering low-confidence unmatched criterion",
+                            criterion_id=llm_id,
                             payer=payer_name,
-                            confidence=c.get("confidence", 0.5),
-                            criterion_name=c.get("criterion_name", ""),
+                            confidence=entry_info["entry"].get("confidence", 0.5),
                         )
-                        continue
+                        entry_info["entry"]["_skip"] = True
                     else:
                         logger.warning(
-                            "LLM returned unknown criterion_id — not in digitized policy",
-                            criterion_id=cid,
+                            "Criterion could not be remapped to policy",
+                            criterion_id=llm_id,
                             payer=payer_name,
-                            confidence=c.get("confidence", 0.5),
-                            criterion_name=c.get("criterion_name", ""),
+                            criterion_name=entry_info["llm_name"],
                         )
 
-            # Use provided ID or generate fallback (with warning)
+        criteria = []
+        for c in raw_criteria:
+            if c.get("_skip"):
+                continue
+            cid = c.get("criterion_id", "")
             if not cid:
                 cid = str(uuid4())
                 logger.warning(
@@ -532,7 +637,6 @@ class PolicyReasoner:
                     payer=payer_name,
                     criterion_name=c.get("criterion_name", "Unknown"),
                 )
-
             criteria.append(CriterionAssessment(
                 criterion_id=cid,
                 criterion_name=c.get("criterion_name", "Unknown"),
