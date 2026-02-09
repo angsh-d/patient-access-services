@@ -37,6 +37,11 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database initialized")
 
+    from backend.storage.seed_policies import seed_policies
+    seeded = await seed_policies()
+    if seeded:
+        logger.info("Policies seeded from local files", count=seeded)
+
     get_scenario_manager()
     logger.info("Scenario manager initialized")
 

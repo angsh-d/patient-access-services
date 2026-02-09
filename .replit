@@ -22,21 +22,21 @@ args = "Start application"
 name = "Start application"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "uvicorn backend.main:app --host localhost --port 8002 & cd frontend && npm run dev"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "uvicorn backend.main:app --host 127.0.0.1 --port 8002 & cd frontend && npm run dev"
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 8002
-externalPort = 3000
+localPort = 8099
+externalPort = 8099
 exposeLocalhost = true
 
 [deployment]
