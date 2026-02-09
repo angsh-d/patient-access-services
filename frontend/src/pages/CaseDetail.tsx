@@ -210,20 +210,14 @@ export function CaseDetail() {
     }
   }
 
-  // Combined handler: approve intake and auto-run policy analysis (LLM)
+  // Combined handler: approve intake and advance to policy analysis step
   const handleApproveIntakeAndRunAnalysis = async () => {
     try {
-      // First approve the intake stage
       await approveStage.mutateAsync('intake')
       setCurrentAnalysis(null)
-      // Refresh to get updated stage
-      await refetchCase()
-      // Then automatically run policy analysis (LLM call)
-      const analysis = await runStage.mutateAsync('policy_analysis')
-      setCurrentAnalysis(analysis as StageAnalysis)
       await refetchCase()
     } catch (error) {
-      console.error('Failed to approve intake and run analysis:', error)
+      console.error('Failed to approve intake:', error)
     }
   }
 
