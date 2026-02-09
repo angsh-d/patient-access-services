@@ -1,0 +1,289 @@
+{
+  "patient_id": "robert_h",
+  "extraction_metadata": {
+    "extracted_from": [
+      "01_Prior_Auth_Request_Form.pdf",
+      "02_Laboratory_Results.pdf",
+      "03_PET_CT_Report.pdf",
+      "04_Echocardiogram_Report.pdf",
+      "05_Clinical_Summary.pdf"
+    ],
+    "extraction_date": "2026-02-01",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Robert",
+    "last_name": "Hawkins",
+    "date_of_birth": "1971-11-03",
+    "age": 54,
+    "gender": "Male",
+    "ethnicity": "African American",
+    "address": {
+      "street": "892 Colfax Avenue, Apt 4B",
+      "city": "Denver",
+      "state": "CO",
+      "zip": "80218"
+    },
+    "phone": "720-555-0178",
+    "mrn": "ROBERT_H",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "BCBS",
+      "payer_id": "BCBS_FEP",
+      "plan_name": "Blue Cross Blue Shield Federal Employee Program",
+      "plan_type": "PPO",
+      "member_id": "FEP891245637",
+      "group_number": "FEP-STANDARD-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Kevin Patel",
+    "credentials": "MD, FACP",
+    "npi": "1567893421",
+    "specialty": "Hematology-Oncology",
+    "practice_name": "University of Colorado Cancer Center",
+    "address": {
+      "street": "1665 Aurora Court",
+      "city": "Aurora",
+      "state": "CO",
+      "zip": "80045"
+    },
+    "phone": "720-555-0500",
+    "fax": "720-555-0501",
+    "rems_certified_facility": true,
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Lisocabtagene maraleucel",
+    "brand_name": "Breyanzi",
+    "j_code": "Q2054",
+    "dose": "Single infusion, patient-specific dose",
+    "route": "Intravenous infusion",
+    "frequency": {
+      "regimen": "Single dose — lymphodepleting chemotherapy followed by CAR-T infusion"
+    },
+    "duration_requested": "One-time infusion authorization",
+    "quantity_requested": "1 infusion",
+    "site_of_care": "Certified REMS treatment center",
+    "start_date_requested": "2026-03-15",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "C83.30",
+      "description": "Diffuse large B-cell lymphoma, unspecified site",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "I50.9",
+      "description": "Heart failure, unspecified",
+      "status": "active",
+      "coding_note": "Pre-existing mild CHF with mildly reduced ejection fraction (LVEF 45%), contraindicates anthracycline use",
+      "source_document": "04_Echocardiogram_Report.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-20",
+    "ann_arbor_stage": "IIIA",
+    "ecog_performance_status": 1,
+    "ecog_interpretation": "Restricted in physically strenuous activity but ambulatory",
+    "ipi_score": 2,
+    "ipi_risk_category": "Low-intermediate",
+    "disease_status": "relapsed_refractory",
+    "lines_of_therapy_completed": 2,
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "05_Clinical_Summary.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Progressive lymphadenopathy refractory to second-line therapy",
+    "history_of_present_illness": "54-year-old male with relapsed/refractory DLBCL and pre-existing mild congestive heart failure (HFmrEF, LVEF 45%). Originally diagnosed June 2024 with Stage IIIA DLBCL. Due to cardiac comorbidity (LVEF 45%, borderline for anthracycline use), first-line therapy was R-bendamustine (rituximab + bendamustine) x6 cycles instead of standard R-CHOP — doxorubicin was contraindicated per cardiology consultation. Achieved partial response but relapsed at 6 months. Second-line R-GemOx (rituximab, gemcitabine, oxaliplatin) x4 cycles with progressive disease. Not eligible for autologous transplant due to cardiac status. Now referred for CAR-T cell therapy.",
+    "cardiac_history": "Mild CHF diagnosed 2019, HFmrEF with baseline LVEF 45%. Managed with lisinopril and low-dose carvedilol. Cardiology clearance obtained for CAR-T but explicitly documented anthracycline contraindication.",
+    "anthracycline_contraindication": {
+      "reason": "Pre-existing heart failure with mildly reduced ejection fraction (HFmrEF), LVEF 45%",
+      "documentation": "Cardiology consultation note dated June 2024 documenting anthracycline contraindication",
+      "cardiologist": "Dr. Amanda Foster, MD, FACC"
+    },
+    "prior_car_t_therapy": false,
+    "prior_gene_therapy": false,
+    "source_document": "05_Clinical_Summary.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "R-Bendamustine",
+      "drug_class": "Alkylating agent-based chemoimmunotherapy",
+      "components": ["Rituximab (anti-CD20)", "Bendamustine"],
+      "dose": "Standard dosing per protocol",
+      "start_date": "2024-07-01",
+      "end_date": "2024-12-15",
+      "cycles_completed": 6,
+      "outcome": "partial_response_then_relapsed",
+      "outcome_description": "Partial response (Deauville 3) at end of treatment. Used instead of R-CHOP due to cardiac contraindication to doxorubicin (anthracycline). Relapsed at 6 months with new supraclavicular and inguinal lymphadenopathy.",
+      "contains_anti_cd20": true,
+      "contains_anthracycline": false,
+      "anthracycline_omitted_reason": "Contraindicated due to pre-existing CHF (LVEF 45%)",
+      "source_document": "05_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "R-GemOx",
+      "drug_class": "Platinum-based salvage chemoimmunotherapy",
+      "components": ["Rituximab (anti-CD20)", "Gemcitabine", "Oxaliplatin"],
+      "dose": "Standard dosing per protocol",
+      "start_date": "2025-07-01",
+      "end_date": "2025-10-15",
+      "cycles_completed": 4,
+      "outcome": "progressive_disease",
+      "outcome_description": "Progressive disease on restaging PET/CT with new hepatic and splenic lesions. Biopsy confirmed persistent DLBCL.",
+      "contains_anti_cd20": true,
+      "contains_anthracycline": false,
+      "source_document": "05_Clinical_Summary.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-18",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count",
+        "results": [
+          {"test": "WBC", "value": 6.2, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "Hemoglobin", "value": 12.1, "unit": "g/dL", "reference_range": "13.5-17.5", "flag": "L"},
+          {"test": "Platelets", "value": 198, "unit": "x10^9/L", "reference_range": "150-400", "flag": null},
+          {"test": "ANC", "value": 3.8, "unit": "x10^9/L", "reference_range": "1.5-8.0", "flag": null}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel",
+        "results": [
+          {"test": "Creatinine", "value": 1.1, "unit": "mg/dL", "reference_range": "0.7-1.3", "flag": null},
+          {"test": "AST", "value": 35, "unit": "U/L", "reference_range": "10-40", "flag": null},
+          {"test": "ALT", "value": 30, "unit": "U/L", "reference_range": "7-56", "flag": null},
+          {"test": "LDH", "value": 310, "unit": "U/L", "reference_range": "140-280", "flag": "H"},
+          {"test": "BNP", "value": 180, "unit": "pg/mL", "reference_range": "0-100", "flag": "H"}
+        ]
+      },
+      "viral_screening": {
+        "panel_name": "Pre-CAR-T Viral Screening",
+        "results": [
+          {"test": "HBsAg", "value": "Negative", "flag": null},
+          {"test": "Anti-HBc", "value": "Negative", "flag": null},
+          {"test": "HCV Antibody", "value": "Negative", "flag": null},
+          {"test": "HIV 1/2 Ab/Ag", "value": "Negative", "flag": null}
+        ]
+      }
+    }
+  },
+
+  "procedures": {
+    "pet_ct": {
+      "procedure_name": "PET/CT Restaging",
+      "procedure_date": "2026-01-15",
+      "findings": "Progressive disease with new hepatic (2.3 cm, SUV 12.4) and splenic lesions. Persistent bilateral inguinal lymphadenopathy. Deauville 5.",
+      "source_document": "03_PET_CT_Report.pdf"
+    },
+    "echocardiogram": {
+      "procedure_name": "Transthoracic Echocardiogram",
+      "procedure_date": "2026-01-10",
+      "findings": "LVEF 45%, Grade I diastolic dysfunction. Mild concentric LV hypertrophy. No significant valvular disease. Cardiology cleared for CAR-T but anthracycline remains contraindicated.",
+      "source_document": "04_Echocardiogram_Report.pdf"
+    }
+  },
+
+  "organ_function_assessment": {
+    "cardiac": {
+      "lvef": "45%",
+      "method": "Echocardiogram",
+      "date": "2026-01-10",
+      "status": "borderline",
+      "notes": "HFmrEF managed medically. LVEF 45% — adequate for CAR-T per institutional protocol but contraindicates anthracycline"
+    },
+    "pulmonary": {
+      "status": "adequate",
+      "notes": "No pulmonary disease"
+    },
+    "hepatic": {
+      "status": "adequate"
+    },
+    "renal": {
+      "status": "adequate",
+      "creatinine_clearance": "72 mL/min"
+    }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": {
+      "met": true,
+      "evidence": "Biopsy-confirmed DLBCL (ICD-10 C83.30), CD19-positive"
+    },
+    "age_requirement": {
+      "met": true,
+      "evidence": "Patient is 54 years old (>=18)"
+    },
+    "prior_anti_cd20": {
+      "met": true,
+      "evidence": "Rituximab included in both prior lines (R-bendamustine, R-GemOx)"
+    },
+    "prior_anthracycline": {
+      "met": false,
+      "evidence": "NEVER received anthracycline. Doxorubicin contraindicated due to pre-existing CHF with mildly reduced ejection fraction (HFmrEF, LVEF 45%). Cardiology consultation explicitly documented anthracycline contraindication. First-line R-bendamustine used as alternative.",
+      "gap_reason": "Cardiac contraindication to anthracycline (doxorubicin)",
+      "impact_on_2024_policy": "FAILS — 2024 policy had TX_INCL_ANTHRACYCLINE (is_required: true) as mandatory step therapy. Robert has never received an anthracycline-containing regimen due to cardiac contraindication.",
+      "impact_on_2025_policy": "FAILS — 2025 policy has TX_ANTHRACYCLINE (is_required: true, renamed from TX_INCL_ANTHRACYCLINE). Same clinical requirement — prior anthracycline exposure remains mandatory."
+    },
+    "lines_of_therapy": {
+      "met": true,
+      "evidence": "2 prior lines of systemic therapy completed"
+    },
+    "rems_facility": {
+      "met": true,
+      "evidence": "University of Colorado Cancer Center is a certified REMS treatment center"
+    },
+    "no_cns_lymphoma": {
+      "met": true,
+      "evidence": "No CNS involvement on imaging"
+    },
+    "adequate_organ_function": {
+      "met": true,
+      "evidence": "LVEF 45% (borderline but meets institutional threshold), CrCl 72, liver function normal"
+    },
+    "no_prior_gene_therapy": {
+      "met": true,
+      "evidence": "No prior CAR-T or gene therapy"
+    },
+    "no_active_infection": {
+      "met": true,
+      "evidence": "Viral screening negative, no active infections"
+    }
+  },
+
+  "overall_pa_readiness": {
+    "status": "DENIED_BOTH_VERSIONS",
+    "blocking_issues": [
+      "No prior anthracycline exposure — contraindicated due to cardiac comorbidity (HFmrEF, LVEF 45%). Anthracycline is a mandatory step therapy requirement under BOTH 2024 (TX_INCL_ANTHRACYCLINE) and 2025 (TX_ANTHRACYCLINE) policy versions."
+    ],
+    "criteria_met_count_2024": 8,
+    "criteria_total_count_2024": 9,
+    "criteria_met_count_2025": 8,
+    "criteria_total_count_2025": 9,
+    "policy_version_impact": {
+      "qualifies_under_2024": false,
+      "qualifies_under_2025": false,
+      "blocking_criterion_both_versions": "TX_INCL_ANTHRACYCLINE (2024) / TX_ANTHRACYCLINE (2025) — Both policy versions require prior anthracycline-containing therapy as mandatory step therapy for LBCL patients. The criterion ID was renamed between versions but the clinical requirement is identical. Robert has a documented cardiac contraindication (HFmrEF, LVEF 45%) that prevents anthracycline use, creating an absolute barrier under both policies.",
+      "clinical_significance": "Robert represents a real-world access barrier for patients with cardiac comorbidities. He has relapsed/refractory DLBCL after 2 appropriate lines of therapy, has prior anti-CD20 exposure, meets all other criteria, and is clinically appropriate for CAR-T — but the mandatory anthracycline step therapy requirement blocks access. African American men have a higher prevalence of heart failure, making this requirement disproportionately impactful for this population. The policy does not include a medical exception pathway for patients with documented anthracycline contraindications.",
+      "potential_appeal_basis": "Strong medical necessity appeal: (1) Documented cardiac contraindication to anthracycline — HFmrEF with LVEF 45% and cardiology consultation explicitly prohibiting doxorubicin, (2) FDA label for Breyanzi does not mandate prior anthracycline exposure, (3) NCCN guidelines support anthracycline-free first-line regimens (e.g., R-bendamustine) for cardiac-compromised DLBCL patients, (4) Patient has exhausted 2 appropriate lines and has progressive disease with limited remaining options, (5) The HSCT-ineligible status due to cardiac comorbidity further limits therapeutic alternatives."
+    }
+  }
+}

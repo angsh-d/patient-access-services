@@ -1,0 +1,206 @@
+{
+  "patient_id": "ethan_w",
+  "extraction_metadata": {
+    "extracted_from": [
+      "01_Prior_Auth_Request_Form.pdf",
+      "02_Genetic_Testing_Report.pdf",
+      "03_Neurology_Assessment.pdf",
+      "04_Clinical_Summary.pdf"
+    ],
+    "extraction_date": "2026-02-01",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Ethan",
+    "last_name": "Williams",
+    "date_of_birth": "2025-06-10",
+    "age_months": 7,
+    "gender": "Male",
+    "ethnicity": "Caucasian",
+    "address": {
+      "street": "1456 North Lakeshore Drive",
+      "city": "Chicago",
+      "state": "IL",
+      "zip": "60610"
+    },
+    "phone": "312-555-0467",
+    "mrn": "ETHAN_W",
+    "parent_guardian": {
+      "name": "Michael and Jennifer Williams",
+      "relationship": "Parents",
+      "contact_phone": "312-555-0467"
+    },
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "BCBS",
+      "payer_id": "BCBS_FEP",
+      "plan_name": "Blue Cross Blue Shield Federal Employee Program",
+      "plan_type": "PPO",
+      "member_id": "FEP567891234",
+      "group_number": "FEP-FAMILY-2025",
+      "subscriber": "Michael Williams",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Anna Kowalski",
+    "credentials": "MD, PhD",
+    "npi": "1654789321",
+    "specialty": "Pediatric Neurology",
+    "subspecialty": "Neuromuscular Disorders",
+    "practice_name": "Ann & Robert H. Lurie Children's Hospital of Chicago",
+    "address": {
+      "street": "225 East Chicago Avenue",
+      "city": "Chicago",
+      "state": "IL",
+      "zip": "60611"
+    },
+    "phone": "312-555-0800",
+    "fax": "312-555-0801",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Nusinersen",
+    "brand_name": "Spinraza",
+    "j_code": "J2326",
+    "dose": "12 mg (5 mL) per intrathecal injection",
+    "route": "Intrathecal injection",
+    "frequency": {
+      "loading": "Day 0, Day 14, Day 28, Day 63",
+      "maintenance": "Once every 4 months"
+    },
+    "duration_requested": "12 months initial authorization (4 loading + 2 maintenance doses)",
+    "quantity_requested": "6 doses",
+    "site_of_care": "Pediatric hospital — intrathecal administration under fluoroscopic guidance",
+    "start_date_requested": "2026-03-01",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "G12.0",
+      "description": "Infantile spinal muscular atrophy, type I [Werdnig-Hoffman]",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-25",
+    "sma_type": "Type 1",
+    "symptom_status": "symptomatic",
+    "age_at_onset_months": 3,
+    "motor_milestone_status": "Never achieved independent sitting",
+    "current_motor_function": "Severe generalized hypotonia, poor head control, weak cry, tongue fasciculations, paradoxical breathing pattern",
+    "chop_intend_score": 18,
+    "chop_intend_interpretation": "Severely reduced motor function (max score 64)",
+    "feeding_status": "Oral feeding with modified consistency; intermittent NG supplementation",
+    "respiratory_status": "No ventilatory support required. SpO2 93-96% on room air. BiPAP during sleep.",
+    "ventilator_dependent": false,
+    "source_documents": ["03_Neurology_Assessment.pdf", "04_Clinical_Summary.pdf"]
+  },
+
+  "genetic_testing": {
+    "test_date": "2025-09-15",
+    "laboratory": "Invitae Molecular Genetics Laboratory",
+    "test_name": "SMN1/SMN2 Copy Number Analysis",
+    "methodology": "MLPA (Multiplex Ligation-dependent Probe Amplification)",
+    "source_document": "02_Genetic_Testing_Report.pdf",
+    "results": {
+      "smn1_exon_7_copies": 0,
+      "smn1_mutation_type": "Homozygous deletion of SMN1 exon 7",
+      "smn2_copy_number": 3,
+      "interpretation": "Consistent with diagnosis of Spinal Muscular Atrophy. Homozygous SMN1 deletion confirmed. 3 copies of SMN2 detected — associated with SMA Type 1 or Type 2 phenotype."
+    },
+    "confirmation": "Diagnosis of SMA confirmed by molecular genetic testing demonstrating biallelic pathogenic variants in SMN1 gene."
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Progressive generalized hypotonia and motor regression in 7-month-old male with genetically confirmed SMA Type 1",
+    "history_of_present_illness": "7-month-old male born full-term with normal birth history. Parents noted poor head control and generalized hypotonia at 3 months of age. Referred to pediatric neurology at 4 months. EMG showed diffuse denervation pattern consistent with anterior horn cell disease. Genetic testing at 5 months confirmed SMA Type 1 (homozygous SMN1 deletion, 3 SMN2 copies). Progressive motor decline with loss of previously acquired limb movements. Currently unable to sit independently, poor head control, weak cry, feeding difficulties requiring intermittent NG supplementation. No prior gene therapy (Zolgensma) or antisense oligonucleotide therapy.",
+    "prior_gene_therapy": false,
+    "prior_spinraza": false,
+    "concurrent_risdiplam": false,
+    "clinical_trial_enrollment": false,
+    "source_document": "04_Clinical_Summary.pdf"
+  },
+
+  "laboratory_results": {
+    "collection_date": "2026-01-20",
+    "source_document": "04_Clinical_Summary.pdf",
+    "panels": {
+      "baseline_labs": {
+        "panel_name": "Baseline Safety Labs",
+        "results": [
+          {"test": "Platelet Count", "value": 312, "unit": "x10^9/L", "reference_range": "150-400", "flag": null},
+          {"test": "PT/INR", "value": 1.0, "unit": "ratio", "reference_range": "0.8-1.2", "flag": null},
+          {"test": "Urine Protein", "value": "Negative", "flag": null},
+          {"test": "Creatinine", "value": 0.2, "unit": "mg/dL", "reference_range": "0.1-0.4", "flag": null}
+        ]
+      }
+    }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": {
+      "met": true,
+      "evidence": "SMA confirmed by molecular genetic testing — homozygous SMN1 deletion (ICD-10 G12.0)"
+    },
+    "genetic_confirmation": {
+      "met": true,
+      "evidence": "SMN1 homozygous deletion confirmed by MLPA. SMN2 copy number: 3."
+    },
+    "smn2_copy_number_requirement": {
+      "met": true,
+      "evidence": "3 SMN2 copies. Symptomatic patient requires 2-4 copies under both 2024 and 2025 policies. Meets requirement."
+    },
+    "symptom_status": {
+      "met": true,
+      "evidence": "Symptomatic — onset at 3 months with progressive hypotonia and motor regression",
+      "status": "symptomatic"
+    },
+    "baseline_motor_score": {
+      "met": true,
+      "evidence": "CHOP INTEND score 18 documented at baseline"
+    },
+    "prescriber_specialty": {
+      "met": true,
+      "evidence": "Prescribed by pediatric neurologist specializing in neuromuscular disorders"
+    },
+    "no_permanent_ventilator": {
+      "met": true,
+      "evidence": "Not ventilator-dependent. Uses BiPAP during sleep only."
+    },
+    "no_prior_gene_therapy": {
+      "met": true,
+      "evidence": "No prior Zolgensma (onasemnogene abeparvovec) or other gene therapy"
+    },
+    "no_concurrent_risdiplam": {
+      "met": true,
+      "evidence": "Not currently on risdiplam (Evrysdi)"
+    },
+    "not_in_clinical_trial": {
+      "met": true,
+      "evidence": "Not enrolled in any clinical trial"
+    }
+  },
+
+  "overall_pa_readiness": {
+    "status": "READY_FOR_SUBMISSION",
+    "blocking_issues": [],
+    "criteria_met_count": 10,
+    "criteria_total_count": 10,
+    "policy_version_impact": {
+      "qualifies_under_2024": true,
+      "qualifies_under_2025": true,
+      "impact_notes": "Symptomatic SMA Type 1 with 3 SMN2 copies — meets both 2024 genetic confirmation and 2025 stratified SMN2 copy number requirements (symptomatic: 2-4 copies)."
+    }
+  }
+}

@@ -1,0 +1,302 @@
+{
+  "patient_id": "james_o",
+  "extraction_metadata": {
+    "extracted_from": [
+      "01_Prior_Auth_Request_Form.pdf",
+      "02_Laboratory_Results.pdf",
+      "03_Bone_Marrow_Biopsy.pdf",
+      "04_Clinical_Summary.pdf"
+    ],
+    "extraction_date": "2026-02-01",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "James",
+    "last_name": "O'Brien",
+    "date_of_birth": "1960-04-12",
+    "age": 65,
+    "gender": "Male",
+    "ethnicity": "Caucasian",
+    "address": {
+      "street": "78 Beacon Street, Unit 3",
+      "city": "Boston",
+      "state": "MA",
+      "zip": "02108"
+    },
+    "phone": "617-555-0312",
+    "mrn": "JAMES_O",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "BCBS",
+      "payer_id": "BCBS_FEP",
+      "plan_name": "Blue Cross Blue Shield Federal Employee Program",
+      "plan_type": "PPO",
+      "member_id": "FEP456782134",
+      "group_number": "FEP-STANDARD-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Elizabeth Warren",
+    "credentials": "MD, PhD",
+    "npi": "1234598765",
+    "specialty": "Hematology-Oncology",
+    "subspecialty": "Multiple Myeloma",
+    "practice_name": "Dana-Farber Cancer Institute",
+    "address": {
+      "street": "450 Brookline Avenue",
+      "city": "Boston",
+      "state": "MA",
+      "zip": "02215"
+    },
+    "phone": "617-555-0600",
+    "fax": "617-555-0601",
+    "rems_certified_facility": true,
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Ciltacabtagene autoleucel",
+    "brand_name": "Carvykti",
+    "j_code": "Q2056",
+    "dose": "Single infusion, 0.5-1.0 x 10^6 CAR-positive viable T cells/kg",
+    "route": "Intravenous infusion",
+    "frequency": {
+      "regimen": "Single dose — lymphodepleting chemotherapy (cyclophosphamide + fludarabine) followed by CAR-T infusion"
+    },
+    "duration_requested": "One-time infusion authorization",
+    "quantity_requested": "1 infusion",
+    "site_of_care": "Certified REMS treatment center",
+    "start_date_requested": "2026-04-01",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "C90.00",
+      "description": "Multiple myeloma not having achieved remission",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-15",
+    "iss_stage": "II",
+    "revised_iss_stage": "II",
+    "ecog_performance_status": 1,
+    "disease_status": "relapsed_refractory",
+    "lines_of_therapy_completed": 5,
+    "refractory_to": ["lenalidomide", "pomalidomide", "bortezomib"],
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "04_Clinical_Summary.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Progressive multiple myeloma refractory to 5 prior lines of therapy",
+    "history_of_present_illness": "65-year-old male with relapsed/refractory multiple myeloma, IgG kappa subtype, diagnosed December 2019. Has received 5 prior lines of therapy. Triple-class refractory (refractory to proteasome inhibitor, immunomodulatory agent, and anti-CD38 monoclonal antibody). Specifically refractory to lenalidomide — progressed on lenalidomide maintenance after 14 months. Current M-protein rising at 2.8 g/dL with new lytic lesions on skeletal survey. ECOG 1.",
+    "prior_car_t_therapy": false,
+    "prior_gene_therapy": false,
+    "source_document": "04_Clinical_Summary.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "VRd (Bortezomib/Lenalidomide/Dexamethasone)",
+      "drug_class": "Proteasome inhibitor + Immunomodulatory agent",
+      "line": 1,
+      "start_date": "2020-01-15",
+      "end_date": "2020-09-30",
+      "cycles_completed": 8,
+      "outcome": "very_good_partial_response",
+      "outcome_description": "VGPR achieved. Transitioned to lenalidomide maintenance.",
+      "contains_proteasome_inhibitor": true,
+      "contains_immunomodulatory_agent": true,
+      "source_document": "04_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "Lenalidomide maintenance",
+      "drug_class": "Immunomodulatory agent maintenance",
+      "line": 1,
+      "start_date": "2020-10-01",
+      "end_date": "2021-12-15",
+      "outcome": "progressed",
+      "outcome_description": "Progressed after 14 months on lenalidomide maintenance. M-protein rose from 0.3 to 1.8 g/dL.",
+      "refractory_to_lenalidomide": true,
+      "contains_immunomodulatory_agent": true,
+      "source_document": "04_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "Carfilzomib/Pomalidomide/Dexamethasone (KPd)",
+      "drug_class": "Proteasome inhibitor + Immunomodulatory agent",
+      "line": 2,
+      "start_date": "2022-01-10",
+      "end_date": "2022-10-20",
+      "cycles_completed": 8,
+      "outcome": "partial_response_then_progressed",
+      "outcome_description": "Partial response, then progressed at 10 months.",
+      "contains_proteasome_inhibitor": true,
+      "contains_immunomodulatory_agent": true,
+      "source_document": "04_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "Daratumumab/Bortezomib/Dexamethasone (DVd)",
+      "drug_class": "Anti-CD38 + Proteasome inhibitor",
+      "line": 3,
+      "start_date": "2023-01-05",
+      "end_date": "2023-08-15",
+      "cycles_completed": 8,
+      "outcome": "partial_response_then_progressed",
+      "outcome_description": "Partial response with 50% M-protein reduction. Progressed after 8 months.",
+      "contains_anti_cd38": true,
+      "contains_proteasome_inhibitor": true,
+      "source_document": "04_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "Isatuximab/Carfilzomib/Dexamethasone (IsaKd)",
+      "drug_class": "Anti-CD38 + Proteasome inhibitor",
+      "line": 4,
+      "start_date": "2023-11-01",
+      "end_date": "2024-06-30",
+      "cycles_completed": 8,
+      "outcome": "minimal_response_then_progressed",
+      "outcome_description": "Minimal response only. Progressed after 8 months with new bone lesions.",
+      "contains_anti_cd38": true,
+      "contains_proteasome_inhibitor": true,
+      "source_document": "04_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "Selinexor/Dexamethasone (Sd)",
+      "drug_class": "XPO1 inhibitor",
+      "line": 5,
+      "start_date": "2024-09-01",
+      "end_date": "2025-02-28",
+      "cycles_completed": 6,
+      "outcome": "progressive_disease",
+      "outcome_description": "Progressive disease with rising M-protein and new lytic lesions.",
+      "source_document": "04_Clinical_Summary.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-12",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "myeloma_markers": {
+        "panel_name": "Multiple Myeloma Panel",
+        "results": [
+          {"test": "M-protein (SPEP)", "value": 2.8, "unit": "g/dL", "reference_range": "0", "flag": "H"},
+          {"test": "Serum Free Kappa", "value": 285, "unit": "mg/L", "reference_range": "3.3-19.4", "flag": "H"},
+          {"test": "Serum Free Lambda", "value": 12.4, "unit": "mg/L", "reference_range": "5.7-26.3", "flag": null},
+          {"test": "Kappa/Lambda Ratio", "value": 23.0, "unit": "ratio", "reference_range": "0.26-1.65", "flag": "H"},
+          {"test": "Beta-2 Microglobulin", "value": 4.8, "unit": "mg/L", "reference_range": "0.7-1.8", "flag": "H"},
+          {"test": "LDH", "value": 220, "unit": "U/L", "reference_range": "140-280", "flag": null}
+        ]
+      },
+      "cbc": {
+        "panel_name": "Complete Blood Count",
+        "results": [
+          {"test": "WBC", "value": 4.2, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": "L"},
+          {"test": "Hemoglobin", "value": 10.8, "unit": "g/dL", "reference_range": "13.5-17.5", "flag": "L"},
+          {"test": "Platelets", "value": 142, "unit": "x10^9/L", "reference_range": "150-400", "flag": "L"}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel",
+        "results": [
+          {"test": "Creatinine", "value": 1.2, "unit": "mg/dL", "reference_range": "0.7-1.3", "flag": null},
+          {"test": "Calcium", "value": 10.1, "unit": "mg/dL", "reference_range": "8.5-10.5", "flag": null},
+          {"test": "Albumin", "value": 3.2, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": "L"},
+          {"test": "AST", "value": 22, "unit": "U/L", "reference_range": "10-40", "flag": null},
+          {"test": "ALT", "value": 18, "unit": "U/L", "reference_range": "7-56", "flag": null}
+        ]
+      },
+      "viral_screening": {
+        "panel_name": "Pre-CAR-T Viral Screening",
+        "results": [
+          {"test": "HBsAg", "value": "Negative", "flag": null},
+          {"test": "Anti-HBc", "value": "Positive", "flag": "H", "note": "Resolved prior infection — HBV DNA undetectable, will require monitoring"},
+          {"test": "Anti-HBs", "value": "Positive (>100 mIU/mL)", "flag": null, "note": "Immune from prior infection"},
+          {"test": "HBV DNA", "value": "Undetectable", "flag": null},
+          {"test": "HCV Antibody", "value": "Negative", "flag": null},
+          {"test": "HIV 1/2 Ab/Ag", "value": "Negative", "flag": null}
+        ]
+      }
+    }
+  },
+
+  "procedures": {
+    "bone_marrow_biopsy": {
+      "procedure_name": "Bone Marrow Aspirate and Biopsy",
+      "procedure_date": "2026-01-10",
+      "findings": "40% plasma cell involvement. Kappa-restricted. Cytogenetics: t(4;14) detected — high-risk feature. BCMA expression confirmed by flow cytometry (95% of plasma cells BCMA+).",
+      "bcma_expression": "95% positive",
+      "source_document": "03_Bone_Marrow_Biopsy.pdf"
+    }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": {
+      "met": true,
+      "evidence": "Multiple myeloma (ICD-10 C90.00) confirmed by bone marrow biopsy with 40% plasma cells"
+    },
+    "age_requirement": {
+      "met": true,
+      "evidence": "Patient is 65 years old (>=18)"
+    },
+    "prior_proteasome_inhibitor": {
+      "met": true,
+      "evidence": "Received bortezomib (VRd, DVd) and carfilzomib (KPd, IsaKd)"
+    },
+    "prior_immunomodulatory_agent": {
+      "met": true,
+      "evidence": "Received lenalidomide (VRd, maintenance) and pomalidomide (KPd)"
+    },
+    "refractory_to_lenalidomide": {
+      "met": true,
+      "evidence": "Progressed on lenalidomide maintenance after 14 months. Meets IMWG definition of lenalidomide-refractory."
+    },
+    "prior_lines_of_therapy": {
+      "met": true,
+      "evidence": "5 prior lines of therapy (exceeds both 2024 requirement of 4+ and 2025 requirement of 1+)"
+    },
+    "prior_anti_cd38": {
+      "met": true,
+      "evidence": "Received daratumumab (DVd) and isatuximab (IsaKd)",
+      "note": "Required under 2024 policy, removed in 2025"
+    },
+    "rems_facility": {
+      "met": true,
+      "evidence": "Dana-Farber Cancer Institute is a certified REMS treatment center"
+    },
+    "no_prior_gene_therapy": {
+      "met": true,
+      "evidence": "No prior CAR-T or gene therapy"
+    },
+    "no_active_infection": {
+      "met": true,
+      "evidence": "No active infections. HBV resolved — DNA undetectable, will require monitoring per HBV management protocol."
+    },
+    "organ_function": {
+      "met": true,
+      "evidence": "Adequate renal (CrCl normal), hepatic (AST/ALT normal), and cardiac function"
+    }
+  },
+
+  "overall_pa_readiness": {
+    "status": "READY_FOR_SUBMISSION",
+    "blocking_issues": [],
+    "criteria_met_count": 11,
+    "criteria_total_count": 11,
+    "policy_version_impact": {
+      "qualifies_under_2024": true,
+      "qualifies_under_2025": true,
+      "impact_notes": "Patient meets all criteria under both policy versions. Had 5 prior lines (exceeds both thresholds), is refractory to lenalidomide (new 2025 requirement), and had prior PI + IMiD + anti-CD38 exposure."
+    }
+  }
+}

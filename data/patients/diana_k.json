@@ -1,0 +1,260 @@
+{
+  "patient_id": "diana_k",
+  "extraction_metadata": {
+    "extracted_from": [
+      "01_Prior_Auth_Request_Form.pdf",
+      "02_Laboratory_Results.pdf",
+      "03_Bone_Marrow_Biopsy.pdf",
+      "04_Clinical_Summary.pdf"
+    ],
+    "extraction_date": "2026-02-05",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Diana",
+    "last_name": "Kowalczyk",
+    "date_of_birth": "1970-03-17",
+    "age": 55,
+    "gender": "Female",
+    "ethnicity": "Polish American",
+    "address": {
+      "street": "3891 Nicollet Avenue South",
+      "city": "Minneapolis",
+      "state": "MN",
+      "zip": "55409"
+    },
+    "phone": "612-555-0178",
+    "mrn": "DIANA_K",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "BCBS",
+      "payer_id": "BCBS_FEP",
+      "plan_name": "Blue Cross Blue Shield Federal Employee Program",
+      "plan_type": "PPO",
+      "member_id": "FEP512347896",
+      "group_number": "FEP-STANDARD-2025",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Gregory Hanson",
+    "credentials": "MD",
+    "npi": "1376542198",
+    "specialty": "Hematology-Oncology",
+    "subspecialty": "Multiple Myeloma and Amyloidosis",
+    "practice_name": "University of Minnesota Masonic Cancer Center",
+    "address": {
+      "street": "420 Delaware Street SE",
+      "city": "Minneapolis",
+      "state": "MN",
+      "zip": "55455"
+    },
+    "phone": "612-555-0800",
+    "fax": "612-555-0801",
+    "rems_certified_facility": true,
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Ciltacabtagene autoleucel",
+    "brand_name": "Carvykti",
+    "j_code": "Q2056",
+    "dose": "Single infusion, 0.5-1.0 x 10^6 CAR-positive viable T cells/kg",
+    "route": "Intravenous infusion",
+    "frequency": {
+      "regimen": "Single dose — lymphodepleting chemotherapy followed by CAR-T infusion"
+    },
+    "duration_requested": "One-time infusion authorization",
+    "quantity_requested": "1 infusion",
+    "site_of_care": "Certified REMS treatment center",
+    "start_date_requested": "2026-04-15",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "C90.00",
+      "description": "Multiple myeloma not having achieved remission",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-22",
+    "iss_stage": "II",
+    "revised_iss_stage": "II",
+    "ecog_performance_status": 1,
+    "disease_status": "relapsed_refractory",
+    "lines_of_therapy_completed": 2,
+    "refractory_to": ["lenalidomide", "bortezomib"],
+    "cytogenetics": "Standard risk — no high-risk features",
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "04_Clinical_Summary.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Early relapsed/refractory multiple myeloma, refractory to both lenalidomide and bortezomib after 2 prior lines",
+    "history_of_present_illness": "55-year-old Polish American female with relapsed/refractory multiple myeloma, IgG kappa subtype, diagnosed September 2023. Received first-line VRd (bortezomib/lenalidomide/dexamethasone) x8 cycles — partial response only. Lenalidomide maintenance initiated but progressed after only 4 months with rising M-protein from 0.8 to 2.4 g/dL while ON lenalidomide — meets IMWG definition of lenalidomide-refractory. Second-line carfilzomib/dexamethasone (Kd) x6 cycles with minimal response then progression. BCMA expression confirmed at 88% on latest bone marrow biopsy. Patient has failed a proteasome inhibitor (bortezomib, refractory) and an immunomodulatory agent (lenalidomide, refractory) but has only completed 2 lines of therapy.",
+    "lenalidomide_refractory_detail": "Progressed while actively on lenalidomide maintenance — M-protein rose from 0.8 to 2.4 g/dL over 4 months despite compliance. Meets IMWG refractory definition (progression on or within 60 days of last therapy).",
+    "prior_car_t_therapy": false,
+    "prior_gene_therapy": false,
+    "source_document": "04_Clinical_Summary.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "VRd (Bortezomib/Lenalidomide/Dexamethasone)",
+      "drug_class": "Proteasome inhibitor + Immunomodulatory agent",
+      "line": 1,
+      "start_date": "2023-10-01",
+      "end_date": "2024-05-30",
+      "cycles_completed": 8,
+      "outcome": "partial_response",
+      "outcome_description": "Partial response only (M-protein 3.1 to 0.8 g/dL). Did not achieve VGPR.",
+      "contains_proteasome_inhibitor": true,
+      "contains_immunomodulatory_agent": true,
+      "source_document": "04_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "Lenalidomide maintenance",
+      "drug_class": "Immunomodulatory agent maintenance",
+      "line": 1,
+      "start_date": "2024-06-15",
+      "end_date": "2024-10-30",
+      "duration_months": 4,
+      "outcome": "progressive_disease_on_therapy",
+      "outcome_description": "Primary refractory to lenalidomide maintenance — M-protein rose from 0.8 to 2.4 g/dL while on active therapy. Discontinued for progression.",
+      "refractory_to_lenalidomide": true,
+      "contains_immunomodulatory_agent": true,
+      "source_document": "04_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "Carfilzomib/Dexamethasone (Kd)",
+      "drug_class": "Proteasome inhibitor",
+      "line": 2,
+      "start_date": "2025-01-15",
+      "end_date": "2025-10-30",
+      "cycles_completed": 6,
+      "outcome": "minimal_response_then_progressed",
+      "outcome_description": "Minimal response (15% M-protein reduction). Progressed at 10 months with new lytic lesions and rising light chains.",
+      "contains_proteasome_inhibitor": true,
+      "source_document": "04_Clinical_Summary.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-20",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "myeloma_markers": {
+        "panel_name": "Multiple Myeloma Panel",
+        "results": [
+          {"test": "M-protein (SPEP)", "value": 3.2, "unit": "g/dL", "reference_range": "0", "flag": "H"},
+          {"test": "Serum Free Kappa", "value": 342, "unit": "mg/L", "reference_range": "3.3-19.4", "flag": "H"},
+          {"test": "Serum Free Lambda", "value": 15.8, "unit": "mg/L", "reference_range": "5.7-26.3", "flag": null},
+          {"test": "Kappa/Lambda Ratio", "value": 21.6, "unit": "ratio", "reference_range": "0.26-1.65", "flag": "H"},
+          {"test": "Beta-2 Microglobulin", "value": 4.1, "unit": "mg/L", "reference_range": "0.7-1.8", "flag": "H"}
+        ]
+      },
+      "cbc": {
+        "panel_name": "Complete Blood Count",
+        "results": [
+          {"test": "WBC", "value": 5.2, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "Hemoglobin", "value": 10.4, "unit": "g/dL", "reference_range": "12.0-16.0", "flag": "L"},
+          {"test": "Platelets", "value": 156, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel",
+        "results": [
+          {"test": "Creatinine", "value": 0.9, "unit": "mg/dL", "reference_range": "0.6-1.2", "flag": null},
+          {"test": "Calcium", "value": 10.2, "unit": "mg/dL", "reference_range": "8.5-10.5", "flag": null},
+          {"test": "Albumin", "value": 3.4, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": "L"},
+          {"test": "LDH", "value": 268, "unit": "U/L", "reference_range": "140-280", "flag": null},
+          {"test": "AST", "value": 25, "unit": "U/L", "reference_range": "10-40", "flag": null},
+          {"test": "ALT", "value": 22, "unit": "U/L", "reference_range": "7-56", "flag": null}
+        ]
+      },
+      "viral_screening": {
+        "panel_name": "Pre-CAR-T Viral Screening",
+        "results": [
+          {"test": "HBsAg", "value": "Negative", "flag": null},
+          {"test": "Anti-HBc", "value": "Negative", "flag": null},
+          {"test": "HCV Antibody", "value": "Negative", "flag": null},
+          {"test": "HIV 1/2 Ab/Ag", "value": "Negative", "flag": null}
+        ]
+      }
+    }
+  },
+
+  "procedures": {
+    "bone_marrow_biopsy": {
+      "procedure_name": "Bone Marrow Aspirate and Biopsy",
+      "procedure_date": "2026-01-18",
+      "findings": "45% plasma cell involvement. Kappa-restricted. Cytogenetics: standard risk — no del(17p), t(4;14), or t(14;16). BCMA expression confirmed by flow cytometry (88% of plasma cells BCMA+).",
+      "bcma_expression": "88% positive",
+      "source_document": "03_Bone_Marrow_Biopsy.pdf"
+    }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": {
+      "met": true,
+      "evidence": "Multiple myeloma (ICD-10 C90.00) confirmed by bone marrow biopsy. BCMA 88% positive."
+    },
+    "age_requirement": {"met": true, "evidence": "55 years old (>=18)"},
+    "prior_proteasome_inhibitor": {
+      "met": true,
+      "evidence": "Received bortezomib (VRd) and carfilzomib (Kd)"
+    },
+    "prior_immunomodulatory_agent": {
+      "met": true,
+      "evidence": "Received lenalidomide (VRd + maintenance)"
+    },
+    "refractory_to_lenalidomide": {
+      "met": true,
+      "evidence": "Progressed ON lenalidomide maintenance — M-protein rose from 0.8 to 2.4 g/dL over 4 months. Meets IMWG refractory criteria."
+    },
+    "prior_lines_of_therapy": {
+      "met_under_2024": false,
+      "met_under_2025": true,
+      "evidence": "2 prior lines completed. 2024 policy required 4+ prior lines (PRIOR_LINES_4) — patient had only 2. 2025 policy lowered threshold to 1+ prior lines (PRIOR_LINES_THERAPY) — patient now qualifies."
+    },
+    "prior_anti_cd38": {
+      "met": false,
+      "evidence": "Has NOT received an anti-CD38 monoclonal antibody (daratumumab or isatuximab).",
+      "impact_on_2024_policy": "REQUIRED — 2024 policy mandated prior anti-CD38 exposure (PRIOR_CD38). Patient fails this criterion.",
+      "impact_on_2025_policy": "NOT REQUIRED — 2025 policy removed the anti-CD38 requirement."
+    },
+    "rems_facility": {"met": true},
+    "no_prior_gene_therapy": {"met": true},
+    "no_active_infection": {"met": true},
+    "organ_function": {"met": true}
+  },
+
+  "overall_pa_readiness": {
+    "status": "POLICY_VERSION_DEPENDENT",
+    "blocking_issues_2024": [
+      "Only 2 prior lines — 2024 required 4+ lines",
+      "No prior anti-CD38 therapy — 2024 required anti-CD38 exposure"
+    ],
+    "blocking_issues_2025": [],
+    "criteria_met_count_2024": 7,
+    "criteria_total_count_2024": 9,
+    "criteria_met_count_2025": 10,
+    "criteria_total_count_2025": 10,
+    "policy_version_impact": {
+      "qualifies_under_2024": false,
+      "qualifies_under_2025": true,
+      "change_causing_new_eligibility": "PRIOR_LINES_THERAPY (lowered from 4+ to 1+) and removal of PRIOR_CD38 requirement. Diana has only 2 prior lines and has not received anti-CD38 therapy — both were disqualifying under 2024 but are no longer barriers under 2025.",
+      "clinical_significance": "This is the most impactful beneficial change in the 2025 Carvykti policy. By lowering the line-of-therapy threshold from 4 to 1, the policy now aligns with the updated FDA indication and gives earlier access to CAR-T therapy for patients with aggressive, early-relapsing myeloma. Diana is refractory to both a PI and an IMiD after only 2 lines — waiting for 2 more lines of conventional therapy (as 2024 required) would expose her to toxicity with diminishing clinical benefit.",
+      "impact_notes": "Under the 2024 policy, Diana would have been forced through at least 2 more lines of therapy (likely daratumumab-based and then another regimen) before qualifying for Carvykti. The 2025 expansion recognizes that patients refractory to core agents (PI + IMiD) early in their disease course may benefit most from CAR-T therapy."
+    }
+  }
+}

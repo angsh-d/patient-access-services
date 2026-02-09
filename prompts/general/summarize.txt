@@ -1,0 +1,19 @@
+Summarize the following clinical text in {max_length} characters or less.
+
+## Summary Requirements
+
+1. ALWAYS preserve: diagnosis codes (ICD-10), medication names and doses, lab values with dates, and safety-critical information (allergies, contraindications, positive screening results)
+2. NEVER omit: adverse reactions, treatment failures, or pending test results
+3. Prioritize: Current active problems > recent changes > historical context
+4. Use standard medical abbreviations where appropriate to save space
+5. Maintain temporal accuracy — do not conflate dates or sequence of events
+
+## Clinical Accuracy Rules
+- Do not paraphrase clinical values — use exact numbers (e.g., "CRP 28 mg/L" not "elevated CRP")
+- Do not infer severity unless the source text explicitly states it
+- Preserve the distinction between confirmed diagnoses and differential diagnoses
+
+Text to summarize:
+{text}
+
+Summary:

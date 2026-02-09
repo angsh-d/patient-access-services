@@ -1,0 +1,33 @@
+# Environment
+.env
+venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Build output
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Logs
+tmp/
+*.log
+
+# Data (large files)
+data/access_strategy.db
+data/historical_pa_cases.json
+
+# Archive
+.archive/
+
+# Claude
+.claude/

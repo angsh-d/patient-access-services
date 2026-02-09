@@ -1,0 +1,211 @@
+{
+  "patient_id": "catherine_p",
+  "extraction_metadata": {
+    "extracted_from": [
+      "01_Prior_Auth_Request_Form.pdf",
+      "02_Pathology_Report.pdf",
+      "03_Imaging_Report.pdf",
+      "04_Clinical_Summary.pdf"
+    ],
+    "extraction_date": "2026-02-01",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Catherine",
+    "last_name": "Park",
+    "date_of_birth": "1967-12-05",
+    "age": 58,
+    "gender": "Female",
+    "ethnicity": "Korean American",
+    "address": {
+      "street": "8834 Wilshire Boulevard, Apt 12C",
+      "city": "Beverly Hills",
+      "state": "CA",
+      "zip": "90211"
+    },
+    "phone": "310-555-0423",
+    "mrn": "CATHERINE_P",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "BCBS",
+      "payer_id": "BCBS_FEP",
+      "plan_name": "Blue Cross Blue Shield Federal Employee Program",
+      "plan_type": "PPO",
+      "member_id": "FEP891234567",
+      "group_number": "FEP-STANDARD-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Lisa Chang",
+    "credentials": "MD, FASCO",
+    "npi": "1345678921",
+    "specialty": "Medical Oncology",
+    "subspecialty": "Breast Oncology",
+    "practice_name": "UCLA Jonsson Comprehensive Cancer Center",
+    "address": {
+      "street": "2825 Santa Monica Boulevard, Suite 200",
+      "city": "Santa Monica",
+      "state": "CA",
+      "zip": "90404"
+    },
+    "phone": "310-555-0600",
+    "fax": "310-555-0601",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Palbociclib",
+    "brand_name": "Ibrance",
+    "j_code": "J8999",
+    "ndc": "0069-0187-01",
+    "dose": "125 mg once daily",
+    "route": "Oral",
+    "frequency": {
+      "schedule": "21 days on, 7 days off (28-day cycle)",
+      "combination_therapy": "With letrozole 2.5 mg daily"
+    },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "21 capsules per 28-day cycle",
+    "site_of_care": "Outpatient — oral medication, specialty pharmacy",
+    "start_date_requested": "2026-03-01",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "C50.912",
+      "description": "Malignant neoplasm of unspecified site of left female breast",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "C79.51",
+      "description": "Secondary malignant neoplasm of bone",
+      "status": "active",
+      "source_document": "03_Imaging_Report.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-20",
+    "stage": "IV (metastatic)",
+    "ecog_performance_status": 0,
+    "ecog_interpretation": "Fully active, able to carry on all pre-disease activities",
+    "metastatic_sites": ["Bone (thoracic spine T8, T10; left iliac crest)"],
+    "disease_status": "newly_diagnosed_metastatic",
+    "source_documents": ["03_Imaging_Report.pdf", "04_Clinical_Summary.pdf"]
+  },
+
+  "tumor_biomarkers": {
+    "source_document": "02_Pathology_Report.pdf",
+    "biopsy_date": "2026-01-10",
+    "biopsy_site": "Left breast, core needle biopsy",
+    "histology": "Invasive ductal carcinoma, Grade 2",
+    "estrogen_receptor": {
+      "status": "Positive",
+      "percent_staining": 95,
+      "allred_score": 8
+    },
+    "progesterone_receptor": {
+      "status": "Positive",
+      "percent_staining": 80,
+      "allred_score": 7
+    },
+    "her2_status": {
+      "ihc_score": "1+",
+      "fish_result": "Not amplified",
+      "overall_status": "Negative"
+    },
+    "ki67": "18%",
+    "pik3ca_mutation": {
+      "tested": true,
+      "status": "Negative (wild-type)",
+      "test_method": "FoundationOne CDx"
+    },
+    "biomarker_summary": "HR-positive (ER 95%, PR 80%), HER2-negative (IHC 1+), PIK3CA wild-type"
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Newly diagnosed HR+/HER2- metastatic breast cancer with bone metastases",
+    "history_of_present_illness": "58-year-old postmenopausal Korean American female presenting with back pain and found to have de novo metastatic breast cancer. Left breast mass detected on screening mammogram December 2025. Core biopsy confirmed invasive ductal carcinoma, Grade 2, ER+/PR+/HER2-. Staging CT and bone scan revealed osseous metastases in T8, T10, and left iliac crest. No visceral metastases. ECOG 0. Recommended first-line therapy: palbociclib + letrozole (aromatase inhibitor). No prior systemic therapy for breast cancer. No prior endocrine therapy.",
+    "menopausal_status": "Postmenopausal (natural menopause age 52)",
+    "prior_breast_cancer_treatment": "None — de novo metastatic disease",
+    "prior_cdk4_6_inhibitor": false,
+    "source_document": "04_Clinical_Summary.pdf"
+  },
+
+  "prior_treatments": [],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-18",
+    "source_document": "04_Clinical_Summary.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count",
+        "results": [
+          {"test": "WBC", "value": 6.8, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "ANC", "value": 4.2, "unit": "x10^9/L", "reference_range": "1.5-8.0", "flag": null},
+          {"test": "Hemoglobin", "value": 13.2, "unit": "g/dL", "reference_range": "12.0-16.0", "flag": null},
+          {"test": "Platelets", "value": 245, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel",
+        "results": [
+          {"test": "Creatinine", "value": 0.7, "unit": "mg/dL", "reference_range": "0.6-1.2", "flag": null},
+          {"test": "AST", "value": 20, "unit": "U/L", "reference_range": "10-40", "flag": null},
+          {"test": "ALT", "value": 18, "unit": "U/L", "reference_range": "7-56", "flag": null},
+          {"test": "Alkaline Phosphatase", "value": 145, "unit": "U/L", "reference_range": "44-147", "flag": "H", "note": "Mildly elevated — likely from bone metastases"},
+          {"test": "Calcium", "value": 9.8, "unit": "mg/dL", "reference_range": "8.5-10.5", "flag": null}
+        ]
+      }
+    }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": {
+      "met": true,
+      "evidence": "Advanced/metastatic breast cancer confirmed — Stage IV with bone metastases"
+    },
+    "hr_positive": {
+      "met": true,
+      "evidence": "ER 95%, PR 80% — strongly HR-positive"
+    },
+    "her2_negative": {
+      "met": true,
+      "evidence": "HER2 IHC 1+, FISH not amplified — HER2-negative"
+    },
+    "age_requirement": {
+      "met": true,
+      "evidence": "Patient is 58 years old (>=18)"
+    },
+    "prescriber_oncology": {
+      "met": true,
+      "evidence": "Prescribed by Dr. Lisa Chang, Medical Oncologist (FASCO) at UCLA Jonsson Comprehensive Cancer Center"
+    },
+    "combination_therapy": {
+      "met": true,
+      "evidence": "Will be used in combination with letrozole (aromatase inhibitor) — meets COMBO_AI_OR_FULVESTRANT criterion"
+    }
+  },
+
+  "overall_pa_readiness": {
+    "status": "READY_FOR_SUBMISSION",
+    "blocking_issues": [],
+    "criteria_met_count": 6,
+    "criteria_total_count": 6,
+    "policy_version_impact": {
+      "qualifies_under_2024": true,
+      "qualifies_under_2025": true,
+      "impact_notes": "Patient meets all criteria under both policy versions. Prescribed by an oncologist (satisfies new 2025 PRESCRIBER_ONCOLOGY requirement). First-line setting with AI combination therapy. 2025 removal of ECOG requirement is a non-issue since patient is ECOG 0."
+    }
+  }
+}

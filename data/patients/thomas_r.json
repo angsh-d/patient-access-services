@@ -1,0 +1,276 @@
+{
+  "patient_id": "thomas_r",
+  "extraction_metadata": {
+    "extracted_from": [
+      "01_Prior_Auth_Request_Form.pdf",
+      "02_Pathology_Report.pdf",
+      "03_Imaging_Report.pdf",
+      "04_Clinical_Summary.pdf"
+    ],
+    "extraction_date": "2026-02-01",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Thomas",
+    "last_name": "Rivera",
+    "date_of_birth": "1964-06-22",
+    "age": 61,
+    "gender": "Male",
+    "ethnicity": "Hispanic",
+    "address": {
+      "street": "3214 Westheimer Road, Apt 5B",
+      "city": "Houston",
+      "state": "TX",
+      "zip": "77098"
+    },
+    "phone": "713-555-0487",
+    "mrn": "THOMAS_R",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "BCBS",
+      "payer_id": "BCBS_FEP",
+      "plan_name": "Blue Cross Blue Shield Federal Employee Program",
+      "plan_type": "PPO",
+      "member_id": "FEP567891278",
+      "group_number": "FEP-STANDARD-2025",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Rachel Kim",
+    "credentials": "MD, FASCO",
+    "npi": "1654321897",
+    "specialty": "Medical Oncology",
+    "subspecialty": "Breast Oncology",
+    "practice_name": "MD Anderson Cancer Center",
+    "address": {
+      "street": "1515 Holcombe Boulevard",
+      "city": "Houston",
+      "state": "TX",
+      "zip": "77030"
+    },
+    "phone": "713-555-0600",
+    "fax": "713-555-0601",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Palbociclib",
+    "brand_name": "Ibrance",
+    "j_code": "J8999",
+    "ndc": "0069-0187-01",
+    "dose": "125 mg once daily",
+    "route": "Oral",
+    "frequency": {
+      "schedule": "21 days on, 7 days off (28-day cycle)",
+      "combination_therapy": "With letrozole 2.5 mg daily"
+    },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "21 capsules per 28-day cycle",
+    "site_of_care": "Outpatient — oral medication, specialty pharmacy",
+    "start_date_requested": "2026-03-15",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "C50.921",
+      "description": "Malignant neoplasm of unspecified site of right male breast",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "C79.51",
+      "description": "Secondary malignant neoplasm of bone",
+      "status": "active",
+      "source_document": "03_Imaging_Report.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "C78.7",
+      "description": "Secondary malignant neoplasm of liver and intrahepatic bile duct",
+      "status": "active",
+      "source_document": "03_Imaging_Report.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-28",
+    "stage": "IV (metastatic)",
+    "ecog_performance_status": 1,
+    "ecog_interpretation": "Restricted in physically strenuous activity but ambulatory and able to carry out light work",
+    "metastatic_sites": ["Bone (thoracic spine T6, T9; right iliac wing)", "Liver (two lesions, largest 2.3 cm)"],
+    "disease_status": "progressive_on_endocrine_therapy",
+    "source_documents": ["03_Imaging_Report.pdf", "04_Clinical_Summary.pdf"]
+  },
+
+  "tumor_biomarkers": {
+    "source_document": "02_Pathology_Report.pdf",
+    "biopsy_date": "2025-04-20",
+    "biopsy_site": "Right breast mass, core needle biopsy",
+    "histology": "Invasive ductal carcinoma, Grade 2",
+    "estrogen_receptor": {
+      "status": "Positive",
+      "percent_staining": 85,
+      "allred_score": 7
+    },
+    "progesterone_receptor": {
+      "status": "Positive",
+      "percent_staining": 40,
+      "allred_score": 5
+    },
+    "her2_status": {
+      "ihc_score": "1+",
+      "fish_result": "Not amplified",
+      "overall_status": "Negative"
+    },
+    "ki67": "22%",
+    "pik3ca_mutation": {
+      "tested": true,
+      "status": "Negative (wild-type)",
+      "test_method": "FoundationOne CDx"
+    },
+    "biomarker_summary": "HR-positive (ER 85%, PR 40%), HER2-negative (IHC 1+), PIK3CA wild-type. Male breast cancer."
+  },
+
+  "clinical_history": {
+    "chief_complaint": "HR+/HER2- metastatic male breast cancer progressing on tamoxifen, requesting palbociclib + letrozole. Cannot tolerate LHRH agonist due to severe cardiovascular adverse effects.",
+    "history_of_present_illness": "61-year-old Hispanic male with HR+/HER2- metastatic breast cancer. Diagnosed April 2025 with right breast mass — biopsy confirmed invasive ductal carcinoma, ER+/PR+/HER2-. Staging revealed bone metastases (T6, T9, right iliac wing). Started on tamoxifen 20 mg daily as first-line therapy. LHRH agonist (goserelin) was initiated concurrently for testicular suppression per standard male breast cancer guidelines. However, patient developed severe cardiovascular adverse effects on goserelin — significant QTc prolongation (520 ms, baseline 440 ms), symptomatic palpitations, and one episode of pre-syncope at 6 weeks. Goserelin was discontinued due to cardiac safety concerns. Continued tamoxifen monotherapy. Disease progressed by January 2026 with new liver metastases (two lesions) and rising CA 15-3. Oncologist recommends switching to palbociclib + letrozole. However, letrozole requires testicular suppression for efficacy in males, and the patient cannot safely receive an LHRH agonist. Orchiectomy was discussed but patient declined surgical castration. Oncologist proceeded with letrozole + palbociclib without concurrent LHRH, noting emerging evidence that CDK4/6 inhibitor combinations may provide clinical benefit even with incomplete hormonal suppression.",
+    "lhrh_intolerance_detail": "Goserelin 3.6 mg subcutaneous initiated May 2025. Developed QTc prolongation (440→520 ms) on 12-lead ECG at 6-week follow-up. Symptomatic palpitations and one pre-syncopal episode. Cardiology consultation recommended immediate discontinuation. Patient refused to trial alternative LHRH agonist (leuprolide) due to fear of recurrent cardiac events. Orchiectomy offered but declined.",
+    "menopausal_status": "Not applicable (male)",
+    "testicular_suppression_status": "NOT suppressed — cannot tolerate LHRH agonist, declined orchiectomy",
+    "prior_cdk4_6_inhibitor": false,
+    "source_document": "04_Clinical_Summary.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Tamoxifen",
+      "drug_class": "Selective estrogen receptor modulator (SERM)",
+      "dose": "20 mg daily",
+      "start_date": "2025-05-01",
+      "end_date": "2026-01-25",
+      "duration_months": 9,
+      "setting": "First-line metastatic",
+      "outcome": "progressive_disease",
+      "outcome_description": "Progressive disease at 9 months — new liver metastases and rising CA 15-3 (42→98 U/mL). Tamoxifen initially given with goserelin but LHRH was discontinued at 6 weeks due to cardiac toxicity.",
+      "source_document": "04_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "Goserelin (Zoladex)",
+      "drug_class": "LHRH agonist",
+      "dose": "3.6 mg subcutaneous monthly",
+      "start_date": "2025-05-15",
+      "end_date": "2025-06-30",
+      "duration_weeks": 6,
+      "setting": "Concurrent testicular suppression",
+      "outcome": "discontinued_adverse_effects",
+      "outcome_description": "Discontinued after 6 weeks due to QTc prolongation (440→520 ms), symptomatic palpitations, and pre-syncope. Cardiology recommended immediate cessation.",
+      "is_lhrh_agonist": true,
+      "source_document": "04_Clinical_Summary.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-22",
+    "source_document": "04_Clinical_Summary.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count",
+        "results": [
+          {"test": "WBC", "value": 7.2, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "ANC", "value": 4.8, "unit": "x10^9/L", "reference_range": "1.5-8.0", "flag": null},
+          {"test": "Hemoglobin", "value": 13.9, "unit": "g/dL", "reference_range": "13.5-17.5", "flag": null},
+          {"test": "Platelets", "value": 232, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
+        ]
+      },
+      "tumor_markers": {
+        "panel_name": "Tumor Markers",
+        "results": [
+          {"test": "CA 15-3", "value": 98, "unit": "U/mL", "reference_range": "0-30", "flag": "H"},
+          {"test": "CEA", "value": 12.4, "unit": "ng/mL", "reference_range": "0-5", "flag": "H"}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel",
+        "results": [
+          {"test": "Creatinine", "value": 1.1, "unit": "mg/dL", "reference_range": "0.7-1.3", "flag": null},
+          {"test": "AST", "value": 38, "unit": "U/L", "reference_range": "10-40", "flag": null},
+          {"test": "ALT", "value": 42, "unit": "U/L", "reference_range": "7-56", "flag": null},
+          {"test": "Alkaline Phosphatase", "value": 178, "unit": "U/L", "reference_range": "44-147", "flag": "H"},
+          {"test": "Total Bilirubin", "value": 1.0, "unit": "mg/dL", "reference_range": "0.1-1.2", "flag": null}
+        ]
+      },
+      "cardiac": {
+        "panel_name": "Cardiac Safety",
+        "results": [
+          {"test": "QTc Interval (off LHRH)", "value": 448, "unit": "ms", "reference_range": "<450", "flag": null, "note": "Normalized after goserelin discontinuation"},
+          {"test": "Testosterone", "value": 385, "unit": "ng/dL", "reference_range": "280-1100", "flag": null, "note": "Normal — confirms lack of testicular suppression"}
+        ]
+      }
+    }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": {
+      "met": true,
+      "evidence": "Advanced/metastatic breast cancer — Stage IV with bone and liver metastases"
+    },
+    "hr_positive": {
+      "met": true,
+      "evidence": "ER 85%, PR 40% — strongly HR-positive"
+    },
+    "her2_negative": {
+      "met": true,
+      "evidence": "HER2 IHC 1+, FISH not amplified — HER2-negative"
+    },
+    "age_requirement": {
+      "met": true,
+      "evidence": "Patient is 61 years old (>=18)"
+    },
+    "prescriber_oncology": {
+      "met": true,
+      "evidence": "Prescribed by Dr. Rachel Kim, Medical Oncologist (FASCO) at MD Anderson Cancer Center. Meets 2025 PRESCRIBER_ONCOLOGY requirement."
+    },
+    "combination_therapy": {
+      "met": true,
+      "evidence": "Will be used in combination with letrozole (aromatase inhibitor) — meets COMBO_AI_OR_FULVESTRANT criterion"
+    },
+    "male_testicular_suppression": {
+      "met": false,
+      "evidence": "Male patient WITHOUT concurrent testicular suppression. LHRH agonist (goserelin) was tried but discontinued after 6 weeks due to severe QTc prolongation (520 ms) and cardiac symptoms. Patient declined orchiectomy. Testosterone level is normal (385 ng/dL), confirming lack of suppression.",
+      "impact_on_2024_policy": "FAILS — 2024 policy MALE_SUPPRESSION criterion was is_required: true. Males MUST have concomitant suppression of testicular steroidogenesis (LHRH agonist drug class). Thomas cannot safely receive LHRH and declined orchiectomy.",
+      "impact_on_2025_policy": "PASSES — 2025 policy changed MALE_SUPPRESSION to is_required: false and removed the LHRH agonist drug class requirement. The criterion still exists but is no longer mandatory. This relaxation allows male patients who cannot tolerate or decline testicular suppression to still access CDK4/6 inhibitor therapy."
+    },
+    "endocrine_resistant": {
+      "met": true,
+      "evidence": "Progressed on tamoxifen after 9 months — disease progression with new liver metastases"
+    }
+  },
+
+  "overall_pa_readiness": {
+    "status": "POLICY_VERSION_DEPENDENT",
+    "blocking_issues_2024": [
+      "Male patient without testicular suppression — 2024 MALE_SUPPRESSION criterion required concomitant LHRH agonist therapy (is_required: true)"
+    ],
+    "blocking_issues_2025": [],
+    "criteria_met_count_2024": 6,
+    "criteria_total_count_2024": 7,
+    "criteria_met_count_2025": 7,
+    "criteria_total_count_2025": 7,
+    "policy_version_impact": {
+      "qualifies_under_2024": false,
+      "qualifies_under_2025": true,
+      "change_causing_new_eligibility": "MALE_SUPPRESSION changed from is_required: true to is_required: false, and the LHRH agonist drug class requirement was removed. Thomas cannot tolerate LHRH agonists (QTc prolongation) and declined orchiectomy — under 2024, this was an absolute barrier. Under 2025, testicular suppression is no longer mandatory.",
+      "clinical_significance": "Male breast cancer is rare (~1% of all breast cancers) and data on CDK4/6 inhibitors in males is limited. The 2024 policy rigidly required LHRH suppression, creating a barrier for patients with LHRH intolerance or who decline orchiectomy. The 2025 relaxation recognizes that: (1) some male patients cannot safely achieve testicular suppression, (2) CDK4/6 inhibitors may provide benefit even without complete hormonal suppression, and (3) rigid requirements disproportionately affect a rare cancer population with fewer treatment options.",
+      "impact_notes": "Under the 2024 policy, Thomas would have been denied palbociclib because he cannot safely receive an LHRH agonist and declined orchiectomy. The only option would have been a medical necessity appeal documenting LHRH intolerance. Under 2025, the suppression requirement is no longer mandatory, removing this barrier entirely."
+    }
+  }
+}

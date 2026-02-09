@@ -1,0 +1,242 @@
+{
+  "patient_id": "margaret_t",
+  "extraction_metadata": {
+    "extracted_from": [
+      "01_Prior_Auth_Request_Form.pdf",
+      "02_Pathology_Report.pdf",
+      "03_Imaging_Report.pdf",
+      "04_Clinical_Summary.pdf"
+    ],
+    "extraction_date": "2026-02-01",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Margaret",
+    "last_name": "Thompson",
+    "date_of_birth": "1953-09-28",
+    "age": 72,
+    "gender": "Female",
+    "ethnicity": "Caucasian",
+    "address": {
+      "street": "156 Magnolia Lane",
+      "city": "Savannah",
+      "state": "GA",
+      "zip": "31401"
+    },
+    "phone": "912-555-0345",
+    "mrn": "MARGARET_T",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "BCBS",
+      "payer_id": "BCBS_FEP",
+      "plan_name": "Blue Cross Blue Shield Federal Employee Program",
+      "plan_type": "PPO",
+      "member_id": "FEP234567891",
+      "group_number": "FEP-RETIREE-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. William Barnes",
+    "credentials": "MD, FACP",
+    "npi": "1678912345",
+    "specialty": "Internal Medicine",
+    "practice_name": "Savannah Internal Medicine Associates",
+    "address": {
+      "street": "4700 Waters Avenue, Suite 300",
+      "city": "Savannah",
+      "state": "GA",
+      "zip": "31404"
+    },
+    "phone": "912-555-0200",
+    "fax": "912-555-0201",
+    "prescriber_notes": "Primary care internist managing patient's breast cancer follow-up. Patient declined referral to medical oncologist at Memorial Health due to travel burden — 45-minute drive each way. Dr. Barnes has been managing her overall care including cancer-related prescriptions for 15 years.",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Palbociclib",
+    "brand_name": "Ibrance",
+    "j_code": "J8999",
+    "ndc": "0069-0187-01",
+    "dose": "125 mg once daily",
+    "route": "Oral",
+    "frequency": {
+      "schedule": "21 days on, 7 days off (28-day cycle)",
+      "combination_therapy": "With fulvestrant 500 mg IM monthly"
+    },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "21 capsules per 28-day cycle",
+    "site_of_care": "Outpatient — oral medication, specialty pharmacy",
+    "start_date_requested": "2026-03-01",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "C50.911",
+      "description": "Malignant neoplasm of unspecified site of right female breast",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "C79.51",
+      "description": "Secondary malignant neoplasm of bone",
+      "status": "active",
+      "source_document": "03_Imaging_Report.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-15",
+    "stage": "IV (metastatic)",
+    "ecog_performance_status": 1,
+    "ecog_interpretation": "Restricted in physically strenuous activity but ambulatory and able to carry out light work",
+    "metastatic_sites": ["Bone (lumbar spine L2, L4; right femoral neck)"],
+    "disease_status": "progressive_on_endocrine_therapy",
+    "source_documents": ["03_Imaging_Report.pdf", "04_Clinical_Summary.pdf"]
+  },
+
+  "tumor_biomarkers": {
+    "source_document": "02_Pathology_Report.pdf",
+    "biopsy_date": "2023-06-15",
+    "biopsy_site": "Right breast, core needle biopsy",
+    "histology": "Invasive lobular carcinoma, Grade 2",
+    "estrogen_receptor": {
+      "status": "Positive",
+      "percent_staining": 90,
+      "allred_score": 8
+    },
+    "progesterone_receptor": {
+      "status": "Positive",
+      "percent_staining": 60,
+      "allred_score": 6
+    },
+    "her2_status": {
+      "ihc_score": "0",
+      "overall_status": "Negative"
+    },
+    "ki67": "12%",
+    "biomarker_summary": "HR-positive (ER 90%, PR 60%), HER2-negative (IHC 0)"
+  },
+
+  "clinical_history": {
+    "chief_complaint": "HR+/HER2- metastatic breast cancer progressing on first-line endocrine therapy, requesting palbociclib + fulvestrant",
+    "history_of_present_illness": "72-year-old postmenopausal Caucasian female with HR+/HER2- metastatic breast cancer. Originally diagnosed June 2023 with Stage IIA right breast invasive lobular carcinoma, treated with lumpectomy and adjuvant radiation. Started adjuvant letrozole July 2023. Developed bone metastases (L2, L4, right femoral neck) detected on routine follow-up CT scan January 2025 — disease recurrence on adjuvant endocrine therapy. Continued letrozole with addition of denosumab for bone metastases. Progressed on letrozole by January 2026 with new L4 lesion and rising tumor markers. Oncologist at Memorial Health (via telehealth consultation) recommended switching to fulvestrant + palbociclib. However, patient's primary prescription is being written by her long-time internist Dr. Barnes, as she declined regular travel to the oncology center. Dr. Barnes consulted with the oncologist and is managing the prescription.",
+    "menopausal_status": "Postmenopausal (natural menopause age 50)",
+    "prior_cdk4_6_inhibitor": false,
+    "oncology_consultation": {
+      "consultant": "Dr. Priya Sharma, MD, Medical Oncology, Memorial Health University Medical Center",
+      "consultation_date": "2026-01-10",
+      "consultation_type": "Telehealth",
+      "recommendation": "Fulvestrant + palbociclib — standard second-line therapy for HR+/HER2- mBC progressing on AI",
+      "note": "Oncologist provided recommendation but patient's PCP is writing the prescription due to patient preference and travel limitations"
+    },
+    "source_document": "04_Clinical_Summary.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Letrozole",
+      "drug_class": "Aromatase inhibitor",
+      "dose": "2.5 mg daily",
+      "start_date": "2023-07-15",
+      "end_date": "2026-01-30",
+      "duration_months": 30,
+      "setting": "Adjuvant, then continued for metastatic disease",
+      "outcome": "progressive_disease",
+      "outcome_description": "Initially used as adjuvant therapy. Continued for metastatic bone disease discovered January 2025. Progressive disease by January 2026 with new bone lesions and rising CA 15-3.",
+      "source_document": "04_Clinical_Summary.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-12",
+    "source_document": "04_Clinical_Summary.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count",
+        "results": [
+          {"test": "WBC", "value": 5.4, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "ANC", "value": 3.1, "unit": "x10^9/L", "reference_range": "1.5-8.0", "flag": null},
+          {"test": "Hemoglobin", "value": 11.8, "unit": "g/dL", "reference_range": "12.0-16.0", "flag": "L"},
+          {"test": "Platelets", "value": 210, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
+        ]
+      },
+      "tumor_markers": {
+        "panel_name": "Tumor Markers",
+        "results": [
+          {"test": "CA 15-3", "value": 68, "unit": "U/mL", "reference_range": "0-30", "flag": "H"},
+          {"test": "CEA", "value": 8.2, "unit": "ng/mL", "reference_range": "0-5", "flag": "H"}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel",
+        "results": [
+          {"test": "Creatinine", "value": 0.9, "unit": "mg/dL", "reference_range": "0.6-1.2", "flag": null},
+          {"test": "AST", "value": 22, "unit": "U/L", "reference_range": "10-40", "flag": null},
+          {"test": "ALT", "value": 19, "unit": "U/L", "reference_range": "7-56", "flag": null},
+          {"test": "Alkaline Phosphatase", "value": 162, "unit": "U/L", "reference_range": "44-147", "flag": "H"}
+        ]
+      }
+    }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": {
+      "met": true,
+      "evidence": "Advanced/metastatic breast cancer — Stage IV with bone metastases, progressing on endocrine therapy"
+    },
+    "hr_positive": {
+      "met": true,
+      "evidence": "ER 90%, PR 60% — strongly HR-positive"
+    },
+    "her2_negative": {
+      "met": true,
+      "evidence": "HER2 IHC 0 — HER2-negative"
+    },
+    "age_requirement": {
+      "met": true,
+      "evidence": "Patient is 72 years old (>=18)"
+    },
+    "prescriber_oncology": {
+      "met": false,
+      "evidence": "Prescribed by Dr. William Barnes, Internal Medicine (FACP) — NOT an oncologist or hematologist-oncologist. Patient's PCP is writing the prescription based on oncology telehealth consultation, but the prescriber of record is an internist.",
+      "impact_on_2024_policy": "NOT REQUIRED — 2024 policy had no prescriber specialty requirement",
+      "impact_on_2025_policy": "NOW REQUIRED — 2025 policy added PRESCRIBER_ONCOLOGY criterion requiring prescription by an Oncologist or Hematologist-Oncologist. An internist prescribing based on oncology consultation does not meet this criterion."
+    },
+    "combination_therapy": {
+      "met": true,
+      "evidence": "Will be used with fulvestrant — meets combination therapy requirement"
+    },
+    "endocrine_resistant": {
+      "met": true,
+      "evidence": "Progressed on letrozole (aromatase inhibitor) after 30 months"
+    }
+  },
+
+  "overall_pa_readiness": {
+    "status": "POLICY_VERSION_DEPENDENT",
+    "blocking_issues": [
+      "Prescriber is Internal Medicine (Dr. Barnes), not Oncology — fails 2025 PRESCRIBER_ONCOLOGY requirement"
+    ],
+    "criteria_met_count_2024": 6,
+    "criteria_total_count_2024": 6,
+    "criteria_met_count_2025": 6,
+    "criteria_total_count_2025": 7,
+    "policy_version_impact": {
+      "qualifies_under_2024": true,
+      "qualifies_under_2025": false,
+      "change_causing_denial": "PRESCRIBER_ONCOLOGY — 2025 policy now requires that palbociclib be prescribed by an Oncologist or Hematologist-Oncologist. Margaret's prescription is written by her internist (Dr. Barnes), even though the treatment plan was recommended by an oncologist via telehealth consultation.",
+      "clinical_significance": "This case highlights access challenges for rural/suburban elderly patients. Margaret lives in an area where the nearest oncology center requires a 45-minute drive. She has a long-standing relationship with her internist who has managed her care. The oncologist's recommendation is documented, but the payer's new policy requires the prescriber of record to be an oncologist — a barrier for patients with limited mobility or transportation.",
+      "potential_appeal_basis": "Could appeal by: (1) Having the oncologist co-sign or write the prescription instead, (2) Documenting the telehealth oncology consultation as equivalent supervision, (3) Requesting a geographic/access exception given patient's age and distance to oncology center. Simplest resolution: have Dr. Sharma at Memorial Health write the prescription directly."
+    }
+  }
+}

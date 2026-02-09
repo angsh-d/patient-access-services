@@ -1,0 +1,20 @@
+Extract structured information from the following text according to the schema provided.
+
+## Schema
+{extraction_schema}
+
+## Source Text
+{text}
+
+## Extraction Rules
+
+1. Return valid JSON matching the schema exactly. Do not add fields not in the schema.
+2. If the source text does not contain information for a schema field, set it to null. Do NOT fabricate or infer values.
+3. If a field expects an array and no matching data exists, return an empty array [].
+4. For date fields, normalize to ISO 8601 format (YYYY-MM-DD).
+5. For clinical codes (ICD-10, HCPCS, CPT), extract only codes explicitly present in the text.
+6. Preserve exact clinical values (lab results, vital signs) without rounding or interpretation.
+
+Respond with ONLY the JSON object, no additional text.
+
+Extracted JSON:

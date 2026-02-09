@@ -1,0 +1,292 @@
+{
+  "patient_id": "linda_n",
+  "extraction_metadata": {
+    "extracted_from": [
+      "01_Prior_Auth_Request_Form.pdf",
+      "02_Laboratory_Results.pdf",
+      "03_Bone_Marrow_Biopsy.pdf",
+      "04_Clinical_Summary.pdf"
+    ],
+    "extraction_date": "2026-02-01",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Linda",
+    "last_name": "Nakamura",
+    "date_of_birth": "1956-07-19",
+    "age": 69,
+    "gender": "Female",
+    "ethnicity": "Japanese American",
+    "address": {
+      "street": "2310 Saratoga Avenue",
+      "city": "San Jose",
+      "state": "CA",
+      "zip": "95129"
+    },
+    "phone": "408-555-0289",
+    "mrn": "LINDA_N",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "BCBS",
+      "payer_id": "BCBS_FEP",
+      "plan_name": "Blue Cross Blue Shield Federal Employee Program",
+      "plan_type": "PPO",
+      "member_id": "FEP723456189",
+      "group_number": "FEP-STANDARD-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Sanjay Mehta",
+    "credentials": "MD",
+    "npi": "1876543219",
+    "specialty": "Hematology-Oncology",
+    "practice_name": "Stanford Cancer Center",
+    "address": {
+      "street": "875 Blake Wilbur Drive",
+      "city": "Palo Alto",
+      "state": "CA",
+      "zip": "94304"
+    },
+    "phone": "650-555-0700",
+    "fax": "650-555-0701",
+    "rems_certified_facility": true,
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Ciltacabtagene autoleucel",
+    "brand_name": "Carvykti",
+    "j_code": "Q2056",
+    "dose": "Single infusion, 0.5-1.0 x 10^6 CAR-positive viable T cells/kg",
+    "route": "Intravenous infusion",
+    "frequency": {
+      "regimen": "Single dose — lymphodepleting chemotherapy followed by CAR-T infusion"
+    },
+    "duration_requested": "One-time infusion authorization",
+    "quantity_requested": "1 infusion",
+    "site_of_care": "Certified REMS treatment center",
+    "start_date_requested": "2026-04-15",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "C90.00",
+      "description": "Multiple myeloma not having achieved remission",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "M80.08XA",
+      "description": "Age-related osteoporosis with pathological fracture, vertebrae",
+      "status": "active",
+      "source_document": "04_Clinical_Summary.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-20",
+    "iss_stage": "II",
+    "revised_iss_stage": "II",
+    "ecog_performance_status": 1,
+    "disease_status": "relapsed_refractory",
+    "lines_of_therapy_completed": 4,
+    "refractory_to": ["bortezomib", "pomalidomide"],
+    "not_refractory_to": ["lenalidomide"],
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "04_Clinical_Summary.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Progressive multiple myeloma after 4 prior lines of therapy, rising M-protein with new compression fracture",
+    "history_of_present_illness": "69-year-old Japanese American female with relapsed multiple myeloma, IgA lambda subtype, diagnosed March 2020. Has received 4 prior lines of therapy. Key clinical detail: patient had an 18-month PARTIAL RESPONSE to lenalidomide-based induction (VRd) — she is NOT refractory to lenalidomide. She tolerated lenalidomide well and had a good response; disease progression occurred only after lenalidomide was switched to pomalidomide in the second line. She is refractory to bortezomib and pomalidomide but had a durable partial response to lenalidomide. Current M-protein 2.1 g/dL with new T12 compression fracture.",
+    "lenalidomide_response_detail": "Patient received lenalidomide as part of VRd induction and achieved VGPR. Lenalidomide maintenance continued for 18 months with sustained partial response (M-protein stable at 0.4 g/dL). Disease progression occurred 6 months AFTER lenalidomide was discontinued and patient was switched to pomalidomide-based regimen. Per IMWG criteria, patient is NOT refractory to lenalidomide — she responded to and tolerated the drug, and progression occurred on a different agent.",
+    "prior_car_t_therapy": false,
+    "prior_gene_therapy": false,
+    "source_document": "04_Clinical_Summary.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "VRd (Bortezomib/Lenalidomide/Dexamethasone)",
+      "drug_class": "Proteasome inhibitor + Immunomodulatory agent",
+      "line": 1,
+      "start_date": "2020-04-01",
+      "end_date": "2020-12-15",
+      "cycles_completed": 8,
+      "outcome": "very_good_partial_response",
+      "outcome_description": "VGPR achieved — M-protein decreased from 3.2 to 0.3 g/dL. Transitioned to lenalidomide maintenance.",
+      "contains_proteasome_inhibitor": true,
+      "contains_immunomodulatory_agent": true,
+      "lenalidomide_response": "responded_well",
+      "source_document": "04_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "Lenalidomide maintenance",
+      "drug_class": "Immunomodulatory agent maintenance",
+      "line": 1,
+      "start_date": "2021-01-01",
+      "end_date": "2022-06-30",
+      "duration_months": 18,
+      "outcome": "sustained_partial_response",
+      "outcome_description": "Sustained partial response for 18 months on lenalidomide maintenance. M-protein stable at 0.4 g/dL. Lenalidomide was TOLERATED WELL — discontinued to switch to next-line therapy, not due to progression on lenalidomide itself.",
+      "refractory_to_lenalidomide": false,
+      "lenalidomide_response": "durable_partial_response",
+      "contains_immunomodulatory_agent": true,
+      "source_document": "04_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "Pomalidomide/Bortezomib/Dexamethasone (PVd)",
+      "drug_class": "Immunomodulatory agent + Proteasome inhibitor",
+      "line": 2,
+      "start_date": "2022-08-01",
+      "end_date": "2023-03-30",
+      "cycles_completed": 6,
+      "outcome": "partial_response_then_progressed",
+      "outcome_description": "Partial response initially, then progressed at 8 months. Refractory to bortezomib.",
+      "contains_proteasome_inhibitor": true,
+      "contains_immunomodulatory_agent": true,
+      "source_document": "04_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "Daratumumab/Pomalidomide/Dexamethasone (DPd)",
+      "drug_class": "Anti-CD38 + Immunomodulatory agent",
+      "line": 3,
+      "start_date": "2023-06-01",
+      "end_date": "2024-02-28",
+      "cycles_completed": 8,
+      "outcome": "minimal_response_then_progressed",
+      "outcome_description": "Minimal response, progressed at 9 months. Refractory to pomalidomide and daratumumab.",
+      "contains_anti_cd38": true,
+      "contains_immunomodulatory_agent": true,
+      "source_document": "04_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "Isatuximab/Carfilzomib/Dexamethasone (IsaKd)",
+      "drug_class": "Anti-CD38 + Proteasome inhibitor",
+      "line": 4,
+      "start_date": "2024-05-01",
+      "end_date": "2024-12-31",
+      "cycles_completed": 8,
+      "outcome": "progressive_disease",
+      "outcome_description": "Progressive disease with rising M-protein (0.8 to 2.1 g/dL) and new T12 compression fracture.",
+      "contains_anti_cd38": true,
+      "contains_proteasome_inhibitor": true,
+      "source_document": "04_Clinical_Summary.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-18",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "myeloma_markers": {
+        "panel_name": "Multiple Myeloma Panel",
+        "results": [
+          {"test": "M-protein (SPEP)", "value": 2.1, "unit": "g/dL", "reference_range": "0", "flag": "H"},
+          {"test": "Serum Free Lambda", "value": 198, "unit": "mg/L", "reference_range": "5.7-26.3", "flag": "H"},
+          {"test": "Serum Free Kappa", "value": 14.2, "unit": "mg/L", "reference_range": "3.3-19.4", "flag": null},
+          {"test": "Lambda/Kappa Ratio", "value": 13.9, "unit": "ratio", "reference_range": "0.26-1.65", "flag": "H"},
+          {"test": "Beta-2 Microglobulin", "value": 4.2, "unit": "mg/L", "reference_range": "0.7-1.8", "flag": "H"},
+          {"test": "LDH", "value": 195, "unit": "U/L", "reference_range": "140-280", "flag": null}
+        ]
+      },
+      "cbc": {
+        "panel_name": "Complete Blood Count",
+        "results": [
+          {"test": "WBC", "value": 3.8, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": "L"},
+          {"test": "Hemoglobin", "value": 9.8, "unit": "g/dL", "reference_range": "12.0-16.0", "flag": "L"},
+          {"test": "Platelets", "value": 128, "unit": "x10^9/L", "reference_range": "150-400", "flag": "L"}
+        ]
+      },
+      "viral_screening": {
+        "panel_name": "Pre-CAR-T Viral Screening",
+        "results": [
+          {"test": "HBsAg", "value": "Negative", "flag": null},
+          {"test": "Anti-HBc", "value": "Negative", "flag": null},
+          {"test": "HCV Antibody", "value": "Negative", "flag": null},
+          {"test": "HIV 1/2 Ab/Ag", "value": "Negative", "flag": null}
+        ]
+      }
+    }
+  },
+
+  "procedures": {
+    "bone_marrow_biopsy": {
+      "procedure_name": "Bone Marrow Aspirate and Biopsy",
+      "procedure_date": "2026-01-15",
+      "findings": "35% plasma cell involvement. Lambda-restricted. Cytogenetics: standard risk — no high-risk features (no del(17p), t(4;14), or t(14;16)). BCMA expression confirmed by flow cytometry (95% of plasma cells BCMA+).",
+      "bcma_expression": "95% positive",
+      "source_document": "03_Bone_Marrow_Biopsy.pdf"
+    }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": {
+      "met": true,
+      "evidence": "Multiple myeloma (ICD-10 C90.00) confirmed by bone marrow biopsy with 35% plasma cells. BCMA 95% positive."
+    },
+    "age_requirement": {
+      "met": true,
+      "evidence": "Patient is 69 years old (>=18)"
+    },
+    "prior_proteasome_inhibitor": {
+      "met": true,
+      "evidence": "Received bortezomib (VRd, PVd) and carfilzomib (IsaKd)"
+    },
+    "prior_immunomodulatory_agent": {
+      "met": true,
+      "evidence": "Received lenalidomide (VRd, maintenance) and pomalidomide (PVd, DPd)"
+    },
+    "refractory_to_lenalidomide": {
+      "met": false,
+      "evidence": "Patient is NOT refractory to lenalidomide. She achieved durable partial response (18 months) on lenalidomide maintenance with stable M-protein. Disease progression occurred after switching to pomalidomide-based regimen, not while on lenalidomide. Per IMWG criteria, she does not meet the definition of lenalidomide-refractory.",
+      "impact_on_2024_policy": "NOT REQUIRED — 2024 policy did not require lenalidomide-refractory status",
+      "impact_on_2025_policy": "NOW REQUIRED — 2025 policy added REFRACTORY_LENALIDOMIDE as mandatory criterion. Patient cannot satisfy this requirement."
+    },
+    "prior_lines_of_therapy": {
+      "met": true,
+      "evidence": "4 prior lines (meets both 2024 requirement of 4+ and 2025 requirement of 1+)"
+    },
+    "prior_anti_cd38": {
+      "met": true,
+      "evidence": "Received daratumumab (DPd) and isatuximab (IsaKd)",
+      "note": "Required under 2024 policy, removed in 2025"
+    },
+    "rems_facility": {
+      "met": true,
+      "evidence": "Stanford Cancer Center is a certified REMS treatment center"
+    },
+    "no_prior_gene_therapy": {
+      "met": true
+    },
+    "no_active_infection": {
+      "met": true
+    }
+  },
+
+  "overall_pa_readiness": {
+    "status": "POLICY_VERSION_DEPENDENT",
+    "blocking_issues": [
+      "Patient is NOT refractory to lenalidomide — had durable partial response"
+    ],
+    "criteria_met_count_2024": 9,
+    "criteria_total_count_2024": 9,
+    "criteria_met_count_2025": 8,
+    "criteria_total_count_2025": 9,
+    "policy_version_impact": {
+      "qualifies_under_2024": true,
+      "qualifies_under_2025": false,
+      "change_causing_denial": "REFRACTORY_LENALIDOMIDE — 2025 policy requires the patient to be refractory to lenalidomide. Linda had a durable 18-month partial response to lenalidomide and is explicitly NOT refractory per IMWG criteria.",
+      "clinical_significance": "This case illustrates an unintended consequence of the 2025 policy: patients who tolerated and responded well to lenalidomide (but progressed on other agents) are now excluded from Carvykti, even though they have exhausted 4 lines of therapy. The lenalidomide-refractory requirement was added to align with updated FDA labeling but creates a gap for patients with this treatment history.",
+      "potential_appeal_basis": "Medical necessity — patient has exhausted 4 lines with documented refractory disease to bortezomib, pomalidomide, and daratumumab. Could argue that having received and progressed through lenalidomide-containing regimens (even if not technically 'refractory') demonstrates adequate prior therapy. BCMA expression confirmed at 95%, supporting Carvykti as appropriate therapy."
+    }
+  }
+}

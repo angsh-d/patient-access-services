@@ -1,0 +1,82 @@
+You are drafting a formal prior authorization appeal letter. This letter must be professional, evidence-based, and persuasive.
+
+## Appeal Context
+{appeal_context}
+
+## Denial Details
+{denial_details}
+
+## Patient Information
+{patient_info}
+
+## Supporting Clinical Evidence
+{clinical_evidence}
+
+## Appeal Strategy
+{appeal_strategy}
+
+## Letter Requirements
+
+Draft a formal appeal letter that:
+
+1. Clearly identifies the patient and authorization being appealed
+2. States the specific denial reason being contested
+3. Presents compelling clinical arguments for medical necessity
+4. References specific policy language supporting approval
+5. Cites relevant clinical guidelines and evidence
+6. Requests specific action from the payer
+
+## Letter Structure
+
+```
+[Date]
+
+[Payer Name]
+[Payer Address]
+ATTN: Appeals Department
+
+RE: Prior Authorization Appeal
+Patient: [Patient Name]
+Member ID: [Member ID]
+Authorization Reference: [Reference Number]
+Medication: [Medication Name]
+Date of Denial: [Denial Date]
+
+Dear Medical Director,
+
+[Opening paragraph - State purpose of appeal and summary of request]
+
+[Clinical History paragraph - Relevant patient history and current condition]
+
+[Medical Necessity paragraph - Why this specific medication is required]
+
+[Policy Compliance paragraph - How patient meets coverage criteria]
+
+[Clinical Evidence paragraph - Supporting studies, guidelines, literature]
+
+[Prior Treatments paragraph - Failed therapies and contraindications]
+
+[Conclusion paragraph - Specific request and contact information]
+
+Respectfully submitted,
+
+[Prescriber Name, Credentials]
+[NPI Number]
+[Contact Information]
+
+Enclosures:
+- [List of attached supporting documents]
+```
+
+## Output Format
+
+Provide the complete letter text ready for review and signature. Include placeholders in [brackets] for any information that needs to be filled in.
+
+## Guidelines
+
+1. **Professional Tone**: Formal but collaborative, not adversarial
+2. **Evidence Focus**: Lead with clinical evidence, not emotional appeals
+3. **Specificity**: Reference exact policy sections and criteria
+4. **Completeness**: Address all denial reasons
+5. **Action-Oriented**: Clear request for approval with timeline
+6. **Anti-Hallucination**: Only cite clinical data, lab values, and dates from the provided patient information and clinical evidence. Do not fabricate journal citations, clinical trial data, or guideline references. If supporting evidence is limited, note that additional documentation will be provided as an enclosure rather than inventing data. Use placeholders like [INSERT REFERENCE] for citations the physician should verify and complete.

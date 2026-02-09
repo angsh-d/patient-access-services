@@ -1,0 +1,248 @@
+{
+  "patient_id": "aiden_f",
+  "extraction_metadata": {
+    "extracted_from": [
+      "01_Prior_Auth_Request_Form.pdf",
+      "02_Genetic_Testing_Report.pdf",
+      "03_Gene_Therapy_Treatment_Record.pdf",
+      "04_Neurology_Assessment.pdf"
+    ],
+    "extraction_date": "2026-02-01",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Aiden",
+    "last_name": "Foster",
+    "date_of_birth": "2022-03-10",
+    "age_years": 3,
+    "gender": "Male",
+    "ethnicity": "Caucasian",
+    "address": {
+      "street": "7210 Aurora Avenue North",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98103"
+    },
+    "phone": "206-555-0334",
+    "mrn": "AIDEN_F",
+    "parent_guardian": {
+      "name": "Ryan and Jessica Foster",
+      "relationship": "Parents",
+      "contact_phone": "206-555-0334"
+    },
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "BCBS",
+      "payer_id": "BCBS_FEP",
+      "plan_name": "Blue Cross Blue Shield Federal Employee Program",
+      "plan_type": "PPO",
+      "member_id": "FEP456789123",
+      "group_number": "FEP-FAMILY-2025",
+      "subscriber": "Ryan Foster",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Amanda Liu",
+    "credentials": "MD",
+    "npi": "1567891234",
+    "specialty": "Pediatric Neurology",
+    "subspecialty": "Neuromuscular Disorders",
+    "practice_name": "Seattle Children's Hospital",
+    "address": {
+      "street": "4800 Sand Point Way NE",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98105"
+    },
+    "phone": "206-555-0800",
+    "fax": "206-555-0801",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Nusinersen",
+    "brand_name": "Spinraza",
+    "j_code": "J2326",
+    "dose": "12 mg (5 mL) per intrathecal injection",
+    "route": "Intrathecal injection",
+    "frequency": {
+      "loading": "Day 0, Day 14, Day 28, Day 63",
+      "maintenance": "Once every 4 months"
+    },
+    "duration_requested": "12 months initial authorization (4 loading + 2 maintenance doses)",
+    "quantity_requested": "6 doses",
+    "site_of_care": "Pediatric hospital — intrathecal administration under fluoroscopic guidance",
+    "start_date_requested": "2026-03-15",
+    "urgency": "Urgent — disease progression documented despite prior gene therapy. Motor function declining.",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "G12.1",
+      "description": "Spinal muscular atrophy, Type 2 (intermediate)",
+      "status": "active",
+      "coding_note": "SMA Type 2 — diagnosed at 9 months when motor milestones plateaued. Initially treated with gene therapy (Zolgensma) at 11 months.",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-25",
+    "sma_type": "Type 2 (intermediate)",
+    "symptom_status": "symptomatic",
+    "age_at_diagnosis": "9 months",
+    "age_at_gene_therapy": "11 months",
+    "motor_milestone_status": "Can sit independently but has never walked. Progressive decline in upper extremity function over past 12 months.",
+    "current_motor_function": "Sits independently. Cannot stand or walk. Moderate upper limb weakness — difficulty raising arms above shoulder height. Fine motor skills declining. HFMSE score 18 (down from 24 one year ago).",
+    "hfmse_score": 18,
+    "hfmse_prior": 24,
+    "hfmse_decline": 6,
+    "feeding_status": "Oral feeding with soft diet. Occasional coughing with thin liquids.",
+    "respiratory_status": "Mild restrictive pattern on PFTs. Uses BiPAP nocturnally. Not on permanent ventilator.",
+    "ventilator_dependent": false,
+    "source_documents": ["04_Neurology_Assessment.pdf"]
+  },
+
+  "genetic_testing": {
+    "initial_testing": {
+      "test_date": "2022-12-15",
+      "laboratory": "Invitae Molecular Genetics Laboratory",
+      "test_name": "SMN1/SMN2 Copy Number Analysis",
+      "methodology": "MLPA (Multiplex Ligation-dependent Probe Amplification)",
+      "source_document": "02_Genetic_Testing_Report.pdf",
+      "results": {
+        "smn1_exon_7_copies": 0,
+        "smn1_mutation_type": "Homozygous deletion of SMN1 exon 7",
+        "smn2_copy_number": 3,
+        "interpretation": "Biallelic SMN1 deletion confirmed. 3 copies of SMN2 detected. Clinical presentation consistent with SMA Type 2."
+      }
+    },
+    "confirmation": "SMA confirmed by molecular genetic testing — homozygous SMN1 deletion with 3 SMN2 copies."
+  },
+
+  "prior_gene_therapy": {
+    "therapy_name": "Onasemnogene abeparvovec-xioi",
+    "brand_name": "Zolgensma",
+    "administration_date": "2023-02-20",
+    "age_at_administration": "11 months",
+    "dose": "1.1 x 10^14 vg/kg, single IV infusion",
+    "administering_facility": "Seattle Children's Hospital",
+    "outcome": "Initial stabilization of motor function for approximately 12 months. HFMSE improved from 14 to 24 in first year post-treatment. However, motor function has been declining over past 12 months (HFMSE now 18), suggesting gene therapy effect may be waning.",
+    "anti_aav9_antibodies": "Positive (titer 1:102,400) — precludes re-dosing with Zolgensma",
+    "source_document": "03_Gene_Therapy_Treatment_Record.pdf"
+  },
+
+  "clinical_history": {
+    "chief_complaint": "SMA Type 2 with declining motor function despite prior Zolgensma gene therapy — requesting Spinraza as rescue/add-on therapy",
+    "history_of_present_illness": "3-year-old male with SMA Type 2 (homozygous SMN1 deletion, 3 SMN2 copies) diagnosed at 9 months when motor milestones plateaued (could sit but never pulled to stand). Received Zolgensma at 11 months with initial improvement — gained sitting endurance and some upper limb function (HFMSE 14 to 24). Motor function stable for approximately 12 months post-gene therapy. Over the past year, progressive decline observed: HFMSE dropped from 24 to 18, decreased upper extremity reach, new nocturnal hypoventilation requiring BiPAP. Anti-AAV9 antibody titers are high (1:102,400), precluding Zolgensma re-dosing. Risdiplam was considered but parents prefer intrathecal Spinraza based on published data showing benefit in post-gene-therapy patients. Prescribing neurologist believes Spinraza could stabilize or slow decline given its different mechanism of action (antisense oligonucleotide vs. gene replacement).",
+    "rationale_for_spinraza_after_gene_therapy": "Gene therapy effect appears to be waning after 2+ years. Spinraza acts via a distinct mechanism (SMN2 pre-mRNA splicing modification) and could complement the residual SMN protein produced by Zolgensma. Published case series and the RESPOND trial data suggest benefit of nusinersen in post-gene-therapy patients with declining motor function.",
+    "family_history": "No other family members with SMA. Both parents confirmed as carriers.",
+    "prior_spinraza": false,
+    "concurrent_risdiplam": false,
+    "clinical_trial_enrollment": false,
+    "source_document": "04_Neurology_Assessment.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Onasemnogene abeparvovec-xioi (Zolgensma)",
+      "drug_class": "Gene therapy (AAV9-SMN1)",
+      "administration_date": "2023-02-20",
+      "route": "Single IV infusion",
+      "outcome": "initial_improvement_then_decline",
+      "outcome_description": "HFMSE improved 14 to 24 in first year. Plateau then decline over subsequent 12 months — HFMSE now 18. Gene therapy effect appears to be waning.",
+      "is_gene_therapy": true,
+      "source_document": "03_Gene_Therapy_Treatment_Record.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-20",
+    "source_document": "04_Neurology_Assessment.pdf",
+    "panels": {
+      "baseline_labs": {
+        "panel_name": "Baseline Safety Labs",
+        "results": [
+          {"test": "Platelet Count", "value": 298, "unit": "x10^9/L", "reference_range": "150-400", "flag": null},
+          {"test": "PT/INR", "value": 1.0, "unit": "ratio", "reference_range": "0.8-1.2", "flag": null},
+          {"test": "Urine Protein", "value": "Negative", "flag": null},
+          {"test": "AST", "value": 35, "unit": "U/L", "reference_range": "10-40", "flag": null},
+          {"test": "ALT", "value": 28, "unit": "U/L", "reference_range": "7-56", "flag": null}
+        ]
+      },
+      "anti_aav9": {
+        "panel_name": "Anti-AAV9 Antibody Titer",
+        "results": [
+          {"test": "Anti-AAV9 IgG", "value": "Positive, 1:102,400", "reference_range": "Negative", "flag": "H", "note": "Precludes Zolgensma re-dosing"}
+        ]
+      }
+    }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": {
+      "met": true,
+      "evidence": "SMA Type 2 confirmed by genetic testing — homozygous SMN1 deletion (ICD-10 G12.1)"
+    },
+    "genetic_confirmation": {
+      "met": true,
+      "evidence": "SMN1 homozygous deletion confirmed by MLPA. 3 SMN2 copies."
+    },
+    "smn2_copy_number_requirement": {
+      "met": true,
+      "evidence": "3 SMN2 copies. Patient is symptomatic — both 2024 and 2025 policies allow 2-4 SMN2 copies for symptomatic patients."
+    },
+    "symptom_status": {
+      "status": "symptomatic",
+      "evidence": "SMA Type 2 — symptomatic with declining motor function (HFMSE 18, down from 24)."
+    },
+    "prescriber_specialty": {
+      "met": true,
+      "evidence": "Prescribed by Dr. Amanda Liu, Pediatric Neurologist specializing in neuromuscular disorders"
+    },
+    "no_permanent_ventilator": {
+      "met": true,
+      "evidence": "Uses nocturnal BiPAP only. Not on permanent ventilator."
+    },
+    "no_prior_gene_therapy": {
+      "met": false,
+      "evidence": "RECEIVED Zolgensma (onasemnogene abeparvovec-xioi) at age 11 months. Both 2024 and 2025 Spinraza policies exclude patients who have previously received gene therapy for SMA.",
+      "impact_on_2024_policy": "FAILS — 2024 policy criterion NO_GENE_THERAPY (is_required: true) excludes prior gene therapy recipients.",
+      "impact_on_2025_policy": "FAILS — 2025 policy criterion NO_PRIOR_GENE_THERAPY (is_required: true) + EXCL_GENE_THERAPY exclusion both exclude prior gene therapy recipients."
+    },
+    "no_concurrent_risdiplam": {
+      "met": true,
+      "evidence": "Not currently on risdiplam"
+    },
+    "not_in_clinical_trial": {
+      "met": true,
+      "evidence": "Not enrolled in a clinical trial"
+    }
+  },
+
+  "overall_pa_readiness": {
+    "status": "DENIED_BOTH_VERSIONS",
+    "blocking_issues": [
+      "Prior gene therapy (Zolgensma) — excluded under both 2024 and 2025 Spinraza policies"
+    ],
+    "criteria_met_count_2024": 8,
+    "criteria_total_count_2024": 9,
+    "criteria_met_count_2025": 8,
+    "criteria_total_count_2025": 9,
+    "policy_version_impact": {
+      "qualifies_under_2024": false,
+      "qualifies_under_2025": false,
+      "blocking_criterion_both_versions": "NO_GENE_THERAPY (2024) / NO_PRIOR_GENE_THERAPY + EXCL_GENE_THERAPY (2025) — Both policy versions exclude patients who have previously received gene therapy for SMA. The exclusion criterion IDs changed between versions but the clinical requirement is identical.",
+      "clinical_significance": "Aiden represents a growing population of SMA patients who received gene therapy as infants but are experiencing waning therapeutic effect. Anti-AAV9 antibodies preclude Zolgensma re-dosing. The gene therapy exclusion in the Spinraza policy creates a treatment gap — these patients may have no approved option for further SMN-augmenting therapy under current payer policies. Emerging data from the RESPOND trial suggests nusinersen can provide benefit in post-gene-therapy patients, but payer policies have not yet adapted.",
+      "potential_appeal_basis": "Strong medical necessity appeal: (1) RESPOND trial data showing nusinersen benefit in post-gene-therapy SMA patients, (2) Documented motor function decline (HFMSE 24→18) despite prior Zolgensma, (3) Anti-AAV9 antibodies preclude gene therapy re-dosing — Spinraza is the only remaining SMN-augmenting therapy, (4) Different mechanisms of action (antisense oligonucleotide vs. gene replacement) support complementary use, (5) Risdiplam (Evrysdi) as alternative if Spinraza denied — but parents prefer intrathecal approach based on published efficacy data."
+    }
+  }
+}

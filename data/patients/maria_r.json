@@ -1,0 +1,458 @@
+{
+  "patient_id": "maria_r",
+  "extraction_metadata": {
+    "extracted_from": [
+      "01_Prior_Auth_Request_Form.pdf",
+      "02_Laboratory_Results.pdf",
+      "03_Colonoscopy_Report.pdf",
+      "04_MRI_Pelvis_Report.pdf",
+      "05_Clinical_Summary.pdf"
+    ],
+    "extraction_date": "2026-01-25",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Maria",
+    "last_name": "Rodriguez",
+    "date_of_birth": "1988-05-22",
+    "age": 36,
+    "gender": "Female",
+    "ethnicity": "Hispanic",
+    "address": {
+      "street": "2847 Maple Creek Drive",
+      "city": "Dallas",
+      "state": "TX",
+      "zip": "75201"
+    },
+    "phone": "214-555-0198",
+    "mrn": "MARIA_R",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "Cigna",
+      "payer_id": "CIGNA",
+      "plan_name": "Cigna PPO Plus",
+      "plan_type": "PPO",
+      "member_id": "CIG789456123",
+      "group_number": "TX-PPO-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. James Wilson",
+    "credentials": "MD, FACG",
+    "npi": "1234567890",
+    "specialty": "Gastroenterology",
+    "practice_name": "Dallas Digestive Disease Associates",
+    "address": {
+      "street": "3500 Gaston Avenue, Suite 450",
+      "city": "Dallas",
+      "state": "TX",
+      "zip": "75246"
+    },
+    "phone": "214-555-0100",
+    "fax": "214-555-0101",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Infliximab",
+    "brand_name": "Inflectra",
+    "generic_name": "infliximab-dyyb",
+    "j_code": "Q5103",
+    "product_type": "preferred_biosimilar",
+    "dose": "5mg/kg",
+    "route": "Intravenous infusion",
+    "frequency": {
+      "induction": "Weeks 0, 2, 6",
+      "maintenance": "Every 8 weeks"
+    },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "4 infusions",
+    "site_of_care": "Outpatient infusion center",
+    "start_date_requested": "2026-01-15",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "K50.913",
+      "description": "Crohn's disease, unspecified, with fistula",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "K60.3",
+      "description": "Anal fistula",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf",
+      "coding_note": "Source document listed K60.30 which is invalid; corrected to K60.3 per ICD-10-CM"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "D50.9",
+      "description": "Iron deficiency anemia, unspecified",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2024-10-18",
+    "cdai_score": 378,
+    "cdai_interpretation": "Moderate-to-severe active disease (CDAI 220-450)",
+    "ses_cd_score": 18,
+    "ses_cd_interpretation": "Moderate-to-severe endoscopic activity",
+    "harvey_bradshaw_index": 12,
+    "hbi_interpretation": "Moderate disease activity (HBI 8-16)",
+    "disease_severity": "moderate_to_severe",
+    "disease_phenotype": "fistulizing",
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "05_Clinical_Summary.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Worsening abdominal pain, bloody diarrhea 6-8x daily, perianal drainage and discomfort",
+    "history_of_present_illness": "36-year-old Hispanic female with known moderate-to-severe Crohn's disease diagnosed February 2023, now presenting with progressive disease activity despite conventional therapy. Patient reports 6-8 loose stools daily, often with visible blood, moderate to severe cramping abdominal pain primarily in RLQ, and significant fatigue affecting work performance. Developed perianal fistula in August 2024 confirmed by MRI, with persistent drainage causing significant distress. Two ED visits in past 45 days for severe symptoms requiring IV hydration. Failed multiple steroid tapers with disease flare upon reduction below 20mg prednisone. Azathioprine discontinued after 6 weeks due to severe intolerance (hepatotoxicity). Mesalamine provided inadequate response at maximum dose.",
+    "er_visits_recent": {
+      "count": 2,
+      "timeframe": "45 days",
+      "reason": "Severe symptoms requiring IV hydration"
+    },
+    "concurrent_biologic_therapy": {
+      "status": "none",
+      "statement": "Patient is not currently receiving any biologic, biosimilar, or targeted synthetic small molecule therapy. No concurrent biologic or JAK inhibitor use.",
+      "last_reviewed": "2024-10-18",
+      "source_document": "05_Clinical_Summary.pdf"
+    },
+    "source_document": "05_Clinical_Summary.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Mesalamine",
+      "brand_name": "Pentasa",
+      "drug_class": "5-ASA",
+      "dose": "1g QID (4g total daily)",
+      "start_date": "2023-02-15",
+      "end_date": "2023-08-01",
+      "duration_weeks": 24,
+      "outcome": "inadequate_response",
+      "outcome_description": "Inadequate response for moderate-to-severe Crohn's disease. Patient had persistent symptoms despite 6 months at maximum FDA-approved dose.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Prednisone",
+      "drug_class": "Corticosteroid",
+      "dose": "40mg initially, multiple taper attempts",
+      "start_date": "2023-03-01",
+      "end_date": "2024-06-15",
+      "duration_weeks": 67,
+      "outcome": "steroid_dependent",
+      "outcome_description": "Steroid-dependent disease confirmed after 4 failed taper attempts. Disease activity returns at doses below 20mg prednisone.",
+      "taper_attempts": 4,
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Azathioprine",
+      "brand_name": "Imuran",
+      "drug_class": "Thiopurine immunomodulator",
+      "dose": "100mg (1.7mg/kg)",
+      "start_date": "2023-08-01",
+      "end_date": "2023-09-15",
+      "duration_weeks": 6,
+      "outcome": "intolerance",
+      "outcome_description": "Severe intolerance within 6 weeks of initiation. Patient developed intractable nausea and vomiting, followed by hepatotoxicity with ALT elevated to 3x upper limit of normal.",
+      "adverse_event": {
+        "type": "hepatotoxicity",
+        "details": "ALT 3x ULN",
+        "severity": "severe"
+      },
+      "adequate_trial": false,
+      "reason_inadequate": "discontinued_due_to_adverse_event",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2024-10-15",
+    "accession_number": "26025-200019",
+    "ordering_provider": "Dr. James Wilson",
+    "facility": "Clinical Laboratory Services",
+    "facility_clia": "45D0987654",
+    "report_status": "FINAL",
+    "source_document": "02_Laboratory_Results.pdf",
+
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count (CBC)",
+        "results": [
+          {"test": "WBC", "value": 11.2, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": "H"},
+          {"test": "RBC", "value": 3.8, "unit": "x10^12/L", "reference_range": "4.0-5.5", "flag": "L"},
+          {"test": "Hemoglobin", "value": 10.2, "unit": "g/dL", "reference_range": "12.0-16.0", "flag": "L"},
+          {"test": "Hematocrit", "value": 31.5, "unit": "%", "reference_range": "36-46", "flag": "L"},
+          {"test": "MCV", "value": 76, "unit": "fL", "reference_range": "80-100", "flag": "L"},
+          {"test": "MCH", "value": 26.8, "unit": "pg", "reference_range": "27-33", "flag": "L"},
+          {"test": "Platelets", "value": 425, "unit": "x10^9/L", "reference_range": "150-400", "flag": "H"}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel (CMP)",
+        "results": [
+          {"test": "Sodium", "value": 138, "unit": "mEq/L", "reference_range": "136-145", "flag": null},
+          {"test": "Potassium", "value": 3.6, "unit": "mEq/L", "reference_range": "3.5-5.0", "flag": null},
+          {"test": "Chloride", "value": 102, "unit": "mEq/L", "reference_range": "98-106", "flag": null},
+          {"test": "CO2", "value": 24, "unit": "mEq/L", "reference_range": "23-29", "flag": null},
+          {"test": "BUN", "value": 18, "unit": "mg/dL", "reference_range": "7-20", "flag": null},
+          {"test": "Creatinine", "value": 0.8, "unit": "mg/dL", "reference_range": "0.6-1.2", "flag": null},
+          {"test": "Glucose", "value": 92, "unit": "mg/dL", "reference_range": "70-100", "flag": null},
+          {"test": "Calcium", "value": 8.8, "unit": "mg/dL", "reference_range": "8.5-10.5", "flag": null},
+          {"test": "Total Protein", "value": 6.2, "unit": "g/dL", "reference_range": "6.0-8.3", "flag": null},
+          {"test": "Albumin", "value": 3.1, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": "L"},
+          {"test": "Total Bilirubin", "value": 0.6, "unit": "mg/dL", "reference_range": "0.1-1.2", "flag": null},
+          {"test": "Alkaline Phosphatase", "value": 72, "unit": "U/L", "reference_range": "44-147", "flag": null},
+          {"test": "AST", "value": 24, "unit": "U/L", "reference_range": "10-40", "flag": null},
+          {"test": "ALT", "value": 28, "unit": "U/L", "reference_range": "7-56", "flag": null}
+        ]
+      },
+      "inflammatory_markers": {
+        "panel_name": "Inflammatory Markers",
+        "results": [
+          {"test": "CRP", "value": 28, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 42, "unit": "mm/hr", "reference_range": "0-20", "flag": "H"}
+        ]
+      },
+      "gi_markers": {
+        "panel_name": "GI-Specific Markers",
+        "results": [
+          {"test": "Fecal Calprotectin", "value": ">800", "unit": "ug/g", "reference_range": "<50", "flag": "H"}
+        ]
+      },
+      "iron_studies": {
+        "panel_name": "Iron Studies",
+        "results": [
+          {"test": "Iron", "value": 35, "unit": "ug/dL", "reference_range": "60-170", "flag": "L"},
+          {"test": "TIBC", "value": 420, "unit": "ug/dL", "reference_range": "250-370", "flag": "H"},
+          {"test": "Ferritin", "value": 12, "unit": "ng/mL", "reference_range": "12-150", "flag": "L", "interpretation_note": "At lower limit of reference; in setting of active inflammation (CRP 28), represents functional iron deficiency as ferritin is an acute phase reactant"},
+          {"test": "Transferrin Saturation", "value": 8, "unit": "%", "reference_range": "20-50", "flag": "L"}
+        ],
+        "clinical_interpretation": "Classic iron deficiency anemia pattern: low iron, elevated TIBC, low transferrin saturation. Ferritin at lower limit despite inflammation indicates true iron deficiency."
+      }
+    },
+
+    "interpretation": "Results demonstrate active inflammatory bowel disease with elevated inflammatory markers. Pre-biologic screening incomplete - TB and/or Hepatitis B screening required prior to biologic initiation."
+  },
+
+  "procedures": {
+    "colonoscopy": {
+      "procedure_name": "Colonoscopy with Ileoscopy and Biopsy",
+      "procedure_date": "2024-09-28",
+      "accession_number": "ENDO260256586",
+      "facility": "Dallas Digestive Endoscopy Center",
+      "performed_by": "Dr. James Wilson, MD, FACG",
+      "indication": "Crohn's disease - assessment of disease activity and extent",
+      "sedation": "Propofol sedation",
+      "source_document": "03_Colonoscopy_Report.pdf",
+
+      "findings": {
+        "terminal_ileum": {
+          "description": "Severe inflammation with deep linear and serpiginous ulcerations, cobblestoning of mucosa, luminal narrowing without obstruction",
+          "severity": "severe",
+          "mucosal_involvement": "70%"
+        },
+        "cecum": {
+          "description": "Moderate inflammation with scattered aphthous ulcers and erythema",
+          "severity": "moderate"
+        },
+        "ascending_colon": {
+          "description": "Moderate to severe inflammation with skip lesions, multiple deep ulcerations, friable mucosa with contact bleeding",
+          "severity": "moderate_to_severe"
+        },
+        "transverse_colon": {
+          "description": "Mild patchy inflammation, edematous mucosa",
+          "severity": "mild"
+        },
+        "descending_colon": {
+          "description": "Normal appearing mucosa - skip pattern confirmed",
+          "severity": "normal"
+        },
+        "sigmoid_colon": {
+          "description": "Normal",
+          "severity": "normal"
+        },
+        "rectum": {
+          "description": "Mild inflammation near dentate line, perianal fistula opening visualized",
+          "severity": "mild",
+          "fistula_observed": true
+        }
+      },
+
+      "endoscopic_score": {
+        "score_type": "SES-CD",
+        "score_value": 18,
+        "interpretation": "moderate-to-severe endoscopic activity"
+      },
+
+      "biopsies": [
+        {"location": "Terminal ileum", "specimens": 4},
+        {"location": "Ascending colon", "specimens": 4},
+        {"location": "Transverse colon", "specimens": 2}
+      ],
+
+      "pathology": {
+        "report_date": "2024-10-02",
+        "pathologist": "Dr. Karen Lee, MD",
+        "microscopic_findings": "Active chronic colitis with crypt architectural distortion, cryptitis, and crypt abscesses. Non-caseating granulomas identified in terminal ileum specimens.",
+        "granulomas_present": true,
+        "granuloma_location": "terminal ileum",
+        "dysplasia": "none",
+        "diagnosis": "Active Crohn's disease involving terminal ileum and colon"
+      },
+
+      "impression": "Escalation to biologic therapy recommended given disease severity and conventional therapy failure"
+    },
+
+    "mri_pelvis": {
+      "procedure_name": "MRI Pelvis with and without contrast",
+      "procedure_date": "2024-10-05",
+      "accession_number": "MR2602544255",
+      "facility": "Dallas Medical Center",
+      "performed_by": "Dr. Michael Chen, MD - Radiology",
+      "ordering_provider": "Dr. James Wilson",
+      "indication": "Evaluate perianal fistula",
+      "technique": "T1, T2, STIR sequences, post-gadolinium T1 fat-sat",
+      "comparison": "No prior pelvic MRI available for comparison",
+      "source_document": "04_MRI_Pelvis_Report.pdf",
+
+      "findings": {
+        "fistula_classification": {
+          "system": "Parks Classification",
+          "type": "Intersphincteric fistula"
+        },
+        "primary_tract": {
+          "description": "Single fistula tract originating at dentate line (6 o'clock position), traversing intersphincteric plane",
+          "location": "6 o'clock",
+          "plane": "intersphincteric"
+        },
+        "external_opening": {
+          "description": "Single external opening 2.5 cm from anal verge, perianal skin",
+          "distance_from_anal_verge": "2.5 cm"
+        },
+        "secondary_tracts": "None identified",
+        "abscess": {
+          "present": false,
+          "description": "No abscess collection identified"
+        },
+        "sphincter_involvement": {
+          "internal_sphincter": "involved",
+          "external_sphincter": "intact"
+        },
+        "rectal_wall": "Mild wall thickening in distal rectum"
+      },
+
+      "impression": "Simple intersphincteric perianal fistula associated with Crohn's disease. No abscess. External sphincter intact.",
+      "recommendation": "Clinical correlation. Consider biologic therapy for fistulizing Crohn's disease. Surgical consultation if persistent despite medical therapy."
+    }
+  },
+
+  "pre_biologic_screening": {
+    "status": "INCOMPLETE",
+    "source_document": "02_Laboratory_Results.pdf",
+
+    "tuberculosis_screening": {
+      "status": "NOT_FOUND",
+      "required_tests": ["QuantiFERON-TB Gold", "T-SPOT.TB", "PPD with chest X-ray"],
+      "documentation_available": false
+    },
+
+    "hepatitis_b_screening": {
+      "status": "NOT_FOUND",
+      "required_tests": ["HBsAg", "anti-HBc", "anti-HBs"],
+      "documentation_available": false
+    },
+
+    "hepatitis_c_screening": {
+      "status": "NOT_FOUND",
+      "required_tests": ["HCV Antibody"],
+      "documentation_available": false,
+      "note": "Not explicitly listed as missing in source documents; inferred as required for pre-biologic screening per standard protocol"
+    }
+  },
+
+  "documentation_gaps": [
+    {
+      "gap_id": "GAP-001",
+      "gap_type": "pre_biologic_screening",
+      "description": "Tuberculosis (TB) screening result not attached to submission",
+      "required_by_policy": true,
+      "payers_requiring": ["Cigna", "UHC"],
+      "impact": "PA_CANNOT_BE_APPROVED",
+      "resolution_action": "Submit QuantiFERON-TB Gold or equivalent TB screening result",
+      "source_document": "05_Clinical_Summary.pdf"
+    },
+    {
+      "gap_id": "GAP-002",
+      "gap_type": "pre_biologic_screening",
+      "description": "Hepatitis B screening panel not attached to submission",
+      "required_by_policy": true,
+      "payers_requiring": ["Cigna", "UHC"],
+      "impact": "PA_CANNOT_BE_APPROVED",
+      "resolution_action": "Submit complete Hepatitis B panel (HBsAg, anti-HBc, anti-HBs)",
+      "source_document": "05_Clinical_Summary.pdf"
+    }
+  ],
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": {
+      "met": true,
+      "evidence": "ICD-10 K50.913 documented on PA form; colonoscopy confirms active Crohn's disease with granulomas",
+      "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf"]
+    },
+    "disease_severity_documented": {
+      "met": true,
+      "evidence": "CDAI 378, SES-CD 18 - both indicate moderate-to-severe disease",
+      "source_documents": ["01_Prior_Auth_Request_Form.pdf", "05_Clinical_Summary.pdf"]
+    },
+    "conventional_therapy_failed": {
+      "met": true,
+      "therapies_tried": [
+        {"medication": "Mesalamine", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Prednisone", "outcome": "steroid_dependent", "duration_adequate": true},
+        {"medication": "Azathioprine", "outcome": "intolerance", "duration_adequate": false, "reason": "hepatotoxicity"}
+      ],
+      "source_documents": ["01_Prior_Auth_Request_Form.pdf"]
+    },
+    "step_therapy_satisfied": {
+      "met": true,
+      "evidence": "Failed 5-ASA (24 weeks), corticosteroids (67 weeks, steroid-dependent), immunomodulator (intolerance)",
+      "source_documents": ["01_Prior_Auth_Request_Form.pdf"]
+    },
+    "pre_biologic_screening_complete": {
+      "met": false,
+      "missing": ["TB screening", "Hepatitis B panel"],
+      "source_documents": ["02_Laboratory_Results.pdf", "05_Clinical_Summary.pdf"]
+    },
+    "fda_approved_indication": {
+      "met": true,
+      "indication": "Moderate-to-severe Crohn's disease with fistulizing disease",
+      "source_documents": ["01_Prior_Auth_Request_Form.pdf"]
+    }
+  },
+
+  "overall_pa_readiness": {
+    "status": "PENDING_DOCUMENTATION",
+    "blocking_issues": [
+      "TB screening not documented",
+      "Hepatitis B screening not documented"
+    ],
+    "criteria_met_if_docs_provided": true,
+    "recommendation": "Request TB and Hepatitis B screening results from provider before PA can be approved"
+  }
+}

@@ -1,0 +1,394 @@
+{
+  "patient_id": "david_c",
+  "extraction_metadata": {
+    "extracted_from": [
+      "01_Prior_Auth_Request_Form.pdf",
+      "02_Laboratory_Results.pdf",
+      "03_Colonoscopy_Report.pdf"
+    ],
+    "extraction_date": "2026-01-25",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "David",
+    "last_name": "Chen",
+    "date_of_birth": "1985-08-14",
+    "age": 39,
+    "gender": "Male",
+    "address": {
+      "street": "1542 Riverside Drive",
+      "city": "Houston",
+      "state": "TX",
+      "zip": "77002"
+    },
+    "phone": "713-555-0234",
+    "mrn": "DAVID_C",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "Cigna",
+      "payer_id": "CIGNA",
+      "plan_name": "Cigna HMO-POS",
+      "plan_type": "HMO-POS",
+      "member_id": "CIG123789456",
+      "group_number": "TX-OAP-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Michelle Park",
+    "credentials": "MD, FACG",
+    "npi": "1654321987",
+    "specialty": "Gastroenterology",
+    "practice_name": "Houston Gastroenterology Associates",
+    "address": {
+      "street": "6550 Fannin Street, Suite 1800",
+      "city": "Houston",
+      "state": "TX",
+      "zip": "77030"
+    },
+    "phone": "713-555-0100",
+    "fax": "713-555-0101",
+    "tax_id": "XX-XXX1195",
+    "dea": "XX9597672",
+    "contact": "Clinical Coordinator",
+    "contact_email": "pacoordinator@gastrocare.com",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Infliximab",
+    "brand_name": "Inflectra",
+    "medication_type": "biosimilar",
+    "j_code": "Q5103",
+    "dose": "5mg/kg",
+    "route": "Intravenous infusion",
+    "frequency": {
+      "induction": "Weeks 0, 2, 6",
+      "maintenance": "Every 8 weeks"
+    },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "4 infusions",
+    "site_of_care": "Outpatient infusion center",
+    "start_date_requested": "2026-01-01",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "K50.10",
+      "description": "Crohn's disease of large intestine without complications",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2024-09-15",
+    "cdai_score": 265,
+    "cdai_interpretation": "Moderate active disease (CDAI 220-450)",
+    "ses_cd_score": 12,
+    "ses_cd_interpretation": "Moderate endoscopic activity",
+    "disease_severity": "moderate_to_severe",
+    "disease_phenotype": "inflammatory_colonic",
+    "disease_location": "Large intestine (transverse and descending colon)",
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Persistent moderate Crohn's disease despite 12 months of optimized immunomodulator therapy",
+    "history_of_present_illness": "39-year-old male with moderate-to-severe Crohn's disease (CDAI 265, SES-CD 12) who has failed an adequate trial of conventional therapy. Treatment history demonstrates conventional therapy failure: (1) Budesonide 9mg x 13 weeks - partial response, unable to taper; (2) Prednisone 40mg x 24 weeks - steroid-dependent with multiple taper failures; (3) Azathioprine 150mg x 52 weeks (12 months) - inadequate response despite therapeutic 6-TGN levels of 285 pmol. Patient has completed the required trial of thiopurine immunomodulator therapy per ACG guidelines, with documented therapeutic drug levels confirming adequate drug exposure. Despite 12 months of optimized azathioprine therapy, disease activity has persisted with CDAI >220 and moderate endoscopic inflammation.",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Budesonide",
+      "brand_name": "Entocort EC",
+      "drug_class": "Corticosteroid (local)",
+      "dose": "9mg daily",
+      "start_date": "2022-06-15",
+      "end_date": "2022-09-15",
+      "duration_weeks": 13,
+      "outcome": "partial_response",
+      "outcome_description": "Partial response to budesonide, but unable to taper without disease flare",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Prednisone",
+      "drug_class": "Corticosteroid (systemic)",
+      "dose": "40mg taper",
+      "start_date": "2023-01-15",
+      "end_date": "2023-06-30",
+      "duration_weeks": 24,
+      "outcome": "steroid_dependent",
+      "outcome_description": "Steroid-dependent disease with multiple taper failures. Disease activity returns upon dose reduction.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Azathioprine",
+      "brand_name": "Imuran",
+      "drug_class": "Thiopurine immunomodulator",
+      "dose": "150mg (2mg/kg)",
+      "start_date": "2023-07-01",
+      "end_date": "2024-07-01",
+      "duration_weeks": 52,
+      "outcome": "inadequate_response",
+      "outcome_description": "Inadequate response despite 12 months of optimized therapy with therapeutic 6-TGN levels (285 pmol). Disease activity persisted with CDAI >220 and moderate endoscopic inflammation.",
+      "therapeutic_drug_monitoring": {
+        "tpmt_genotype": "*1/*1 (Wild type)",
+        "6_tgn_level": 285,
+        "6_tgn_unit": "pmol/8x10^8 RBC",
+        "6_tgn_therapeutic_range": "235-450",
+        "6_tgn_interpretation": "Therapeutic - confirms adequate drug exposure",
+        "6_mmp_level": 3200,
+        "6_mmp_unit": "pmol/8x10^8 RBC",
+        "6_mmp_reference": "<5700"
+      },
+      "adequate_trial": true,
+      "acg_guideline_compliant": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2024-10-10",
+    "accession_number": "26025-141317",
+    "ordering_provider": "Dr. Michelle Park",
+    "facility": "Clinical Laboratory Services",
+    "facility_address": "3500 Gaston Avenue, Dallas, TX 75246",
+    "facility_clia": "45D0987654",
+    "facility_cap": "7654321-01",
+    "report_status": "FINAL",
+    "source_document": "02_Laboratory_Results.pdf",
+
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count (CBC)",
+        "results": [
+          {"test": "WBC", "value": 8.2, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "RBC", "value": 4.6, "unit": "x10^12/L", "reference_range": "4.5-5.5", "flag": null},
+          {"test": "Hemoglobin", "value": 13.2, "unit": "g/dL", "reference_range": "13.5-17.5", "flag": "L"},
+          {"test": "Hematocrit", "value": 40.1, "unit": "%", "reference_range": "38.8-50", "flag": null},
+          {"test": "MCV", "value": 87, "unit": "fL", "reference_range": "80-100", "flag": null},
+          {"test": "MCH", "value": 28.7, "unit": "pg", "reference_range": "27-33", "flag": null},
+          {"test": "Platelets", "value": 285, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel (CMP)",
+        "results": [
+          {"test": "Sodium", "value": 140, "unit": "mEq/L", "reference_range": "136-145", "flag": null},
+          {"test": "Potassium", "value": 4.2, "unit": "mEq/L", "reference_range": "3.5-5.0", "flag": null},
+          {"test": "Chloride", "value": 101, "unit": "mEq/L", "reference_range": "98-106", "flag": null},
+          {"test": "CO2", "value": 25, "unit": "mEq/L", "reference_range": "23-29", "flag": null},
+          {"test": "BUN", "value": 15, "unit": "mg/dL", "reference_range": "7-20", "flag": null},
+          {"test": "Creatinine", "value": 1.0, "unit": "mg/dL", "reference_range": "0.7-1.3", "flag": null},
+          {"test": "Glucose", "value": 95, "unit": "mg/dL", "reference_range": "70-100", "flag": null},
+          {"test": "Calcium", "value": 9.4, "unit": "mg/dL", "reference_range": "8.5-10.5", "flag": null},
+          {"test": "Total Protein", "value": 7.0, "unit": "g/dL", "reference_range": "6.0-8.3", "flag": null},
+          {"test": "Albumin", "value": 3.8, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": null},
+          {"test": "Total Bilirubin", "value": 0.8, "unit": "mg/dL", "reference_range": "0.1-1.2", "flag": null},
+          {"test": "Alkaline Phosphatase", "value": 68, "unit": "U/L", "reference_range": "44-147", "flag": null},
+          {"test": "AST", "value": 22, "unit": "U/L", "reference_range": "10-40", "flag": null},
+          {"test": "ALT", "value": 25, "unit": "U/L", "reference_range": "7-56", "flag": null}
+        ]
+      },
+      "inflammatory_markers": {
+        "panel_name": "Inflammatory Markers",
+        "results": [
+          {"test": "CRP", "value": 18, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 28, "unit": "mm/hr", "reference_range": "0-15", "flag": "H"}
+        ]
+      },
+      "gi_markers": {
+        "panel_name": "GI-Specific Markers",
+        "results": [
+          {"test": "Fecal Calprotectin", "value": 450, "unit": "ug/g", "reference_range": "<50", "flag": "H"}
+        ]
+      },
+      "thiopurine_monitoring": {
+        "panel_name": "Thiopurine Monitoring",
+        "results": [
+          {"test": "TPMT Genotype", "value": "*1/*1", "interpretation": "Wild type - normal metabolism"},
+          {"test": "6-TGN", "value": 285, "unit": "pmol/8x10^8 RBC", "reference_range": "235-450 (therapeutic)", "flag": null},
+          {"test": "6-MMP", "value": 3200, "unit": "pmol/8x10^8 RBC", "reference_range": "<5700", "flag": null}
+        ],
+        "interpretation": "Patient has achieved therapeutic 6-TGN levels, confirming adequate azathioprine exposure. Despite therapeutic drug levels, disease remains active, supporting escalation to biologic therapy."
+      }
+    },
+
+    "interpretation": "Results demonstrate active inflammatory bowel disease with elevated inflammatory markers (CRP 18, ESR 28, fecal calprotectin 450). Mild anemia present (Hgb 13.2). Thiopurine monitoring confirms therapeutic drug levels despite inadequate disease control. Pre-biologic screening complete and cleared."
+  },
+
+  "procedures": {
+    "colonoscopy": {
+      "procedure_name": "Colonoscopy with Biopsy",
+      "procedure_date": "2024-09-15",
+      "procedure_time": "09:30 - 10:15 AM",
+      "accession_number": "ENDO260253308",
+      "facility": "Houston Gastroenterology Center",
+      "facility_address": "3500 Gaston Avenue, Suite 450, Dallas, TX 75246",
+      "performed_by": "Dr. Michelle Park, MD, FACG",
+      "referring_md": "Dr. Michelle Park",
+      "asa_class": "II",
+      "indication": "Crohn's disease surveillance and assessment of disease activity on current therapy",
+      "sedation": "Moderate sedation (midazolam/fentanyl)",
+      "source_document": "03_Colonoscopy_Report.pdf",
+
+      "findings": {
+        "terminal_ileum": {
+          "description": "Normal appearing mucosa, no ulceration or inflammation",
+          "severity": "normal"
+        },
+        "cecum": {
+          "description": "Normal",
+          "severity": "normal"
+        },
+        "ascending_colon": {
+          "description": "Mild patchy erythema",
+          "severity": "mild"
+        },
+        "transverse_colon": {
+          "description": "Moderate inflammation with scattered aphthous ulcers, edematous mucosa, loss of vascular pattern",
+          "severity": "moderate"
+        },
+        "descending_colon": {
+          "description": "Moderate inflammation with linear ulcerations, contact bleeding, skip areas of normal mucosa",
+          "severity": "moderate"
+        },
+        "sigmoid_colon": {
+          "description": "Mild patchy erythema",
+          "severity": "mild"
+        },
+        "rectum": {
+          "description": "Normal",
+          "severity": "normal"
+        }
+      },
+
+      "endoscopic_score": {
+        "score_type": "SES-CD",
+        "score_value": 12,
+        "interpretation": "moderate endoscopic activity"
+      },
+
+      "biopsies": [
+        {"location": "Transverse colon", "type": "Biopsy", "specimens": 4, "container": "#1"},
+        {"location": "Descending colon", "type": "Biopsy", "specimens": 4, "container": "#2"}
+      ],
+
+      "pathology": {
+        "pathologist": "Dr. Robert Kim, MD",
+        "report_date": "2024-09-19",
+        "microscopic_findings": "Active chronic colitis with crypt architectural distortion, cryptitis, and focal crypt abscesses. Non-caseating granulomas present.",
+        "granulomas_present": true,
+        "diagnosis": "Active Crohn's disease, transverse and descending colon"
+      },
+
+      "impression": "Persistent moderate disease activity despite 12-month adequate trial of azathioprine with therapeutic drug levels. Recommend escalation to biologic therapy (TNF inhibitor)."
+    }
+  },
+
+  "pre_biologic_screening": {
+    "status": "COMPLETE",
+    "source_document": "02_Laboratory_Results.pdf",
+    "clearance_summary": "Pre-biologic screening complete. No contraindication to biologic therapy from infectious disease standpoint. Patient cleared for TNF-alpha inhibitor initiation.",
+
+    "tuberculosis_screening": {
+      "status": "COMPLETE",
+      "test_performed": "QuantiFERON-TB Gold Plus",
+      "result": "Negative",
+      "interpretation": "TB screening complete and negative. Patient cleared to initiate TNF inhibitor therapy.",
+      "cleared_for_biologic": true
+    },
+
+    "hepatitis_b_screening": {
+      "status": "COMPLETE",
+      "results": [
+        {"test": "Hepatitis B Surface Antigen (HBsAg)", "result": "Non-reactive"},
+        {"test": "Hepatitis B Core Antibody (anti-HBc)", "result": "Non-reactive"},
+        {"test": "Hepatitis B Surface Antibody (anti-HBs)", "result": ">100", "unit": "mIU/mL", "reference": ">10 (immune)"}
+      ],
+      "interpretation": "Hepatitis B screening complete. Patient is HBV negative with immunity from prior vaccination.",
+      "immune_status": "immune_from_vaccination",
+      "cleared_for_biologic": true
+    },
+
+    "hepatitis_c_screening": {
+      "status": "COMPLETE",
+      "test_performed": "Hepatitis C Antibody",
+      "result": "Non-reactive",
+      "cleared_for_biologic": true
+    }
+  },
+
+  "documentation_gaps": [],
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": {
+      "met": true,
+      "evidence": "ICD-10 K50.10 documented on PA form; colonoscopy confirms active Crohn's disease with non-caseating granulomas in transverse and descending colon",
+      "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf"]
+    },
+    "disease_severity_documented": {
+      "met": true,
+      "evidence": "CDAI 265, SES-CD 12 - both indicate moderate active disease requiring biologic escalation",
+      "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf"]
+    },
+    "conventional_therapy_failed": {
+      "met": true,
+      "therapies_tried": [
+        {"medication": "Budesonide", "outcome": "partial_response", "duration_adequate": true},
+        {"medication": "Prednisone", "outcome": "steroid_dependent", "duration_adequate": true},
+        {"medication": "Azathioprine", "outcome": "inadequate_response", "duration_adequate": true, "therapeutic_drug_monitoring": "6-TGN 285 pmol (therapeutic)"}
+      ],
+      "source_documents": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf"]
+    },
+    "step_therapy_satisfied": {
+      "met": true,
+      "evidence": "Failed corticosteroids (budesonide 13 weeks, prednisone 24 weeks - steroid-dependent), immunomodulator (azathioprine 52 weeks with therapeutic 6-TGN levels). Meets ACG guideline criteria for biologic escalation.",
+      "acg_guideline_compliant": true,
+      "source_documents": ["01_Prior_Auth_Request_Form.pdf"]
+    },
+    "pre_biologic_screening_complete": {
+      "met": true,
+      "tb_screening": "Negative (QuantiFERON-TB Gold Plus)",
+      "hepatitis_b": "Immune from vaccination (HBsAg negative, anti-HBs >100)",
+      "hepatitis_c": "Non-reactive",
+      "source_documents": ["02_Laboratory_Results.pdf"]
+    },
+    "fda_approved_indication": {
+      "met": true,
+      "indication": "Moderate-to-severe Crohn's disease in adults who have had inadequate response to conventional therapy",
+      "source_documents": ["01_Prior_Auth_Request_Form.pdf"]
+    },
+    "therapeutic_drug_monitoring_documented": {
+      "met": true,
+      "evidence": "6-TGN level 285 pmol/8x10^8 RBC (therapeutic range 235-450) confirms adequate azathioprine exposure. Disease activity persists despite therapeutic levels, objectively supporting need for biologic escalation.",
+      "source_documents": ["02_Laboratory_Results.pdf"]
+    }
+  },
+
+  "overall_pa_readiness": {
+    "status": "READY_FOR_SUBMISSION",
+    "blocking_issues": [],
+    "criteria_met": true,
+    "recommendation": "All PA criteria met. Patient has documented moderate Crohn's disease (CDAI 265, SES-CD 12), failed adequate trials of corticosteroids (steroid-dependent) and immunomodulator (52 weeks azathioprine with therapeutic 6-TGN levels), and has completed all required pre-biologic screening (TB negative, Hepatitis B immune, Hepatitis C negative). PA submission can proceed.",
+    "strengths": [
+      "12-month adequate trial of azathioprine per ACG guidelines",
+      "Therapeutic drug monitoring confirms adequate drug exposure (6-TGN 285)",
+      "Complete pre-biologic screening with documented results",
+      "Pathology-confirmed Crohn's disease with non-caseating granulomas",
+      "Clear documentation of steroid dependence",
+      "Objective endoscopic confirmation of moderate disease activity (SES-CD 12)"
+    ]
+  }
+}

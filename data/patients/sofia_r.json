@@ -1,0 +1,219 @@
+{
+  "patient_id": "sofia_r",
+  "extraction_metadata": {
+    "extracted_from": [
+      "01_Prior_Auth_Request_Form.pdf",
+      "02_Newborn_Screening_Report.pdf",
+      "03_Genetic_Testing_Report.pdf",
+      "04_Neurology_Assessment.pdf"
+    ],
+    "extraction_date": "2026-02-01",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Sofia",
+    "last_name": "Reyes",
+    "date_of_birth": "2026-01-15",
+    "age_weeks": 2,
+    "age_days": 17,
+    "gender": "Female",
+    "ethnicity": "Hispanic",
+    "address": {
+      "street": "4521 West Camelback Road",
+      "city": "Phoenix",
+      "state": "AZ",
+      "zip": "85031"
+    },
+    "phone": "602-555-0156",
+    "mrn": "SOFIA_R",
+    "parent_guardian": {
+      "name": "Carlos and Elena Reyes",
+      "relationship": "Parents",
+      "contact_phone": "602-555-0156"
+    },
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "BCBS",
+      "payer_id": "BCBS_FEP",
+      "plan_name": "Blue Cross Blue Shield Federal Employee Program",
+      "plan_type": "PPO",
+      "member_id": "FEP345678912",
+      "group_number": "FEP-FAMILY-2026",
+      "subscriber": "Carlos Reyes",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Michael Torres",
+    "credentials": "MD",
+    "npi": "1432567891",
+    "specialty": "Pediatric Neurology",
+    "subspecialty": "Neuromuscular Disorders",
+    "practice_name": "Phoenix Children's Hospital",
+    "address": {
+      "street": "1919 East Thomas Road",
+      "city": "Phoenix",
+      "state": "AZ",
+      "zip": "85016"
+    },
+    "phone": "602-555-0900",
+    "fax": "602-555-0901",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Nusinersen",
+    "brand_name": "Spinraza",
+    "j_code": "J2326",
+    "dose": "12 mg (5 mL) per intrathecal injection",
+    "route": "Intrathecal injection",
+    "frequency": {
+      "loading": "Day 0, Day 14, Day 28, Day 63",
+      "maintenance": "Once every 4 months"
+    },
+    "duration_requested": "12 months initial authorization (4 loading + 2 maintenance doses)",
+    "quantity_requested": "6 doses",
+    "site_of_care": "Pediatric hospital — intrathecal administration under fluoroscopic guidance",
+    "start_date_requested": "2026-02-15",
+    "urgency": "Urgent — presymptomatic treatment window is critical. Earlier treatment in presymptomatic SMA is associated with significantly better motor outcomes.",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "G12.9",
+      "description": "Spinal muscular atrophy, unspecified",
+      "status": "active",
+      "coding_note": "Presymptomatic — specific SMA type not yet determined. Genetically confirmed carrier of biallelic SMN1 deletion detected via newborn screening.",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-02-01",
+    "sma_type": "Presymptomatic — type not yet determined",
+    "symptom_status": "asymptomatic",
+    "age_at_detection": "Day 5 of life (newborn screening)",
+    "motor_milestone_status": "Age-appropriate — normal muscle tone and reflexes on neurological exam at 3 weeks",
+    "current_motor_function": "Normal for age. Active spontaneous movements, appropriate tone, symmetric reflexes. No fasciculations. Normal suck and swallow.",
+    "chop_intend_score": null,
+    "feeding_status": "Normal breastfeeding",
+    "respiratory_status": "Normal. No respiratory compromise.",
+    "ventilator_dependent": false,
+    "source_documents": ["04_Neurology_Assessment.pdf"]
+  },
+
+  "genetic_testing": {
+    "newborn_screening": {
+      "test_date": "2026-01-20",
+      "screening_program": "Arizona Newborn Screening Program",
+      "result": "POSITIVE for SMA — SMN1 deletion detected",
+      "source_document": "02_Newborn_Screening_Report.pdf"
+    },
+    "confirmatory_testing": {
+      "test_date": "2026-01-28",
+      "laboratory": "Invitae Molecular Genetics Laboratory",
+      "test_name": "SMN1/SMN2 Copy Number Analysis",
+      "methodology": "MLPA (Multiplex Ligation-dependent Probe Amplification)",
+      "source_document": "03_Genetic_Testing_Report.pdf",
+      "results": {
+        "smn1_exon_7_copies": 0,
+        "smn1_mutation_type": "Homozygous deletion of SMN1 exon 7",
+        "smn2_copy_number": 4,
+        "interpretation": "Biallelic SMN1 deletion confirmed. 4 copies of SMN2 detected. Higher SMN2 copy number is generally associated with milder phenotype (SMA Type 3 or Type 4), though clinical correlation is necessary. Presymptomatic treatment is recommended based on genetic diagnosis regardless of predicted phenotype."
+      }
+    },
+    "confirmation": "Diagnosis of SMA confirmed by molecular genetic testing. Patient is presymptomatic at time of diagnosis."
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Presymptomatic SMA detected via newborn screening — urgent request for early treatment initiation",
+    "history_of_present_illness": "3-week-old female born full-term (39 weeks, birth weight 3.2 kg, Apgar 8/9) via uncomplicated vaginal delivery. Arizona newborn screening returned positive for SMA (SMN1 deletion) on day 5 of life. Confirmatory genetic testing confirmed homozygous SMN1 deletion with 4 SMN2 copies. Currently completely asymptomatic with age-appropriate motor milestones. Neurological examination at 3 weeks shows normal tone, reflexes, and spontaneous movements. Pediatric neurologist recommends immediate treatment initiation to preserve motor neurons before symptom onset. Literature strongly supports that presymptomatic treatment leads to significantly better outcomes than waiting for symptom onset.",
+    "family_history": "No known family history of SMA. Both parents confirmed as carriers after proband diagnosis.",
+    "prior_gene_therapy": false,
+    "prior_spinraza": false,
+    "concurrent_risdiplam": false,
+    "clinical_trial_enrollment": false,
+    "source_document": "04_Neurology_Assessment.pdf"
+  },
+
+  "laboratory_results": {
+    "collection_date": "2026-01-30",
+    "source_document": "04_Neurology_Assessment.pdf",
+    "panels": {
+      "baseline_labs": {
+        "panel_name": "Baseline Safety Labs",
+        "results": [
+          {"test": "Platelet Count", "value": 345, "unit": "x10^9/L", "reference_range": "150-400", "flag": null},
+          {"test": "PT/INR", "value": 1.1, "unit": "ratio", "reference_range": "0.8-1.2", "flag": null},
+          {"test": "Urine Protein", "value": "Negative", "flag": null}
+        ]
+      }
+    }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": {
+      "met": true,
+      "evidence": "SMA confirmed by molecular genetic testing — homozygous SMN1 deletion (ICD-10 G12.9)"
+    },
+    "genetic_confirmation": {
+      "met": true,
+      "evidence": "SMN1 homozygous deletion confirmed by MLPA via both newborn screening and confirmatory testing"
+    },
+    "smn2_copy_number_requirement": {
+      "met": false,
+      "evidence": "4 SMN2 copies detected. BOTH 2024 and 2025 policies require asymptomatic patients to have 2-3 SMN2 copies. Sofia has 4 copies and is asymptomatic — DOES NOT MEET the SMN2 copy number requirement under either policy version.",
+      "impact_on_2024_policy": "NOT MET — 2024 policy had ASYMPTOMATIC_SMN2_COPIES criterion in the asymptomatic criterion group requiring 2 to 3 copies of the SMN2 gene for presymptomatic patients. 4 copies exceeds this threshold.",
+      "impact_on_2025_policy": "NOT MET — 2025 policy has SMN2_COPIES_ASYMPTOMATIC criterion requiring 2-3 SMN2 copies for asymptomatic patients. Same clinical restriction as 2024 with updated criterion IDs."
+    },
+    "symptom_status": {
+      "status": "asymptomatic",
+      "evidence": "Presymptomatic — detected via newborn screening. Neurological exam normal at 3 weeks."
+    },
+    "prescriber_specialty": {
+      "met": true,
+      "evidence": "Prescribed by pediatric neurologist specializing in neuromuscular disorders"
+    },
+    "no_permanent_ventilator": {
+      "met": true,
+      "evidence": "Not ventilator-dependent"
+    },
+    "no_prior_gene_therapy": {
+      "met": true,
+      "evidence": "No prior gene therapy"
+    },
+    "no_concurrent_risdiplam": {
+      "met": true,
+      "evidence": "Not on risdiplam"
+    },
+    "not_in_clinical_trial": {
+      "met": true,
+      "evidence": "Not enrolled in clinical trial"
+    }
+  },
+
+  "overall_pa_readiness": {
+    "status": "DENIED_BOTH_VERSIONS",
+    "blocking_issues": [
+      "4 SMN2 copies in asymptomatic patient — exceeds the 2-3 copy limit for presymptomatic patients under BOTH 2024 and 2025 policies"
+    ],
+    "criteria_met_count_2024": 8,
+    "criteria_total_count_2024": 9,
+    "criteria_met_count_2025": 8,
+    "criteria_total_count_2025": 9,
+    "policy_version_impact": {
+      "qualifies_under_2024": false,
+      "qualifies_under_2025": false,
+      "blocking_criterion_both_versions": "ASYMPTOMATIC_SMN2_COPIES (2024) / SMN2_COPIES_ASYMPTOMATIC (2025) — Both policy versions stratify SMN2 copy number requirements by symptom status and require asymptomatic patients to have 2-3 SMN2 copies. Sofia has 4 copies, exceeding the threshold in both versions. The criterion IDs changed between versions but the clinical requirement is identical.",
+      "clinical_significance": "Sofia represents a challenging policy gap for newborn screening programs. She was identified presymptomatically via NBS — the entire purpose of which is early treatment. While 4 SMN2 copies correlate with milder SMA phenotypes (Type 3/4), research (NURTURE trial) shows presymptomatic treatment yields the best outcomes regardless of SMN2 copy number. The policy rationale is that higher SMN2 copy counts predict milder disease that may not benefit as significantly from early intervention, but this 'wait and see' approach contradicts the established benefit of presymptomatic treatment in SMA.",
+      "potential_appeal_basis": "Strong medical necessity appeal: (1) NURTURE trial data showing presymptomatic treatment benefit across all SMN2 copy numbers, (2) SMA Foundation consensus guidelines recommending treatment for all genetically confirmed SMA regardless of copy number, (3) Irreversible motor neuron loss occurs before symptoms appear — denying treatment while waiting for symptom onset causes permanent damage, (4) Risdiplam (Evrysdi) as alternative if Spinraza denied, (5) Genotype-phenotype correlation is imperfect — some patients with 4 SMN2 copies develop SMA Type 2 (intermediate) rather than the predicted milder Type 3."
+    }
+  }
+}

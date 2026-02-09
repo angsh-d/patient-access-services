@@ -1,0 +1,288 @@
+{
+  "patient_id": "sarah_m",
+  "extraction_metadata": {
+    "extracted_from": [
+      "01_Prior_Auth_Request_Form.pdf",
+      "02_Laboratory_Results.pdf",
+      "03_PET_CT_Report.pdf",
+      "04_Bone_Marrow_Biopsy.pdf",
+      "05_Clinical_Summary.pdf"
+    ],
+    "extraction_date": "2026-02-01",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Sarah",
+    "last_name": "Mitchell",
+    "date_of_birth": "1973-08-14",
+    "age": 52,
+    "gender": "Female",
+    "ethnicity": "Caucasian",
+    "address": {
+      "street": "1425 Hawthorne Boulevard",
+      "city": "Portland",
+      "state": "OR",
+      "zip": "97201"
+    },
+    "phone": "503-555-0234",
+    "mrn": "SARAH_M",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "BCBS",
+      "payer_id": "BCBS_FEP",
+      "plan_name": "Blue Cross Blue Shield Federal Employee Program",
+      "plan_type": "PPO",
+      "member_id": "FEP334829176",
+      "group_number": "FEP-STANDARD-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Rachel Nguyen",
+    "credentials": "MD, FACP",
+    "npi": "1987654321",
+    "specialty": "Hematology-Oncology",
+    "practice_name": "Oregon Cancer Institute",
+    "address": {
+      "street": "3181 SW Sam Jackson Park Road",
+      "city": "Portland",
+      "state": "OR",
+      "zip": "97239"
+    },
+    "phone": "503-555-0400",
+    "fax": "503-555-0401",
+    "rems_certified_facility": true,
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Lisocabtagene maraleucel",
+    "brand_name": "Breyanzi",
+    "j_code": "Q2054",
+    "dose": "Single infusion, patient-specific dose",
+    "route": "Intravenous infusion",
+    "frequency": {
+      "regimen": "Single dose — lymphodepleting chemotherapy followed by CAR-T infusion"
+    },
+    "duration_requested": "One-time infusion authorization",
+    "quantity_requested": "1 infusion",
+    "site_of_care": "Certified REMS treatment center",
+    "start_date_requested": "2026-03-01",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "C83.30",
+      "description": "Diffuse large B-cell lymphoma, unspecified site",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "C83.38",
+      "description": "Diffuse large B-cell lymphoma, lymph nodes of multiple sites",
+      "status": "active",
+      "source_document": "03_PET_CT_Report.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-10",
+    "ann_arbor_stage": "IIIB",
+    "ecog_performance_status": 1,
+    "ecog_interpretation": "Restricted in physically strenuous activity but ambulatory",
+    "ipi_score": 3,
+    "ipi_risk_category": "High-intermediate",
+    "disease_status": "relapsed_refractory",
+    "lines_of_therapy_completed": 3,
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "05_Clinical_Summary.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Progressive lymphadenopathy with constitutional symptoms after third-line therapy failure",
+    "history_of_present_illness": "52-year-old female with relapsed/refractory DLBCL. Originally diagnosed March 2024 with Stage IIIB disease. Received first-line R-CHOP (rituximab, cyclophosphamide, doxorubicin, vincristine, prednisone) x6 cycles with initial complete response. Relapsed at 8 months. Received second-line R-ICE (rituximab, ifosfamide, carboplatin, etoposide) x3 cycles — partial response but not eligible for autologous stem cell transplant due to insufficient stem cell mobilization. Third-line gemcitabine/oxaliplatin/rituximab x4 cycles with progressive disease on restaging PET/CT. Now referred for CAR-T cell therapy.",
+    "prior_car_t_therapy": false,
+    "prior_gene_therapy": false,
+    "source_document": "05_Clinical_Summary.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "R-CHOP",
+      "drug_class": "Anthracycline-containing chemoimmunotherapy",
+      "components": ["Rituximab (anti-CD20)", "Cyclophosphamide", "Doxorubicin (anthracycline)", "Vincristine", "Prednisone"],
+      "dose": "Standard dosing per protocol",
+      "start_date": "2024-03-15",
+      "end_date": "2024-08-20",
+      "cycles_completed": 6,
+      "outcome": "complete_response_then_relapsed",
+      "outcome_description": "Achieved complete metabolic response on end-of-treatment PET/CT (Deauville 2). Relapsed at 8 months with new cervical and retroperitoneal lymphadenopathy.",
+      "contains_anti_cd20": true,
+      "contains_anthracycline": true,
+      "source_document": "05_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "R-ICE",
+      "drug_class": "Platinum-based salvage chemoimmunotherapy",
+      "components": ["Rituximab (anti-CD20)", "Ifosfamide", "Carboplatin", "Etoposide"],
+      "dose": "Standard dosing per protocol",
+      "start_date": "2025-05-01",
+      "end_date": "2025-07-15",
+      "cycles_completed": 3,
+      "outcome": "partial_response",
+      "outcome_description": "Partial metabolic response (Deauville 4). Stem cell mobilization attempted but failed — insufficient CD34+ yield. Not eligible for autologous transplant.",
+      "hsct_eligible": false,
+      "hsct_reason": "Failed stem cell mobilization",
+      "contains_anti_cd20": true,
+      "source_document": "05_Clinical_Summary.pdf"
+    },
+    {
+      "medication_name": "GemOx-R",
+      "drug_class": "Third-line chemoimmunotherapy",
+      "components": ["Gemcitabine", "Oxaliplatin", "Rituximab (anti-CD20)"],
+      "start_date": "2025-09-01",
+      "end_date": "2025-12-15",
+      "cycles_completed": 4,
+      "outcome": "progressive_disease",
+      "outcome_description": "Progressive disease on restaging PET/CT with new hepatic lesions. Biopsy-confirmed persistent DLBCL.",
+      "contains_anti_cd20": true,
+      "source_document": "05_Clinical_Summary.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-08",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count",
+        "results": [
+          {"test": "WBC", "value": 5.8, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "Hemoglobin", "value": 11.4, "unit": "g/dL", "reference_range": "12.0-16.0", "flag": "L"},
+          {"test": "Platelets", "value": 165, "unit": "x10^9/L", "reference_range": "150-400", "flag": null},
+          {"test": "ANC", "value": 3.2, "unit": "x10^9/L", "reference_range": "1.5-8.0", "flag": null},
+          {"test": "ALC", "value": 0.9, "unit": "x10^9/L", "reference_range": "1.0-4.8", "flag": "L"}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel",
+        "results": [
+          {"test": "Creatinine", "value": 0.9, "unit": "mg/dL", "reference_range": "0.6-1.2", "flag": null},
+          {"test": "AST", "value": 32, "unit": "U/L", "reference_range": "10-40", "flag": null},
+          {"test": "ALT", "value": 28, "unit": "U/L", "reference_range": "7-56", "flag": null},
+          {"test": "Total Bilirubin", "value": 0.8, "unit": "mg/dL", "reference_range": "0.1-1.2", "flag": null},
+          {"test": "LDH", "value": 285, "unit": "U/L", "reference_range": "140-280", "flag": "H"},
+          {"test": "Albumin", "value": 3.4, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": "L"}
+        ]
+      },
+      "viral_screening": {
+        "panel_name": "Pre-CAR-T Viral Screening",
+        "results": [
+          {"test": "HBsAg", "value": "Negative", "flag": null},
+          {"test": "Anti-HBc", "value": "Negative", "flag": null},
+          {"test": "HCV Antibody", "value": "Negative", "flag": null},
+          {"test": "HIV 1/2 Ab/Ag", "value": "Negative", "flag": null}
+        ]
+      }
+    }
+  },
+
+  "procedures": {
+    "pet_ct": {
+      "procedure_name": "PET/CT Restaging",
+      "procedure_date": "2026-01-05",
+      "indication": "Restaging after third-line therapy",
+      "findings": "Progressive disease with new hepatic lesions, persistent cervical and retroperitoneal lymphadenopathy. Maximum SUV 18.2 in largest retroperitoneal node (4.8 cm). Deauville 5.",
+      "source_document": "03_PET_CT_Report.pdf"
+    },
+    "bone_marrow_biopsy": {
+      "procedure_name": "Bone Marrow Aspirate and Biopsy",
+      "procedure_date": "2026-01-12",
+      "findings": "No marrow involvement by lymphoma. Adequate trilineage hematopoiesis. Cellularity 40%.",
+      "source_document": "04_Bone_Marrow_Biopsy.pdf"
+    }
+  },
+
+  "organ_function_assessment": {
+    "cardiac": {
+      "lvef": "55%",
+      "method": "Echocardiogram",
+      "date": "2026-01-15",
+      "status": "adequate"
+    },
+    "pulmonary": {
+      "status": "adequate",
+      "notes": "No significant pulmonary disease"
+    },
+    "hepatic": {
+      "status": "adequate",
+      "notes": "AST/ALT within normal limits, bilirubin normal"
+    },
+    "renal": {
+      "status": "adequate",
+      "creatinine_clearance": "82 mL/min"
+    }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": {
+      "met": true,
+      "evidence": "Biopsy-confirmed DLBCL (ICD-10 C83.30). CD19-positive on immunohistochemistry."
+    },
+    "age_requirement": {
+      "met": true,
+      "evidence": "Patient is 52 years old (>=18)"
+    },
+    "prior_anti_cd20": {
+      "met": true,
+      "evidence": "Rituximab included in all 3 prior lines (R-CHOP, R-ICE, GemOx-R)"
+    },
+    "prior_anthracycline": {
+      "met": true,
+      "evidence": "Doxorubicin (anthracycline) included in first-line R-CHOP"
+    },
+    "lines_of_therapy": {
+      "met": true,
+      "evidence": "3 prior lines of systemic therapy completed"
+    },
+    "rems_facility": {
+      "met": true,
+      "evidence": "Oregon Cancer Institute is a certified REMS treatment center"
+    },
+    "no_cns_lymphoma": {
+      "met": true,
+      "evidence": "No CNS involvement on staging workup"
+    },
+    "adequate_organ_function": {
+      "met": true,
+      "evidence": "LVEF 55%, CrCl 82, liver function normal"
+    },
+    "no_prior_gene_therapy": {
+      "met": true,
+      "evidence": "No prior CAR-T or gene therapy"
+    },
+    "no_active_infection": {
+      "met": true,
+      "evidence": "Viral screening negative, no active infections"
+    }
+  },
+
+  "overall_pa_readiness": {
+    "status": "READY_FOR_SUBMISSION",
+    "blocking_issues": [],
+    "criteria_met_count": 10,
+    "criteria_total_count": 10,
+    "policy_version_impact": {
+      "qualifies_under_2024": true,
+      "qualifies_under_2025": true,
+      "impact_notes": "Patient meets all criteria under both 2024 and 2025 BCBS policy versions. R-CHOP contains both anti-CD20 (rituximab) and anthracycline (doxorubicin), satisfying the new 2025 step therapy requirements."
+    }
+  }
+}

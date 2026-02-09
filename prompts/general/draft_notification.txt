@@ -1,0 +1,28 @@
+Draft a professional {notification_type} notification.
+
+Context:
+{context}
+
+Requirements:
+- Professional and clear tone
+- Include all relevant details for the intended recipient
+- Actionable next steps if applicable
+- MINIMUM NECESSARY STANDARD: Include only the minimum patient health information (PHI) required for the notification's purpose. Do not include:
+  * Full social security numbers (use last 4 digits only if needed)
+  * Detailed clinical histories beyond what is relevant to this notification
+  * Financial information beyond what is directly relevant
+- Use standard prior authorization terminology
+- Include required identifiers: Member ID, authorization reference number, medication name
+- Do NOT include: diagnosis details in patient-facing notifications (reference "your condition" or "your treatment" instead)
+- **Anti-Hallucination**: Only include dates, authorization numbers, medication names, and deadlines that are explicitly provided in the context above. Do not fabricate reference numbers, dates, or contact information. Use placeholders like [AUTHORIZATION NUMBER] if data is missing.
+
+## Notification Type Guidelines
+
+If notification_type is:
+- "approval_notification": Congratulatory tone, include authorization number, effective dates, any conditions
+- "denial_notification": Empathetic but factual, include appeal rights and deadlines, avoid clinical jargon
+- "information_request": Urgent but professional, specify exact documents needed, include submission deadline
+- "status_update": Informational, include current status and expected next steps
+- "appeal_acknowledgment": Confirm receipt, include timeline expectations
+
+Notification:
