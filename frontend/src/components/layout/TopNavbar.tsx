@@ -47,8 +47,47 @@ export function TopNavbar() {
             whiteSpace: 'nowrap',
           }}
         >
-          Patient Access Strategy
+          Prior Auth Agent
         </span>
+
+        <nav className="hidden md:flex items-center gap-6 ml-8">
+          <button
+            onClick={() => navigate('/dashboard')}
+            style={{
+              fontSize: '12px',
+              fontWeight: 500,
+              color: '#86868b',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              letterSpacing: '-0.008em',
+              transition: 'color 0.15s ease',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#1d1d1f' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#86868b' }}
+          >
+            Cases
+          </button>
+          <button
+            onClick={() => navigate('/analytics')}
+            style={{
+              fontSize: '12px',
+              fontWeight: 500,
+              color: '#86868b',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              letterSpacing: '-0.008em',
+              transition: 'color 0.15s ease',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#1d1d1f' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#86868b' }}
+          >
+            Analytics
+          </button>
+        </nav>
       </div>
     </header>
   )

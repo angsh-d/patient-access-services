@@ -76,7 +76,10 @@ class CaseRepository:
             Case model or None
         """
         result = await self.session.execute(
-            select(CaseModel).where(CaseModel.id == case_id)
+            select(CaseModel).where(
+                CaseModel.id == case_id,
+                CaseModel.deleted_at.is_(None),
+            )
         )
         return result.scalar_one_or_none()
 
@@ -97,7 +100,7 @@ class CaseRepository:
         Returns:
             List of case models
         """
-        query = select(CaseModel)
+        query = select(CaseModel).where(CaseModel.deleted_at.is_(None))
 
         if stage:
             query = query.where(CaseModel.stage == stage.value)
@@ -118,7 +121,7 @@ class CaseRepository:
         Returns:
             Total number of matching cases
         """
-        query = select(func.count(CaseModel.id))
+        query = select(func.count(CaseModel.id)).where(CaseModel.deleted_at.is_(None))
         if stage:
             query = query.where(CaseModel.stage == stage.value)
         result = await self.session.execute(query)
@@ -208,20 +211,22 @@ class CaseRepository:
 
     async def delete(self, case_id: str) -> bool:
         """
-        Delete a case.
+        Soft-delete a case by setting deleted_at timestamp.
 
         Args:
             case_id: Case ID
 
         Returns:
-            True if deleted, False if not found
+            True if soft-deleted, False if not found
         """
         result = await self.session.execute(
-            delete(CaseModel).where(CaseModel.id == case_id)
+            update(CaseModel)
+            .where(CaseModel.id == case_id, CaseModel.deleted_at.is_(None))
+            .values(deleted_at=datetime.now(timezone.utc))
         )
         deleted = result.rowcount > 0
         if deleted:
-            logger.info("Case deleted", case_id=case_id)
+            logger.info("Case soft-deleted", case_id=case_id)
         return deleted
 
     async def get_snapshots(self, case_id: str) -> List[CaseStateSnapshotModel]:

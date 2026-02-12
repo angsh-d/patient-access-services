@@ -89,20 +89,21 @@
   ],
 
   "disease_activity": {
-    "assessment_date": "2024-09-15",
-    "cdai_score": 265,
-    "cdai_interpretation": "Moderate active disease (CDAI 220-450)",
-    "ses_cd_score": 12,
-    "ses_cd_interpretation": "Moderate endoscopic activity",
-    "disease_severity": "moderate_to_severe",
+    "assessment_date": "2024-01-10",
+    "cdai_score": 228,
+    "cdai_interpretation": "Borderline moderate active disease (CDAI 220-450); near the mild-moderate threshold",
+    "ses_cd_score": 8,
+    "ses_cd_interpretation": "Mild-to-moderate endoscopic activity",
+    "disease_severity": "moderate",
     "disease_phenotype": "inflammatory_colonic",
     "disease_location": "Large intestine (transverse and descending colon)",
+    "assessment_staleness_note": "Disease activity assessment is over 12 months old — may not reflect current disease status",
     "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf"]
   },
 
   "clinical_history": {
-    "chief_complaint": "Persistent moderate Crohn's disease despite 12 months of optimized immunomodulator therapy",
-    "history_of_present_illness": "39-year-old male with moderate-to-severe Crohn's disease (CDAI 265, SES-CD 12) who has failed an adequate trial of conventional therapy. Treatment history demonstrates conventional therapy failure: (1) Budesonide 9mg x 13 weeks - partial response, unable to taper; (2) Prednisone 40mg x 24 weeks - steroid-dependent with multiple taper failures; (3) Azathioprine 150mg x 52 weeks (12 months) - inadequate response despite therapeutic 6-TGN levels of 285 pmol. Patient has completed the required trial of thiopurine immunomodulator therapy per ACG guidelines, with documented therapeutic drug levels confirming adequate drug exposure. Despite 12 months of optimized azathioprine therapy, disease activity has persisted with CDAI >220 and moderate endoscopic inflammation.",
+    "chief_complaint": "Persistent Crohn's disease symptoms despite immunomodulator therapy, requesting biologic escalation",
+    "history_of_present_illness": "39-year-old male with Crohn's disease (CDAI 228 as of January 2024, SES-CD 8) who reports inadequate response to conventional therapy. Treatment history: (1) Budesonide 9mg x 13 weeks - partial response, unable to taper; (2) Prednisone 40mg x 24 weeks - steroid-dependent with multiple taper failures; (3) Azathioprine 150mg x 52 weeks (12 months) - inadequate response despite therapeutic 6-TGN levels of 285 pmol. Patient reports 3-4 loose stools daily, mild-to-moderate abdominal discomfort, and intermittent fatigue. No ER visits. No weight loss. No fistulizing or stricturing complications. Last colonoscopy was January 2024 showing mild-to-moderate activity. Current symptoms are manageable but patient desires escalation to biologic therapy for better disease control.",
     "source_document": "01_Prior_Auth_Request_Form.pdf"
   },
 
@@ -175,7 +176,7 @@
         "results": [
           {"test": "WBC", "value": 8.2, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
           {"test": "RBC", "value": 4.6, "unit": "x10^12/L", "reference_range": "4.5-5.5", "flag": null},
-          {"test": "Hemoglobin", "value": 13.2, "unit": "g/dL", "reference_range": "13.5-17.5", "flag": "L"},
+          {"test": "Hemoglobin", "value": 14.0, "unit": "g/dL", "reference_range": "13.5-17.5", "flag": null},
           {"test": "Hematocrit", "value": 40.1, "unit": "%", "reference_range": "38.8-50", "flag": null},
           {"test": "MCV", "value": 87, "unit": "fL", "reference_range": "80-100", "flag": null},
           {"test": "MCH", "value": 28.7, "unit": "pg", "reference_range": "27-33", "flag": null},
@@ -194,7 +195,7 @@
           {"test": "Glucose", "value": 95, "unit": "mg/dL", "reference_range": "70-100", "flag": null},
           {"test": "Calcium", "value": 9.4, "unit": "mg/dL", "reference_range": "8.5-10.5", "flag": null},
           {"test": "Total Protein", "value": 7.0, "unit": "g/dL", "reference_range": "6.0-8.3", "flag": null},
-          {"test": "Albumin", "value": 3.8, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": null},
+          {"test": "Albumin", "value": 4.0, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": null},
           {"test": "Total Bilirubin", "value": 0.8, "unit": "mg/dL", "reference_range": "0.1-1.2", "flag": null},
           {"test": "Alkaline Phosphatase", "value": 68, "unit": "U/L", "reference_range": "44-147", "flag": null},
           {"test": "AST", "value": 22, "unit": "U/L", "reference_range": "10-40", "flag": null},
@@ -204,15 +205,14 @@
       "inflammatory_markers": {
         "panel_name": "Inflammatory Markers",
         "results": [
-          {"test": "CRP", "value": 18, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
-          {"test": "ESR", "value": 28, "unit": "mm/hr", "reference_range": "0-15", "flag": "H"}
+          {"test": "CRP", "value": 8.5, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 16, "unit": "mm/hr", "reference_range": "0-15", "flag": "H"}
         ]
       },
       "gi_markers": {
         "panel_name": "GI-Specific Markers",
-        "results": [
-          {"test": "Fecal Calprotectin", "value": 450, "unit": "ug/g", "reference_range": "<50", "flag": "H"}
-        ]
+        "results": [],
+        "note": "Fecal calprotectin was not ordered. This test would provide objective evidence of intestinal inflammation independent of clinical scoring."
       },
       "thiopurine_monitoring": {
         "panel_name": "Thiopurine Monitoring",
@@ -225,13 +225,13 @@
       }
     },
 
-    "interpretation": "Results demonstrate active inflammatory bowel disease with elevated inflammatory markers (CRP 18, ESR 28, fecal calprotectin 450). Mild anemia present (Hgb 13.2). Thiopurine monitoring confirms therapeutic drug levels despite inadequate disease control. Pre-biologic screening complete and cleared."
+    "interpretation": "Results show mildly elevated CRP (8.5) and borderline ESR (16). No fecal calprotectin obtained — this objective marker of intestinal inflammation would strengthen the clinical picture. CBC and CMP are essentially normal (Hgb 14.0, albumin 4.0). Thiopurine monitoring confirms therapeutic drug levels. Pre-biologic screening complete and cleared. Note: inflammatory markers are only mildly elevated, which may not strongly support the clinical assertion of moderate-to-severe disease activity."
   },
 
   "procedures": {
     "colonoscopy": {
       "procedure_name": "Colonoscopy with Biopsy",
-      "procedure_date": "2024-09-15",
+      "procedure_date": "2024-01-10",
       "procedure_time": "09:30 - 10:15 AM",
       "accession_number": "ENDO260253308",
       "facility": "Houston Gastroenterology Center",
@@ -240,6 +240,7 @@
       "referring_md": "Dr. Michelle Park",
       "asa_class": "II",
       "indication": "Crohn's disease surveillance and assessment of disease activity on current therapy",
+      "staleness_warning": "This colonoscopy was performed over 12 months ago. Payers typically require endoscopic evidence within 6-12 months of PA submission to confirm current disease activity.",
       "sedation": "Moderate sedation (midazolam/fentanyl)",
       "source_document": "03_Colonoscopy_Report.pdf",
 
@@ -276,8 +277,8 @@
 
       "endoscopic_score": {
         "score_type": "SES-CD",
-        "score_value": 12,
-        "interpretation": "moderate endoscopic activity"
+        "score_value": 8,
+        "interpretation": "mild-to-moderate endoscopic activity"
       },
 
       "biopsies": [
@@ -287,13 +288,13 @@
 
       "pathology": {
         "pathologist": "Dr. Robert Kim, MD",
-        "report_date": "2024-09-19",
+        "report_date": "2024-01-14",
         "microscopic_findings": "Active chronic colitis with crypt architectural distortion, cryptitis, and focal crypt abscesses. Non-caseating granulomas present.",
         "granulomas_present": true,
         "diagnosis": "Active Crohn's disease, transverse and descending colon"
       },
 
-      "impression": "Persistent moderate disease activity despite 12-month adequate trial of azathioprine with therapeutic drug levels. Recommend escalation to biologic therapy (TNF inhibitor)."
+      "impression": "Mild-to-moderate disease activity in transverse and descending colon. Patient on azathioprine with therapeutic drug levels — consider repeat assessment in 6-12 months to determine if escalation to biologic therapy is warranted."
     }
   },
 
@@ -330,7 +331,43 @@
     }
   },
 
-  "documentation_gaps": [],
+  "documentation_gaps": [
+    {
+      "gap_id": "GAP-001",
+      "gap_type": "stale_endoscopic_evidence",
+      "description": "Colonoscopy is over 12 months old (performed 2024-01-10). Payers typically require endoscopic evidence within 6-12 months to confirm current disease activity.",
+      "required_by_policy": true,
+      "impact": "WEAKENS_APPROVAL_LIKELIHOOD",
+      "resolution_action": "Obtain updated colonoscopy or sigmoidoscopy with SES-CD scoring to document current endoscopic disease activity",
+      "estimated_timeline": "2-4 weeks for scheduling and completion"
+    },
+    {
+      "gap_id": "GAP-002",
+      "gap_type": "missing_objective_marker",
+      "description": "Fecal calprotectin test not performed. This objective biomarker of intestinal inflammation is increasingly required by payers as objective evidence alongside clinical scoring.",
+      "required_by_policy": false,
+      "impact": "WEAKENS_APPROVAL_LIKELIHOOD",
+      "resolution_action": "Order fecal calprotectin test — elevated result (>250 ug/g) would provide strong objective evidence of active intestinal inflammation independent of clinical scoring",
+      "estimated_timeline": "1-2 weeks for results"
+    },
+    {
+      "gap_id": "GAP-003",
+      "gap_type": "stale_disease_activity_assessment",
+      "description": "CDAI assessment is over 12 months old (last assessed 2024-01-10 at 228). Current disease activity may have changed. A CDAI of 228 is borderline moderate — an updated assessment could either strengthen or weaken the case.",
+      "required_by_policy": true,
+      "impact": "WEAKENS_APPROVAL_LIKELIHOOD",
+      "resolution_action": "Perform updated CDAI assessment at next clinic visit to document current disease activity level",
+      "estimated_timeline": "At next scheduled visit"
+    },
+    {
+      "gap_id": "GAP-004",
+      "gap_type": "borderline_inflammatory_markers",
+      "description": "CRP 8.5 mg/L is only mildly elevated (normal <5). ESR 16 mm/hr is borderline (normal <15). These values do not strongly support moderate-to-severe disease activity. Albumin is normal (4.0).",
+      "required_by_policy": false,
+      "impact": "WEAKENS_APPROVAL_LIKELIHOOD",
+      "resolution_action": "Consider repeating inflammatory markers closer to submission date, or obtain fecal calprotectin as a more specific GI inflammation marker"
+    }
+  ],
 
   "pa_criteria_assessment": {
     "diagnosis_confirmed": {
@@ -339,8 +376,15 @@
       "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf"]
     },
     "disease_severity_documented": {
-      "met": true,
-      "evidence": "CDAI 265, SES-CD 12 - both indicate moderate active disease requiring biologic escalation",
+      "met": "partially",
+      "evidence": "CDAI 228 (borderline moderate, assessed January 2024 — over 12 months ago), SES-CD 8 (mild-to-moderate, also from January 2024). CRP only mildly elevated at 8.5. No fecal calprotectin obtained. Current disease severity documentation is stale and borderline — may not adequately support moderate-to-severe disease claim.",
+      "concerns": [
+        "CDAI 228 is just above the 220 threshold for moderate disease",
+        "Disease activity assessment is >12 months old",
+        "Inflammatory markers (CRP 8.5, ESR 16) are only mildly elevated",
+        "No fecal calprotectin to objectively confirm intestinal inflammation",
+        "Normal albumin (4.0) does not suggest significant nutritional impact from disease"
+      ],
       "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf"]
     },
     "conventional_therapy_failed": {
@@ -378,17 +422,32 @@
   },
 
   "overall_pa_readiness": {
-    "status": "READY_FOR_SUBMISSION",
-    "blocking_issues": [],
-    "criteria_met": true,
-    "recommendation": "All PA criteria met. Patient has documented moderate Crohn's disease (CDAI 265, SES-CD 12), failed adequate trials of corticosteroids (steroid-dependent) and immunomodulator (52 weeks azathioprine with therapeutic 6-TGN levels), and has completed all required pre-biologic screening (TB negative, Hepatitis B immune, Hepatitis C negative). PA submission can proceed.",
+    "status": "ADDITIONAL_DOCUMENTATION_RECOMMENDED",
+    "blocking_issues": [
+      "Colonoscopy is over 12 months old (January 2024) — payers may reject as stale evidence",
+      "CDAI 228 is borderline moderate (threshold is 220) — an updated assessment is critical",
+      "No fecal calprotectin to objectively confirm active intestinal inflammation",
+      "CRP 8.5 and ESR 16 are only mildly elevated — do not strongly support moderate-to-severe claim"
+    ],
+    "criteria_technically_met": true,
+    "approval_risk": "Submitting with current documentation carries significant denial risk due to borderline disease severity markers and stale endoscopic evidence. Cigna reviewers may determine that CDAI 228 with CRP 8.5 does not meet the threshold for moderate-to-severe disease requiring biologic therapy.",
+    "recommendation": "Collect additional documentation before submission to significantly strengthen the case: (1) Updated colonoscopy with SES-CD scoring to confirm current endoscopic activity, (2) Fecal calprotectin test to provide objective biomarker evidence, (3) Updated CDAI assessment at next clinic visit. The step therapy documentation is strong (12-month azathioprine trial with TDM), but the current disease activity evidence is the weak link.",
     "strengths": [
       "12-month adequate trial of azathioprine per ACG guidelines",
       "Therapeutic drug monitoring confirms adequate drug exposure (6-TGN 285)",
       "Complete pre-biologic screening with documented results",
       "Pathology-confirmed Crohn's disease with non-caseating granulomas",
-      "Clear documentation of steroid dependence",
-      "Objective endoscopic confirmation of moderate disease activity (SES-CD 12)"
+      "Clear documentation of steroid dependence"
+    ],
+    "weaknesses": [
+      "Colonoscopy >12 months old — does not reflect current disease status",
+      "CDAI 228 is borderline (just 8 points above 220 moderate threshold)",
+      "SES-CD 8 indicates mild-to-moderate, not moderate-to-severe endoscopic activity",
+      "CRP 8.5 is only mildly elevated — does not strongly indicate active inflammation",
+      "ESR 16 is borderline normal",
+      "Albumin 4.0 is normal — no nutritional compromise suggesting severe disease",
+      "No fecal calprotectin obtained — missing key objective biomarker",
+      "No recent ER visits or hospitalizations suggesting clinical urgency"
     ]
   }
 }

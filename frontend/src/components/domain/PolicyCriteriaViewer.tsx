@@ -63,25 +63,25 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 const STATUS_CONFIG = {
   met: {
     icon: CheckCircle2,
-    color: 'text-green-600',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-200',
+    color: 'text-grey-700',
+    bgColor: 'bg-grey-50',
+    borderColor: 'border-grey-300',
     label: 'Met',
     badgeVariant: 'success' as const,
   },
   partial: {
     icon: AlertCircle,
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-50',
-    borderColor: 'border-amber-200',
+    color: 'text-grey-500',
+    bgColor: 'bg-grey-50',
+    borderColor: 'border-grey-200',
     label: 'Partial',
     badgeVariant: 'warning' as const,
   },
   not_met: {
     icon: XCircle,
-    color: 'text-red-600',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
+    color: 'text-grey-400',
+    bgColor: 'bg-grey-50',
+    borderColor: 'border-grey-200',
     label: 'Not Met',
     badgeVariant: 'error' as const,
   },
@@ -279,7 +279,7 @@ function CriterionRow({
         'w-full text-left p-3 rounded-lg border transition-all',
         'flex items-start gap-3',
         isSelected
-          ? 'ring-2 ring-blue-400 border-blue-200 bg-blue-50/50'
+          ? 'ring-2 ring-grey-400 border-grey-200 bg-grey-50/50'
           : showStatus
             ? cn(config.bgColor, config.borderColor)
             : 'bg-white border-grey-200 hover:border-grey-300 hover:bg-grey-50'

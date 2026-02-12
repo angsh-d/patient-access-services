@@ -52,6 +52,15 @@ Compensating factors may apply to:
 
 If a compensating factor pattern involves skipping safety screenings, explicitly note that the pattern should NOT be followed and recommend obtaining the safety screening.
 
+## Reasoning Process — Think Step-by-Step
+
+Before generating recommendations, follow this reasoning chain:
+
+1. **Identify the patient's strongest assets**: Which criteria are clearly met? Which documentation is solid?
+2. **Identify the patient's biggest risks**: What's missing? What historically causes denials for this payer/medication combination?
+3. **Cross-reference with compensating factors**: Can any of the patient's strengths offset the risks? Quote specific patterns from the historical data.
+4. **Prioritize actions by impact-to-effort ratio**: A low-effort, high-impact action should always be recommended first.
+
 ## Your Task
 
 Based on this historical intelligence, provide strategic recommendations for maximizing approval likelihood. Your analysis should include:
@@ -141,12 +150,12 @@ Respond in valid JSON format:
   ],
   "agentic_insights": [
     {
-      "pattern_type": "severity_compensates_for_missing_doc",
-      "headline": "Disease severity can compensate for pending TB screening",
-      "finding": "In 35 similar cases, patients with CRP>15 and severe classification were approved 100% of the time despite missing TB screening, vs 0% when severity markers were absent",
-      "recommendation": "Submit PA now with strong emphasis on disease severity (CRP, CDAI, fistula documentation). Add a clinical note stating that treatment initiation is clinically urgent given active severe disease.",
-      "approval_uplift": "+78% compared to waiting for TB results",
-      "confidence": "high"
+      "pattern_type": "severity_compensates_for_incomplete_step_therapy",
+      "headline": "High disease severity offsets incomplete step therapy",
+      "finding": "Among 22 cases with incomplete step therapy documentation, those with CDAI > 300 AND CRP > 20 were approved 82% of the time (18/22) vs 31% (4/13) when severity markers were below these thresholds. Note: this does NOT apply to safety screenings (TB, Hepatitis B).",
+      "recommendation": "Emphasize disease severity markers (CDAI, CRP, fistula presence) in the PA submission alongside a physician attestation of clinical urgency.",
+      "approval_uplift": "+51 pp (82% vs 31%) based on n=35, moderate confidence",
+      "confidence": "moderate"
     }
   ]
 }
@@ -161,3 +170,45 @@ When reporting percentages and statistics:
 - Never fabricate or extrapolate statistics beyond what the provided data supports
 
 Be specific with percentages, timelines, and rationale. Base all recommendations on the historical data provided. If the sample size is small, note limitations in confidence.
+
+## Statistical Rigor Requirements
+
+You MUST follow these rules when reporting any quantitative claim:
+
+### 1. Always Report Sample Sizes
+Every percentage, rate, or quantified claim MUST include the sample size it is based on. Never state a percentage without its denominator.
+- CORRECT: "85% approval rate (17/20 cases)"
+- INCORRECT: "85% approval rate"
+
+### 2. Never Extrapolate from Fewer Than 5 Cases
+If a pattern is based on fewer than 5 cases, do NOT report it as a percentage or rate. Instead, describe it qualitatively.
+- If n < 5: "In a small number of cases, we observed..." or "Too few cases to establish a pattern"
+- If n >= 5: You may report the rate, but must include the sample size
+
+### 3. Distinguish Pattern Confidence Levels
+Use the following labels based on sample size:
+- **n >= 20**: "Observed pattern" — sufficient data to identify a meaningful trend
+- **n >= 10 but < 20**: "Preliminary signal" — directionally informative but not conclusive
+- **n < 10**: Prefix with "[LOW SAMPLE]" — e.g., "[LOW SAMPLE] 3 of 4 cases with this profile were approved"
+
+### 4. Low Sample Size Prefixing
+Any insight, recommendation, or pattern claim based on fewer than 10 cases MUST be prefixed with "[LOW SAMPLE]" in the text. This applies to:
+- Documentation impact claims
+- Payer-specific insights
+- Timing recommendations
+- Compensating factor patterns
+- Counterfactual scenario predictions
+- Agentic insight findings
+
+### 5. Confidence Interval Awareness
+When the system provides confidence intervals alongside rate claims, respect their width:
+- If the 95% CI spans more than 30 percentage points, describe the estimate as "uncertain" or "wide-ranging"
+- If the CI lower bound is below 50% for an approval rate, do not describe the rate as "high" or "strong"
+- Use language that reflects uncertainty: "estimated", "approximately", "in the range of" rather than definitive statements
+
+### Correlation vs. Causation
+
+Historical patterns show CORRELATIONS, not proven causal relationships. When surfacing a pattern:
+- If the pattern has a plausible causal mechanism (e.g., "higher CRP documents more severe disease, which is a policy criterion"), present it as an actionable insight
+- If the pattern has no clear causal link (e.g., "Monday submissions have higher approval rates"), note it as an observed correlation and suggest the likely confounding variable
+- Never frame a correlation as a guaranteed outcome

@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Brain,
   User,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui'
@@ -29,6 +30,7 @@ export interface CaseQueueItem {
 interface CaseQueueCardProps {
   item: CaseQueueItem
   onProcess: (caseId: string) => void
+  onDelete?: (caseId: string) => void
   variant?: 'compact' | 'expanded'
   className?: string
 }
@@ -72,6 +74,7 @@ function getPriorityFromStage(stage: CaseStage, payerStatus: PayerStatus): 'high
 export function CaseQueueCard({
   item,
   onProcess,
+  onDelete,
   variant = 'compact',
   className,
 }: CaseQueueCardProps) {
@@ -125,7 +128,28 @@ export function CaseQueueCard({
           )}
         </div>
 
-        <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="flex items-center gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          {onDelete && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onDelete(item.caseId) }}
+              className="flex items-center justify-center transition-colors duration-150"
+              style={{
+                width: '26px',
+                height: '26px',
+                borderRadius: '8px',
+                background: 'rgba(0, 0, 0, 0.04)',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#aeaeb2',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 59, 48, 0.08)'; e.currentTarget.style.color = '#ff3b30' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0, 0, 0, 0.04)'; e.currentTarget.style.color = '#aeaeb2' }}
+              title="Delete case"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
           <div
             className="flex items-center gap-1.5"
             style={{

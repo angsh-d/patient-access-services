@@ -385,6 +385,64 @@ class RubricLoader:
             ]
         )
 
+    def load_payer_rubric(self, payer_name: str) -> str:
+        """
+        Load the raw markdown text of a payer-specific rubric.
+
+        Tries ``data/rubrics/{payer_name_normalized}_rubric.md`` first. If no
+        payer-specific file exists, falls back to ``data/rubrics/default_rubric.md``.
+
+        Args:
+            payer_name: Payer name (e.g. "Cigna", "UHC", "United Healthcare").
+                        Normalised to lowercase with spaces replaced by underscores.
+
+        Returns:
+            Full rubric markdown text as a string.
+        """
+        payer_key = payer_name.lower().replace(" ", "_")
+        rubrics_root = self.rubrics_dir.resolve()
+
+        # Try payer-specific rubric file
+        payer_path = (self.rubrics_dir / f"{payer_key}_rubric.md").resolve()
+        try:
+            payer_path.relative_to(rubrics_root)
+        except ValueError:
+            logger.warning(
+                "Payer rubric path traversal blocked",
+                payer_name=payer_name,
+                resolved_path=str(payer_path),
+            )
+            # Fall through to default
+            payer_path = None
+
+        if payer_path and payer_path.exists():
+            with open(payer_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            logger.info(
+                "Payer-specific rubric loaded",
+                payer=payer_name,
+                path=str(payer_path),
+            )
+            return content
+
+        # Fall back to default rubric
+        default_path = self.rubrics_dir / "default_rubric.md"
+        if default_path.exists():
+            with open(default_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            logger.info(
+                "Default rubric loaded (no payer-specific rubric found)",
+                payer=payer_name,
+                path=str(default_path),
+            )
+            return content
+
+        logger.warning(
+            "No rubric file found at all — returning empty string",
+            payer=payer_name,
+        )
+        return ""
+
     def clear_cache(self) -> None:
         """Clear the rubric cache."""
         self._cache.clear()

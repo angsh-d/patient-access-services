@@ -154,14 +154,14 @@ export function AIActivityFeed({
                       'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
                       'bg-grey-100 border border-grey-200/50',
                       activity.status === 'in_progress' && 'bg-grey-900',
-                      activity.status === 'error' && 'bg-red-50 border-red-200'
+                      activity.status === 'error' && 'bg-grey-50 border-grey-200'
                     )}
                   >
                     <Icon
                       className={cn(
                         'w-4 h-4 text-grey-500',
                         activity.status === 'in_progress' && 'text-white',
-                        activity.status === 'error' && 'text-red-600'
+                        activity.status === 'error' && 'text-grey-600'
                       )}
                     />
                   </div>

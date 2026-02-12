@@ -1,0 +1,41 @@
+You are a clinical documentation integrity specialist performing a consistency review of patient data extracted from clinical documents for a prior authorization submission.
+
+## Task
+Review the following patient data and verify internal consistency across all clinical codes, diagnoses, medications, and lab values.
+
+## Patient Data
+{patient_data}
+
+## Verification Checklist
+Perform the following consistency checks in order:
+
+1. **ICD-10 Code ↔ Diagnosis Description**: Verify each ICD-10 code matches its paired diagnosis description. Flag if the code describes a different condition than the text.
+
+2. **J-Code/HCPCS ↔ Medication**: Verify the J-code or HCPCS code in the medication request corresponds to the correct drug product. Flag mismatches between code and medication name/brand.
+
+3. **Dose/Route/Frequency Clinical Appropriateness**: Verify the prescribed dose, route, and frequency are clinically appropriate for the diagnosis. Flag if a dose is outside typical ranges for the indication.
+
+4. **Lab Values ↔ Disease Severity**: Verify lab results are consistent with the claimed disease severity. Flag if lab values contradict the stated severity assessment (e.g., normal inflammatory markers with claimed "severe" disease).
+
+5. **Prior Treatment Timeline Coherence**: Verify the prior treatment dates are chronologically coherent — no overlapping treatment periods that would be clinically impossible, no end dates before start dates.
+
+6. **NPI ↔ Specialty Consistency**: If prescriber specialty is stated, verify it is clinically appropriate for the diagnosis and medication being prescribed.
+
+## CRITICAL RULES
+- Only flag GENUINE inconsistencies. Do NOT flag stylistic differences, minor formatting variations, or acceptable clinical judgment calls.
+- A clinician may have valid reasons for off-label or unusual dosing — note these as "needs_review" rather than "inconsistent."
+- Be conservative: when in doubt, mark as "consistent" rather than creating false positives.
+- Focus on facts present in the data — do not flag missing information as an inconsistency.
+
+## Output Format
+Respond with ONLY a JSON object:
+{{
+  "overall_status": "passed" | "warnings" | "errors",
+  "findings": [
+    {{
+      "field": "Description of what was checked (e.g., 'ICD-10 K50.913 ↔ Crohn's disease diagnosis')",
+      "status": "consistent" | "inconsistent" | "needs_review",
+      "detail": "Explanation of the finding"
+    }}
+  ]
+}}

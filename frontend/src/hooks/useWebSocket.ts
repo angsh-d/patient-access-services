@@ -49,6 +49,9 @@ export function useWebSocket(caseId: string | undefined, options: UseWebSocketOp
         if (caseId) {
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.case(caseId) })
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cases })
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.strategies(caseId) })
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.strategicIntelligence(caseId) })
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.trace(caseId) })
         }
         break
       }
@@ -58,6 +61,8 @@ export function useWebSocket(caseId: string | undefined, options: UseWebSocketOp
         if (caseId) {
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.case(caseId) })
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.strategies(caseId) })
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.strategicIntelligence(caseId) })
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.trace(caseId) })
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cases })
         }
         break
@@ -68,6 +73,7 @@ export function useWebSocket(caseId: string | undefined, options: UseWebSocketOp
         // Refetch to get latest state after error
         if (caseId) {
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.case(caseId) })
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.trace(caseId) })
         }
         break
       }

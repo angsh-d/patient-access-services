@@ -68,6 +68,34 @@ Enclosures:
 - [List of attached supporting documents]
 ```
 
+## Few-Shot Examples
+
+### Example A: Correct Opening Paragraph
+
+Good:
+"I am writing to formally appeal the denial of prior authorization for adalimumab (Humira) 40mg subcutaneous injection every other week for my patient, Maria Rodriguez (Member ID: CIG-2847291, Authorization Reference: PA-2024-08812). The denial dated January 15, 2025, cited 'insufficient documentation of conventional therapy failure' as the basis for non-coverage. As detailed below, Ms. Rodriguez has completed adequate trials of two conventional therapies with documented failure, and I respectfully request that this authorization be approved."
+
+Bad:
+"I am writing to appeal a denial for a patient who needs a biologic medication. The denial was unfair and the patient really needs this drug. Please reconsider."
+Why this is wrong: No patient identifiers, no authorization reference, no specific denial reason, emotional rather than evidence-based.
+
+### Example B: Clinical Evidence Paragraph (Handling Citations Correctly)
+
+Good:
+"Current clinical practice guidelines support the use of anti-TNF therapy in patients with moderate-to-severe Crohn's disease who have failed conventional immunomodulatory therapy. Ms. Rodriguez's clinical profile -- with a CDAI score of 310, CRP of 28 mg/L, and documented failure of both mesalamine and azathioprine -- meets established criteria for biologic escalation. [INSERT SPECIFIC GUIDELINE REFERENCE: AGA/ACG guidelines for the treating physician to verify and cite]."
+
+Bad:
+"According to the landmark SONIC trial (Colombel et al., NEJM 2010), combination therapy achieves superior outcomes."
+Why this is wrong: Specific citations may be inaccurate -- fabricating precise journal references violates the anti-hallucination rule.
+
+### Example C: Prior Treatments Paragraph (When Documentation Is Thin)
+
+Good:
+"Ms. Rodriguez's treatment history demonstrates adequate conventional therapy trial and failure:
+1. Mesalamine (Asacol) 4.8g daily for 16 weeks (June-September 2024): Inadequate response (CDAI remained above 300)
+2. Azathioprine 150mg daily for 12 weeks (October-December 2024): Discontinued due to leukopenia (WBC 2.1 x10^9/L)
+[NOTE: If additional prior treatment records are available, please attach as Enclosure.]"
+
 ## Output Format
 
 Provide the complete letter text ready for review and signature. Include placeholders in [brackets] for any information that needs to be filled in.

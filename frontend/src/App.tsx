@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import CaseDetail from './pages/CaseDetail'
 import NewCase from './pages/NewCase'
 import Settings from './pages/Settings'
+import Analytics from './pages/Analytics'
 import { pageTransition } from './lib/animations'
 
 function AnimatedRoutes() {
@@ -56,6 +57,15 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <CaseDetail />
+              </PageWrapper>
+            }
+          />
+
+          <Route
+            path="/analytics"
+            element={
+              <PageWrapper>
+                <Analytics />
               </PageWrapper>
             }
           />

@@ -103,8 +103,10 @@ export function NewCase() {
           </div>
         )}
 
-        {/* Patient cards grouped by payer */}
-        {Object.entries(grouped).map(([payerName, payerPatients]) => (
+        {/* Patient cards grouped by payer — Cigna first */}
+        {Object.entries(grouped).sort(([a], [b]) =>
+          a.toLowerCase().includes('cigna') ? -1 : b.toLowerCase().includes('cigna') ? 1 : a.localeCompare(b)
+        ).map(([payerName, payerPatients]) => (
           <div key={payerName} className="mb-8">
             <h3 className="text-sm font-medium text-grey-500 uppercase tracking-wider mb-4">
               {payerName} ({payerPatients.length} patients)

@@ -147,6 +147,11 @@ class ActionCoordinator:
         updated_responses = dict(state.get("payer_responses", {}))
         updated_responses[payer_name] = response.to_dict()
 
+        # Auto-capture outcome for prediction tracking when payer gives a terminal decision
+        payer_status = response.to_payer_status_value()
+        if payer_status in ("approved", "denied"):
+            await self._record_prediction_outcome(state, payer_name, payer_status)
+
         return {
             "action_type": ActionType.SUBMIT_PA.value,
             "target_payer": payer_name,
@@ -255,8 +260,8 @@ class ActionCoordinator:
             "recovery_reason": state.get("recovery_reason", "Payer denial")
         }
 
-        # Classify the denial
-        classification = recovery_agent.classify_denial(denial_response, case_state)
+        # Classify the denial (LLM-powered)
+        classification = await recovery_agent.classify_denial(denial_response, case_state)
 
         logger.info(
             "Denial classified",
@@ -280,15 +285,15 @@ class ActionCoordinator:
                 "messages": [f"No recovery path for {denied_payer}: {classification.denial_type}"]
             }
 
-        # Generate recovery strategy options
-        recovery_options = recovery_agent.generate_recovery_strategies(
+        # Generate recovery strategy options (LLM-powered)
+        recovery_options = await recovery_agent.generate_recovery_strategies(
             classification=classification,
             case_state=case_state,
             payer_name=denied_payer
         )
 
-        # Select the best recovery strategy
-        recovery_strategy = recovery_agent.select_recovery_strategy(recovery_options, case_state)
+        # Select the best recovery strategy (LLM-recommended)
+        recovery_strategy = await recovery_agent.select_recovery_strategy(recovery_options, case_state)
 
         logger.info(
             "Recovery strategy selected",
@@ -354,8 +359,8 @@ Evidence Cited:
 Success Probability Assessment: {appeal_strategy.success_probability:.0%}
 """
         except Exception as e:
-            logger.warning("Claude appeal strategy generation failed, using basic appeal", error=str(e))
-            appeal_letter = "Appeal based on clinical necessity and prior treatment failures."
+            logger.error("Claude appeal strategy generation failed", error=str(e), error_type=type(e).__name__)
+            raise
 
         # Submit appeal
         appeal_response = await gateway.submit_appeal(
@@ -559,6 +564,52 @@ Success Probability Assessment: {appeal_strategy.success_probability:.0%}
         clinical = patient_data.get("clinical_profile", {})
         diagnoses = clinical.get("diagnoses", [])
         return [d.get("icd10_code", "") for d in diagnoses if d.get("icd10_code")]
+
+    async def _record_prediction_outcome(
+        self,
+        state: Dict[str, Any],
+        payer_name: str,
+        actual_outcome: str,
+    ) -> None:
+        """Record payer outcome against AI prediction for accuracy tracking (non-fatal)."""
+        try:
+            from uuid import uuid4
+            from backend.storage.database import get_db
+            from backend.storage.models import PredictionOutcomeModel
+
+            case_id = state.get("case_id", "")
+            assessments = state.get("coverage_assessments", {})
+            assessment = assessments.get(payer_name, {})
+            predicted_likelihood = assessment.get("approval_likelihood", 0.5)
+            predicted_status = assessment.get("coverage_status", "unknown")
+            medication_name = state.get("medication_data", {}).get(
+                "medication_request", state.get("medication_data", {})
+            ).get("medication_name", "unknown")
+            strategy_id = state.get("selected_strategy_id")
+
+            record = PredictionOutcomeModel(
+                id=str(uuid4()),
+                case_id=case_id,
+                predicted_likelihood=predicted_likelihood,
+                predicted_status=predicted_status,
+                payer_name=payer_name,
+                medication_name=medication_name,
+                actual_outcome=actual_outcome,
+                actual_decision_date=datetime.now(timezone.utc),
+                strategy_used=strategy_id,
+            )
+            async with get_db() as session:
+                session.add(record)
+
+            logger.info(
+                "Prediction outcome recorded",
+                case_id=case_id,
+                payer=payer_name,
+                predicted=round(predicted_likelihood, 2),
+                actual=actual_outcome,
+            )
+        except Exception as e:
+            logger.debug("Failed to record prediction outcome (non-fatal)", error=str(e))
 
 
 # Global instance

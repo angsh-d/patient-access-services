@@ -1,7 +1,12 @@
 """Case management API routes."""
 from typing import Optional
 from datetime import datetime, timezone
+from uuid import uuid4
+
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
+from sqlalchemy import select, func
 
 from backend.api.requests import CreateCaseRequest, ProcessCaseRequest, ConfirmDecisionRequest
 from backend.api.responses import (
@@ -14,6 +19,8 @@ from backend.api.dependencies import get_case_service
 from backend.services.case_service import CaseService
 from backend.models.enums import CaseStage
 from backend.mock_services.scenarios import get_scenario_manager, Scenario
+from backend.storage.models import PredictionOutcomeModel, CaseModel, LLMUsageModel
+from backend.storage.database import get_db
 from backend.config.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -265,6 +272,66 @@ async def run_single_stage(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
+@router.get("/{case_id}/stream-stage/{stage}")
+async def stream_stage(
+    case_id: str,
+    stage: str,
+    refresh: bool = Query(False, description="Force fresh LLM call"),
+    case_service: CaseService = Depends(get_case_service),
+):
+    """
+    Stream stage processing via Server-Sent Events.
+
+    Provides incremental feedback during long-running LLM calls by streaming
+    progress events as the analysis proceeds.
+
+    Events emitted:
+    - stage_start: {stage, case_id, timestamp}
+    - payer_start: {payer_name, percent}
+    - progress: {message, percent}
+    - payer_complete: {payer_name, coverage_status, approval_likelihood, criteria_met, criteria_total}
+    - stage_complete: {full result object}
+    - error: {message}
+    - done: signals stream end
+
+    Args:
+        case_id: Case identifier
+        stage: Stage to run (currently only policy_analysis supports streaming)
+        refresh: Force fresh analysis (default: false, returns cached if available)
+        case_service: Injected case service
+    """
+    async def event_stream():
+        import json as _json
+        from datetime import datetime as _dt, timezone as _tz
+
+        try:
+            yield f"data: {_json.dumps({'event': 'stage_start', 'stage': stage, 'case_id': case_id, 'timestamp': _dt.now(_tz.utc).isoformat()})}\n\n"
+
+            if stage == "policy_analysis":
+                async for event in case_service.stream_policy_analysis(case_id, refresh=refresh):
+                    yield f"data: {_json.dumps(event, default=str)}\n\n"
+            else:
+                # Non-streaming fallback for other stages
+                result = await case_service.run_stage(case_id, stage, refresh=refresh)
+                yield f"data: {_json.dumps({'event': 'stage_complete', **result}, default=str)}\n\n"
+
+        except Exception as e:
+            logger.error("SSE stream error", case_id=case_id, stage=stage, error=str(e))
+            yield f"data: {_json.dumps({'event': 'error', 'message': str(e)})}\n\n"
+
+        yield f"data: {_json.dumps({'event': 'done'})}\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
 @router.post("/{case_id}/approve-stage/{stage}")
 async def approve_stage(
     case_id: str,
@@ -479,6 +546,151 @@ async def get_strategic_intelligence(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
+@router.get("/{case_id}/cohort-analysis")
+async def get_cohort_analysis(
+    case_id: str,
+    refresh: bool = Query(False, description="Force fresh analysis, bypassing cache"),
+    case_service: CaseService = Depends(get_case_service),
+):
+    """
+    Get cohort similarity analysis for a case.
+
+    Finds clinically similar historical cases, splits into approved/denied
+    cohorts, and uses AI to discover non-obvious differentiating factors
+    between outcomes. Results are cached for 24 hours.
+
+    Args:
+        case_id: Case identifier
+        refresh: Force cache refresh (default: false)
+
+    Returns:
+        Cohort analysis with differentiating insights and recommendations
+    """
+    from backend.agents.strategic_intelligence_agent import get_strategic_intelligence_agent
+    from backend.agents.intake_agent import get_intake_agent
+
+    try:
+        case_data = await case_service.get_case(case_id)
+        if not case_data:
+            raise HTTPException(status_code=404, detail=f"Case not found: {case_id}")
+
+        patient_id = case_data.get("patient", {}).get("patient_id")
+        if not patient_id:
+            raise HTTPException(status_code=400, detail="Case does not have associated patient data")
+
+        intake_agent = get_intake_agent()
+        patient_data = await intake_agent.load_patient_data(patient_id)
+
+        agent = get_strategic_intelligence_agent()
+        start_time = datetime.now(timezone.utc)
+        analysis = await agent.generate_cohort_analysis(
+            case_data=case_data,
+            patient_data=patient_data,
+            skip_cache=refresh,
+        )
+        elapsed_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
+        from_cache = analysis.pop("_from_cache", False)
+
+        logger.info(
+            "Cohort analysis retrieved",
+            case_id=case_id,
+            status=analysis.get("status"),
+            from_cache=from_cache,
+            elapsed_ms=round(elapsed_ms, 2),
+        )
+
+        return {
+            "case_id": case_id,
+            "analysis_timestamp": datetime.now(timezone.utc).isoformat(),
+            "cache_status": {
+                "from_cache": from_cache,
+                "cache_ttl_hours": agent.cache_ttl_hours,
+                "refresh_requested": refresh,
+            },
+            **analysis,
+        }
+
+    except FileNotFoundError as e:
+        logger.warning("Data not found for cohort analysis", case_id=case_id, error=str(e))
+        raise HTTPException(status_code=404, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error generating cohort analysis", case_id=case_id, error=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/{case_id}/gap-cohort-analysis")
+async def get_gap_cohort_analysis(
+    case_id: str,
+    case_service: CaseService = Depends(get_case_service),
+):
+    """
+    Get gap-driven cohort analysis for a case.
+
+    Takes each documentation gap from policy analysis and analyzes how that
+    gap historically impacts denial rates — broken down by payer, severity,
+    and time period.
+    """
+    from backend.agents.strategic_intelligence_agent import get_strategic_intelligence_agent
+    from backend.agents.intake_agent import get_intake_agent
+
+    try:
+        case_data = await case_service.get_case(case_id)
+        if not case_data:
+            raise HTTPException(status_code=404, detail=f"Case not found: {case_id}")
+
+        documentation_gaps = case_data.get("documentation_gaps", [])
+        if not documentation_gaps:
+            return {
+                "case_id": case_id,
+                "status": "no_gaps",
+                "message": "No documentation gaps found on this case. Run policy analysis first.",
+                "gap_analyses": [],
+                "llm_synthesis": {},
+                "filter_metadata": {},
+            }
+
+        patient_id = case_data.get("patient", {}).get("patient_id")
+        if not patient_id:
+            raise HTTPException(status_code=400, detail="Case does not have associated patient data")
+
+        intake_agent = get_intake_agent()
+        patient_data = await intake_agent.load_patient_data(patient_id)
+
+        agent = get_strategic_intelligence_agent()
+        start_time = datetime.now(timezone.utc)
+        analysis = await agent.generate_gap_driven_cohort_analysis(
+            case_data=case_data,
+            patient_data=patient_data,
+            documentation_gaps=documentation_gaps,
+        )
+        elapsed_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
+
+        logger.info(
+            "Gap cohort analysis retrieved",
+            case_id=case_id,
+            status=analysis.get("status"),
+            gap_count=len(analysis.get("gap_analyses", [])),
+            elapsed_ms=round(elapsed_ms, 2),
+        )
+
+        return {
+            "case_id": case_id,
+            "analysis_timestamp": datetime.now(timezone.utc).isoformat(),
+            **analysis,
+        }
+
+    except FileNotFoundError as e:
+        logger.warning("Data not found for gap cohort analysis", case_id=case_id, error=str(e))
+        raise HTTPException(status_code=404, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error generating gap cohort analysis", case_id=case_id, error=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 @router.delete("/{case_id}/strategic-intelligence/cache")
 async def invalidate_strategic_intelligence_cache(
     case_id: str,
@@ -544,4 +756,719 @@ async def delete_case(
         raise
     except Exception as e:
         logger.error("Error deleting case", case_id=case_id, error=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/{case_id}/policy-qa")
+async def policy_qa(
+    case_id: str,
+    body: dict,
+    case_service: CaseService = Depends(get_case_service),
+):
+    """
+    Ask the Policy Assistant a question about the current case's policy analysis.
+
+    Uses Claude (policy_qa task category) with full case context to answer
+    clinical/policy questions grounded in the actual case data.
+
+    Args:
+        case_id: Case identifier
+        body: {"question": "user's question"}
+
+    Returns:
+        {"answer": "...", "question": "..."}
+    """
+    question = body.get("question", "").strip()
+    if not question:
+        raise HTTPException(status_code=400, detail="Question is required")
+
+    try:
+        case_data = await case_service.get_case(case_id)
+        if not case_data:
+            raise HTTPException(status_code=404, detail=f"Case not found: {case_id}")
+
+        case_state = case_data.get("case", case_data)
+        patient = case_state.get("patient", {})
+        medication = case_state.get("medication", {})
+        primary_payer = patient.get("primary_payer", "Unknown")
+
+        # Build coverage summary
+        coverage_assessments = case_state.get("coverage_assessments", {})
+        coverage_lines = []
+        for payer_name, assessment in coverage_assessments.items():
+            if isinstance(assessment, dict):
+                status = assessment.get("coverage_status", "unknown")
+                likelihood = assessment.get("approval_likelihood", 0)
+                met = assessment.get("criteria_met_count", 0)
+                total = assessment.get("criteria_total_count", 0)
+                coverage_lines.append(
+                    f"{payer_name}: status={status}, approval_likelihood={likelihood}, "
+                    f"criteria={met}/{total} met"
+                )
+                details = assessment.get("criteria_details") or assessment.get("criteria_assessments") or []
+                for d in details[:12]:
+                    name = d.get("criterion_name", "Unknown")
+                    is_met = d.get("is_met")
+                    reasoning = d.get("reasoning", "")
+                    met_str = "Met" if is_met is True else "Not Met" if is_met is False else "Pending"
+                    coverage_lines.append(f"  - {name}: {met_str}. {reasoning}")
+        coverage_summary = "\n".join(coverage_lines) if coverage_lines else "No coverage assessment available yet."
+
+        # Build documentation gaps
+        gaps = case_state.get("documentation_gaps", [])
+        gap_lines = [f"- [{g.get('priority', 'medium')}] {g.get('description', '')}" for g in gaps]
+        documentation_gaps = "\n".join(gap_lines) if gap_lines else "No documentation gaps identified."
+
+        # Build cohort summary (from last cohort analysis if available)
+        cohort_summary = "Cohort analysis data not included in case state. Refer to the cohort intelligence panel for details."
+
+        # Build policy criteria summary
+        policy_criteria = "Refer to the Policy Criteria Details section for full criteria breakdown."
+
+        from backend.reasoning.prompt_loader import get_prompt_loader
+        from backend.reasoning.claude_pa_client import ClaudePAClient
+
+        prompt_loader = get_prompt_loader()
+        prompt = prompt_loader.load(
+            "policy_analysis/policy_qa.txt",
+            {
+                "patient_name": f"{patient.get('first_name', '')} {patient.get('last_name', '')}",
+                "patient_dob": patient.get("date_of_birth", "Unknown"),
+                "medication_name": medication.get("medication_name", "Unknown"),
+                "medication_dose": medication.get("dose", "Unknown"),
+                "medication_frequency": medication.get("frequency", "Unknown"),
+                "prescriber_name": medication.get("prescriber_name", "Unknown"),
+                "primary_payer": primary_payer,
+                "diagnosis_codes": ", ".join(patient.get("diagnosis_codes", [])),
+                "coverage_summary": coverage_summary,
+                "documentation_gaps": documentation_gaps,
+                "cohort_summary": cohort_summary,
+                "policy_criteria": policy_criteria,
+                "question": question,
+            }
+        )
+
+        client = ClaudePAClient()
+        result = await client.analyze_policy(prompt, response_format="text")
+        answer = result.get("response", "I was unable to generate an answer.")
+
+        return {"answer": answer, "question": question, "case_id": case_id}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error in policy Q&A", case_id=case_id, error=str(e))
+        raise HTTPException(status_code=500, detail=f"Policy Q&A failed: {str(e)}")
+
+
+@router.post("/{case_id}/predict-appeal")
+async def predict_appeal(
+    case_id: str,
+    case_service: CaseService = Depends(get_case_service),
+):
+    """
+    Predict appeal success likelihood for a denied case.
+
+    Uses Claude (APPEAL_STRATEGY task category) to analyze the denial context,
+    clinical profile strength, historical outcomes, documentation quality, and
+    payer reversal patterns to produce a calibrated prediction.
+
+    Args:
+        case_id: Case identifier
+
+    Returns:
+        Appeal prediction with success rate, key factors, recommended actions,
+        and risk assessment
+    """
+    from backend.reasoning.llm_gateway import get_llm_gateway
+    from backend.reasoning.prompt_loader import get_prompt_loader
+    from backend.models.enums import TaskCategory
+
+    try:
+        # Retrieve case
+        case_data = await case_service.get_case(case_id)
+        if not case_data:
+            raise HTTPException(status_code=404, detail=f"Case not found: {case_id}")
+
+        case_state = case_data.get("case", case_data)
+
+        # Extract patient and medication info
+        patient = case_state.get("patient", {})
+        medication = case_state.get("medication", {})
+        medication_name = medication.get("medication_name", "Unknown")
+
+        # Build denial context from coverage assessments and payer states
+        coverage_assessments = case_state.get("coverage_assessments", {})
+        payer_states = case_state.get("payer_states", {})
+        documentation_gaps = case_state.get("documentation_gaps", [])
+
+        denial_context_parts = []
+        for payer_name, payer_state in payer_states.items():
+            status = payer_state.get("status", "")
+            if status in ("denied", "appeal_denied"):
+                denial_reason = payer_state.get("denial_reason", "")
+                denial_code = payer_state.get("denial_reason_code", "") or payer_state.get("denial_code", "")
+                assessment = coverage_assessments.get(payer_name, {})
+                denial_context_parts.append({
+                    "payer_name": payer_name,
+                    "status": status,
+                    "denial_reason": denial_reason,
+                    "denial_reason_code": denial_code,
+                    "coverage_status": assessment.get("coverage_status", "unknown") if isinstance(assessment, dict) else "unknown",
+                    "approval_likelihood": assessment.get("approval_likelihood", 0) if isinstance(assessment, dict) else 0,
+                    "criteria_met": assessment.get("criteria_met_count", 0) if isinstance(assessment, dict) else 0,
+                    "criteria_total": assessment.get("criteria_total_count", 0) if isinstance(assessment, dict) else 0,
+                })
+
+        # If no denied payers found, check for recovery stage or low-likelihood assessments
+        if not denial_context_parts:
+            for payer_name, assessment in coverage_assessments.items():
+                if isinstance(assessment, dict):
+                    likelihood = assessment.get("approval_likelihood", 0)
+                    cov_status = assessment.get("coverage_status", "")
+                    if likelihood < 0.5 or cov_status in ("requires_human_review", "not_covered", "pend"):
+                        denial_context_parts.append({
+                            "payer_name": payer_name,
+                            "status": payer_states.get(payer_name, {}).get("status", "under_review"),
+                            "denial_reason": f"Low approval likelihood ({likelihood}). Coverage status: {cov_status}",
+                            "coverage_status": cov_status,
+                            "approval_likelihood": likelihood,
+                            "criteria_met": assessment.get("criteria_met_count", 0),
+                            "criteria_total": assessment.get("criteria_total_count", 0),
+                        })
+
+        if not denial_context_parts:
+            raise HTTPException(
+                status_code=400,
+                detail="No denied payers or low-likelihood assessments found for this case. Appeal prediction requires a denial or at-risk coverage assessment."
+            )
+
+        # Build clinical strength summary from patient data
+        clinical_profile = patient.get("clinical_profile", {})
+        diagnoses = clinical_profile.get("diagnoses", [])
+        clinical_strength = {
+            "diagnosis_codes": patient.get("diagnosis_codes", []),
+            "diagnoses": diagnoses,
+            "medication_requested": medication_name,
+            "dose": medication.get("dose", "Unknown"),
+            "frequency": medication.get("frequency", "Unknown"),
+            "prescriber": medication.get("prescriber_name", "Unknown"),
+            "documentation_gaps_count": len(documentation_gaps),
+            "documentation_gaps": [
+                {"description": g.get("description", ""), "priority": g.get("priority", "medium")}
+                for g in documentation_gaps
+            ],
+        }
+
+        # Build historical outcomes context from prediction_outcomes table
+        historical_outcomes = []
+        try:
+            async with get_db() as db:
+                stmt = select(PredictionOutcomeModel).where(
+                    PredictionOutcomeModel.medication_name == medication_name,
+                    PredictionOutcomeModel.actual_outcome.isnot(None),
+                ).limit(20)
+                result = await db.execute(stmt)
+                records = result.scalars().all()
+                for rec in records:
+                    historical_outcomes.append({
+                        "payer_name": rec.payer_name,
+                        "predicted_likelihood": rec.predicted_likelihood,
+                        "actual_outcome": rec.actual_outcome,
+                        "strategy_used": rec.strategy_used,
+                        "was_effective": rec.was_strategy_effective,
+                    })
+        except Exception as hist_err:
+            logger.warning("Could not fetch historical outcomes", error=str(hist_err))
+            historical_outcomes = [{"note": "No historical outcome data available"}]
+
+        if not historical_outcomes:
+            historical_outcomes = [{"note": "No historical outcome data available for this medication"}]
+
+        # Build payer reversal pattern summary
+        payer_reversal_patterns = []
+        for dc in denial_context_parts:
+            pn = dc["payer_name"]
+            try:
+                async with get_db() as db:
+                    total_stmt = select(func.count()).select_from(PredictionOutcomeModel).where(
+                        PredictionOutcomeModel.payer_name == pn,
+                        PredictionOutcomeModel.actual_outcome.isnot(None),
+                    )
+                    total_result = await db.execute(total_stmt)
+                    total_count = total_result.scalar() or 0
+
+                    approved_stmt = select(func.count()).select_from(PredictionOutcomeModel).where(
+                        PredictionOutcomeModel.payer_name == pn,
+                        PredictionOutcomeModel.actual_outcome == "approved",
+                    )
+                    approved_result = await db.execute(approved_stmt)
+                    approved_count = approved_result.scalar() or 0
+
+                reversal_rate = (approved_count / total_count) if total_count > 0 else None
+                payer_reversal_patterns.append({
+                    "payer_name": pn,
+                    "total_outcomes_recorded": total_count,
+                    "approved_count": approved_count,
+                    "reversal_rate": reversal_rate,
+                    "note": f"Based on {total_count} recorded outcomes" if total_count > 0 else "No historical data for this payer",
+                })
+            except Exception:
+                payer_reversal_patterns.append({
+                    "payer_name": pn,
+                    "note": "Could not retrieve payer reversal data",
+                })
+
+        # Build available documentation summary
+        available_docs = case_state.get("available_documents", [])
+        completed_actions = case_state.get("completed_actions", [])
+        available_documentation = {
+            "documents": available_docs if available_docs else ["No explicit document list available"],
+            "completed_actions": [
+                a.get("action", str(a)) if isinstance(a, dict) else str(a)
+                for a in completed_actions[:10]
+            ],
+            "coverage_criteria_details": {},
+        }
+        for payer_name, assessment in coverage_assessments.items():
+            if isinstance(assessment, dict):
+                criteria = assessment.get("criteria_details") or assessment.get("criteria_assessments", [])
+                available_documentation["coverage_criteria_details"][payer_name] = criteria[:15] if isinstance(criteria, list) else criteria
+
+        # Load prompt and call LLM
+        import json as _json
+
+        prompt_loader = get_prompt_loader()
+        prompt = prompt_loader.load(
+            "appeals/appeal_prediction.txt",
+            {
+                "denial_context": _json.dumps(denial_context_parts, indent=2, default=str),
+                "patient_profile": _json.dumps(patient, indent=2, default=str),
+                "clinical_strength": _json.dumps(clinical_strength, indent=2, default=str),
+                "historical_outcomes": _json.dumps(historical_outcomes, indent=2, default=str),
+                "available_documentation": _json.dumps(available_documentation, indent=2, default=str),
+                "payer_reversal_patterns": _json.dumps(payer_reversal_patterns, indent=2, default=str),
+            }
+        )
+
+        gateway = get_llm_gateway()
+        result = await gateway.generate(
+            task_category=TaskCategory.APPEAL_STRATEGY,
+            prompt=prompt,
+            temperature=0.1,
+            response_format="json",
+        )
+
+        # Extract the parsed JSON response
+        prediction = {
+            "case_id": case_id,
+            "predicted_success_rate": result.get("predicted_success_rate", 0.5),
+            "confidence": result.get("confidence", 0.5),
+            "key_factors_for": result.get("key_factors_for", []),
+            "key_factors_against": result.get("key_factors_against", []),
+            "recommended_actions": result.get("recommended_actions", []),
+            "risk_assessment": result.get("risk_assessment", {}),
+            "reasoning_chain": result.get("reasoning_chain", ""),
+            "denial_context": denial_context_parts,
+            "provider": result.get("provider", "unknown"),
+        }
+
+        logger.info(
+            "Appeal prediction generated",
+            case_id=case_id,
+            predicted_success_rate=prediction["predicted_success_rate"],
+            confidence=prediction["confidence"],
+        )
+
+        return prediction
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error generating appeal prediction", case_id=case_id, error=str(e))
+        raise HTTPException(status_code=500, detail=f"Appeal prediction failed: {str(e)}")
+
+
+@router.post("/{case_id}/draft-appeal-letter")
+async def draft_appeal_letter(
+    case_id: str,
+    case_service: CaseService = Depends(get_case_service),
+):
+    """
+    Draft a formal appeal letter using LLM (Gemini via APPEAL_DRAFTING task).
+
+    Builds rich appeal context from the case's denial information, patient
+    clinical profile, coverage assessment criteria, and any previously
+    generated appeal strategy, then calls the LLM gateway to produce a
+    professional, evidence-based letter.
+
+    Args:
+        case_id: Case identifier
+
+    Returns:
+        {"letter": "...", "case_id": "..."}
+    """
+    from backend.reasoning.llm_gateway import get_llm_gateway
+    import json as _json
+
+    try:
+        case_data = await case_service.get_case(case_id)
+        if not case_data:
+            raise HTTPException(status_code=404, detail=f"Case not found: {case_id}")
+
+        case_state = case_data.get("case", case_data)
+        patient = case_state.get("patient", {})
+        medication = case_state.get("medication", {})
+        coverage_assessments = case_state.get("coverage_assessments", {})
+        payer_states = case_state.get("payer_states", {})
+        documentation_gaps = case_state.get("documentation_gaps", [])
+
+        # Build denial details from payer states
+        denial_parts = []
+        for payer_name, ps in payer_states.items():
+            status = ps.get("status", "")
+            if status in ("denied", "appeal_denied"):
+                denial_parts.append({
+                    "payer_name": payer_name,
+                    "denial_reason": ps.get("denial_reason", ""),
+                    "denial_reason_code": ps.get("denial_reason_code", "") or ps.get("denial_code", ""),
+                    "denial_date": ps.get("denial_date", ""),
+                })
+
+        # Also include low-likelihood assessments as potential appeal targets
+        if not denial_parts:
+            for payer_name, assessment in coverage_assessments.items():
+                if isinstance(assessment, dict):
+                    likelihood = assessment.get("approval_likelihood", 0)
+                    cov_status = assessment.get("coverage_status", "")
+                    if likelihood < 0.5 or cov_status in ("requires_human_review", "not_covered", "pend"):
+                        denial_parts.append({
+                            "payer_name": payer_name,
+                            "denial_reason": f"Coverage status: {cov_status}, likelihood: {likelihood}",
+                        })
+
+        if not denial_parts:
+            raise HTTPException(
+                status_code=400,
+                detail="No denied payers or at-risk assessments found. Appeal letter requires a denial context.",
+            )
+
+        # Build clinical evidence from coverage criteria
+        clinical_evidence_lines = []
+        for payer_name, assessment in coverage_assessments.items():
+            if isinstance(assessment, dict):
+                criteria = assessment.get("criteria_details") or assessment.get("criteria_assessments", [])
+                for c in (criteria if isinstance(criteria, list) else []):
+                    name = c.get("criterion_name", "")
+                    is_met = c.get("is_met")
+                    reasoning = c.get("reasoning", "")
+                    status_str = "Met" if is_met else "Not Met" if is_met is False else "Pending"
+                    clinical_evidence_lines.append(f"[{payer_name}] {name}: {status_str} — {reasoning}")
+
+        # Build appeal strategy summary (if strategy generation has been run)
+        strategies = case_state.get("available_strategies", [])
+        appeal_strategy_summary = ""
+        if strategies:
+            for s in strategies:
+                if isinstance(s, dict):
+                    appeal_strategy_summary += f"- {s.get('name', '')}: {s.get('description', '')}\n"
+
+        # Build appeal context dict for prompt substitution
+        appeal_context = {
+            "appeal_context": _json.dumps({
+                "case_id": case_id,
+                "patient_name": f"{patient.get('first_name', '')} {patient.get('last_name', '')}",
+                "member_id": patient.get("member_id", "[MEMBER ID]"),
+                "medication_name": medication.get("medication_name", "Unknown"),
+                "dose": medication.get("dose", "Unknown"),
+                "frequency": medication.get("frequency", "Unknown"),
+                "prescriber_name": medication.get("prescriber_name", "[PRESCRIBER NAME]"),
+                "primary_payer": patient.get("primary_payer", "Unknown"),
+            }, indent=2, default=str),
+            "denial_details": _json.dumps(denial_parts, indent=2, default=str),
+            "patient_info": _json.dumps(patient, indent=2, default=str),
+            "clinical_evidence": "\n".join(clinical_evidence_lines) if clinical_evidence_lines else "Clinical evidence details are available in the case record.",
+            "appeal_strategy": appeal_strategy_summary or "No pre-generated appeal strategy available. Draft based on clinical evidence.",
+        }
+
+        gateway = get_llm_gateway()
+        letter = await gateway.draft_appeal_letter(appeal_context)
+
+        return {"letter": letter, "case_id": case_id}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error drafting appeal letter", case_id=case_id, error=str(e))
+        raise HTTPException(status_code=500, detail=f"Appeal letter drafting failed: {str(e)}")
+
+
+# --- Request/Response models for prediction outcome tracking ---
+
+class RecordOutcomeRequest(BaseModel):
+    """Request body for recording an actual payer outcome."""
+    actual_outcome: str = Field(
+        ...,
+        description="Actual payer decision: approved, denied, info_requested, or withdrawn",
+        pattern=r"^(approved|denied|info_requested|withdrawn)$",
+    )
+    actual_decision_date: Optional[str] = Field(
+        default=None,
+        description="ISO 8601 date string of the actual decision (e.g. 2026-02-11T00:00:00Z)",
+    )
+    strategy_used: Optional[str] = Field(default=None, description="Name/ID of the strategy that was used")
+    was_strategy_effective: Optional[bool] = Field(default=None, description="Whether the strategy achieved its goal")
+    payer_name: str = Field(..., description="Payer whose outcome is being recorded")
+
+
+@router.post("/{case_id}/record-outcome")
+async def record_outcome(
+    case_id: str,
+    request: RecordOutcomeRequest,
+    case_service: CaseService = Depends(get_case_service),
+):
+    """
+    Record the actual payer outcome for a case and create a PredictionOutcome record.
+
+    Looks up the case's coverage_assessments for the given payer to capture
+    the AI's predicted_likelihood and predicted_status at time of assessment,
+    then stores the actual outcome alongside those predictions.
+
+    Args:
+        case_id: Case identifier
+        request: Outcome details including payer_name, actual_outcome, etc.
+
+    Returns:
+        The created PredictionOutcomeModel record as a dict
+    """
+    try:
+        # Retrieve case
+        case_data = await case_service.get_case(case_id)
+        if not case_data:
+            raise HTTPException(status_code=404, detail=f"Case not found: {case_id}")
+
+        case_state = case_data.get("case", case_data)
+
+        # Extract predicted values from coverage_assessments for the given payer
+        coverage_assessments = case_state.get("coverage_assessments", {})
+        payer_assessment = coverage_assessments.get(request.payer_name)
+        if not payer_assessment or not isinstance(payer_assessment, dict):
+            raise HTTPException(
+                status_code=404,
+                detail=f"No coverage assessment found for payer '{request.payer_name}' on case {case_id}",
+            )
+
+        predicted_likelihood = payer_assessment.get("approval_likelihood", 0.0)
+        predicted_status = payer_assessment.get("coverage_status", "unknown")
+
+        # Extract medication name from case
+        medication = case_state.get("medication", {})
+        medication_name = medication.get("medication_name", "Unknown")
+
+        # Parse actual_decision_date if provided
+        actual_decision_date = None
+        if request.actual_decision_date:
+            try:
+                actual_decision_date = datetime.fromisoformat(request.actual_decision_date.replace("Z", "+00:00"))
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid date format: {request.actual_decision_date}. Use ISO 8601.",
+                )
+
+        # Create the prediction outcome record
+        record = PredictionOutcomeModel(
+            id=str(uuid4()),
+            case_id=case_id,
+            predicted_likelihood=predicted_likelihood,
+            predicted_status=predicted_status,
+            payer_name=request.payer_name,
+            medication_name=medication_name,
+            actual_outcome=request.actual_outcome,
+            actual_decision_date=actual_decision_date,
+            strategy_used=request.strategy_used,
+            was_strategy_effective=request.was_strategy_effective,
+        )
+
+        async with get_db() as db:
+            db.add(record)
+            await db.flush()
+            result = record.to_dict()
+
+        logger.info(
+            "Prediction outcome recorded",
+            case_id=case_id,
+            payer_name=request.payer_name,
+            predicted_likelihood=predicted_likelihood,
+            actual_outcome=request.actual_outcome,
+        )
+
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error recording prediction outcome", case_id=case_id, error=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# --- Analytics router (separate prefix: /analytics) ---
+
+analytics_router = APIRouter(prefix="/analytics", tags=["Analytics"])
+
+
+@analytics_router.get("/prediction-accuracy")
+async def get_prediction_accuracy():
+    """
+    Compute prediction accuracy statistics across all recorded outcomes.
+
+    Queries all PredictionOutcomeModel records that have an actual_outcome,
+    and computes:
+    - total_predictions: number of records with actual outcomes
+    - correct_predictions: predicted approved (likelihood >= 50) and actual approved,
+      OR predicted not-approved (likelihood < 50) and actual denied
+    - accuracy_rate: correct / total (0.0 if no records)
+    - average_likelihood_error: mean of abs(predicted_likelihood/100 - actual_binary)
+      where actual_binary is 1.0 for approved, 0.0 otherwise
+
+    Returns:
+        Summary statistics dict
+    """
+    try:
+        async with get_db() as db:
+            stmt = select(PredictionOutcomeModel).where(
+                PredictionOutcomeModel.actual_outcome.isnot(None)
+            )
+            result = await db.execute(stmt)
+            records = result.scalars().all()
+
+        total = len(records)
+        if total == 0:
+            return {
+                "total_predictions": 0,
+                "correct_predictions": 0,
+                "accuracy_rate": 0.0,
+                "average_likelihood_error": 0.0,
+                "message": "No prediction outcomes recorded yet.",
+            }
+
+        correct = 0
+        total_error = 0.0
+
+        for rec in records:
+            predicted_approved = rec.predicted_likelihood >= 0.50
+            actual_approved = rec.actual_outcome == "approved"
+
+            # Correct if both agree on approved or both agree on not-approved
+            if predicted_approved == actual_approved:
+                correct += 1
+
+            # Likelihood error: distance between predicted probability and actual binary
+            actual_binary = 1.0 if actual_approved else 0.0
+            total_error += abs(rec.predicted_likelihood - actual_binary)
+
+        accuracy_rate = correct / total
+        avg_error = total_error / total
+
+        return {
+            "total_predictions": total,
+            "correct_predictions": correct,
+            "accuracy_rate": round(accuracy_rate, 4),
+            "average_likelihood_error": round(avg_error, 4),
+        }
+
+    except Exception as e:
+        logger.error("Error computing prediction accuracy", error=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@analytics_router.get("/llm-costs")
+async def get_llm_costs(
+    days: int = Query(30, ge=1, le=365, description="Number of days to look back"),
+    group_by: str = Query("provider", description="Group costs by: provider, model, task_category, case_id"),
+):
+    """
+    Get LLM cost analytics with breakdowns.
+
+    Queries LLMUsageModel records and aggregates costs by the requested dimension.
+
+    Args:
+        days: Number of days to look back (default: 30)
+        group_by: Grouping dimension (provider, model, task_category, case_id)
+
+    Returns:
+        Aggregated cost breakdown with totals
+    """
+    valid_groups = {"provider", "model", "task_category", "case_id"}
+    if group_by not in valid_groups:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid group_by value. Must be one of: {', '.join(valid_groups)}",
+        )
+
+    try:
+        cutoff = datetime.now(timezone.utc) - __import__("datetime").timedelta(days=days)
+        group_col = getattr(LLMUsageModel, group_by)
+
+        async with get_db() as db:
+            # Aggregated breakdown
+            stmt = (
+                select(
+                    group_col.label("group_key"),
+                    func.count().label("call_count"),
+                    func.sum(LLMUsageModel.input_tokens).label("total_input_tokens"),
+                    func.sum(LLMUsageModel.output_tokens).label("total_output_tokens"),
+                    func.sum(LLMUsageModel.cost_usd).label("total_cost_usd"),
+                    func.avg(LLMUsageModel.latency_ms).label("avg_latency_ms"),
+                )
+                .where(LLMUsageModel.created_at >= cutoff)
+                .group_by(group_col)
+                .order_by(func.sum(LLMUsageModel.cost_usd).desc())
+            )
+            result = await db.execute(stmt)
+            rows = result.all()
+
+            # Grand totals
+            totals_stmt = (
+                select(
+                    func.count().label("call_count"),
+                    func.sum(LLMUsageModel.input_tokens).label("total_input_tokens"),
+                    func.sum(LLMUsageModel.output_tokens).label("total_output_tokens"),
+                    func.sum(LLMUsageModel.cost_usd).label("total_cost_usd"),
+                    func.avg(LLMUsageModel.latency_ms).label("avg_latency_ms"),
+                )
+                .where(LLMUsageModel.created_at >= cutoff)
+            )
+            totals_result = await db.execute(totals_stmt)
+            totals = totals_result.one()
+
+        breakdown = [
+            {
+                group_by: row.group_key or "unknown",
+                "call_count": row.call_count,
+                "total_input_tokens": row.total_input_tokens or 0,
+                "total_output_tokens": row.total_output_tokens or 0,
+                "total_cost_usd": round(row.total_cost_usd or 0, 6),
+                "avg_latency_ms": round(row.avg_latency_ms or 0, 2),
+            }
+            for row in rows
+        ]
+
+        return {
+            "period_days": days,
+            "group_by": group_by,
+            "totals": {
+                "call_count": totals.call_count or 0,
+                "total_input_tokens": totals.total_input_tokens or 0,
+                "total_output_tokens": totals.total_output_tokens or 0,
+                "total_cost_usd": round(totals.total_cost_usd or 0, 6),
+                "avg_latency_ms": round(totals.avg_latency_ms or 0, 2),
+            },
+            "breakdown": breakdown,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error computing LLM costs", error=str(e))
         raise HTTPException(status_code=500, detail="Internal server error")

@@ -139,9 +139,11 @@ def create_initial_state(
     )
 
 
-def transition_stage(state: OrchestratorState, new_stage: CaseStage) -> OrchestratorState:
+def transition_stage(state: OrchestratorState, new_stage: CaseStage) -> Dict[str, Any]:
     """
     Create a state update for stage transition.
+
+    Used by apply_stage_transition() in transitions.py.
 
     Args:
         state: Current state

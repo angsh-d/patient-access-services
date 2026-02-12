@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Plus,
   ArrowRight,
@@ -31,6 +31,8 @@ function toCaseQueueItem(caseState: CaseState): CaseQueueItem {
   const aiStatusMap: Record<CaseStage, string> = {
     intake: 'Ready for review',
     policy_analysis: 'AI analyzing policy',
+    cohort_analysis: 'Analyzing cohort evidence',
+    ai_recommendation: 'Generating recommendation',
     awaiting_human_decision: 'Ready for decision',
     strategy_generation: 'Generating strategies',
     strategy_selection: 'Strategy ready',
@@ -122,7 +124,29 @@ const ease = [0.16, 1, 0.3, 1] as const
 
 export function Dashboard() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { data, isLoading, error } = useCases({ limit: 50 })
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+
+  const deleteMutation = useMutation({
+    mutationFn: async (caseId: string) => {
+      const { casesApi } = await import('@/services/api')
+      return casesApi.delete(caseId)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cases })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.aiActivity })
+      setPendingDeleteId(null)
+    },
+  })
+
+  const handleDelete = useCallback((caseId: string) => {
+    setPendingDeleteId(caseId)
+  }, [])
+
+  const confirmDelete = useCallback(() => {
+    if (pendingDeleteId) deleteMutation.mutate(pendingDeleteId)
+  }, [pendingDeleteId, deleteMutation])
 
   const { data: aiActivity = [] } = useQuery({
     queryKey: QUERY_KEYS.aiActivity,
@@ -459,6 +483,7 @@ export function Dashboard() {
                       key={item.caseId}
                       item={item}
                       onProcess={(id) => navigate(`/cases/${id}`)}
+                      onDelete={handleDelete}
                       variant="compact"
                     />
                   ))}
@@ -532,6 +557,7 @@ export function Dashboard() {
                       key={item.caseId}
                       item={item}
                       onProcess={(id) => navigate(`/cases/${id}`)}
+                      onDelete={handleDelete}
                       variant="compact"
                     />
                   ))
@@ -665,6 +691,65 @@ export function Dashboard() {
             )}
           </div>
         </section>
+      )}
+
+      {/* Delete confirmation dialog */}
+      {pendingDeleteId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setPendingDeleteId(null)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="bg-white rounded-2xl shadow-xl"
+            style={{ padding: '28px', maxWidth: '340px', width: '90%' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#1d1d1f', letterSpacing: '-0.02em' }}>
+              Delete case?
+            </h3>
+            <p style={{ fontSize: '0.875rem', color: '#86868b', marginTop: '8px', lineHeight: 1.5 }}>
+              This will remove the case from your workspace. This action cannot be undone.
+            </p>
+            <div className="flex items-center gap-2 mt-5" style={{ justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setPendingDeleteId(null)}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  color: '#6e6e73',
+                  background: 'rgba(0, 0, 0, 0.04)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  color: '#ffffff',
+                  background: '#ff3b30',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  opacity: deleteMutation.isPending ? 0.6 : 1,
+                }}
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </div>
   )

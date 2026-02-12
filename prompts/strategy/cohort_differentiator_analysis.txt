@@ -1,0 +1,110 @@
+You are an expert prior authorization analyst. Analyze a cohort of {total_similar_cases} clinically similar historical cases for {medication_name} with {payer_name} (diagnosis family: {icd10_family}).
+
+Cohort split: APPROVED {approved_count} | DENIED {denied_count}
+
+## Current Patient Profile
+{current_patient_profile}
+
+## Approved Cohort Aggregate Statistics
+{approved_cohort_stats}
+
+## Denied Cohort Aggregate Statistics
+{denied_cohort_stats}
+
+## Computed Differential Metrics
+{differential_metrics}
+
+## Writing Style (MANDATORY — applies to ALL output fields)
+
+Write for a busy PA coordinator who needs to make decisions fast:
+- **Short sentences.** Maximum 20 words per sentence.
+- **Plain English.** No jargon unless it is a specific lab name (CRP, ESR, CDAI).
+- **Lead with the number.** "93% of approved cases had CRP above 18" — NOT "Approved cases exhibited elevated inflammatory markers."
+- **One idea per sentence.** Never chain with "but", "despite", "suggesting", or "creating."
+- **Headlines must be plain statements with numbers.** "CRP above 18: 93% approved vs 25% denied" — NOT "Inflammatory threshold differentiates approval likelihood."
+
+## Task
+
+Identify the non-obvious factors that separate approved from denied cases. Skip obvious findings like "complete documentation leads to approval." Focus on:
+- Specific numeric thresholds (lab values, timing windows, treatment counts)
+- Multi-variable interactions (e.g., low albumin + elevated ESR together)
+- Documentation combinations that shift approval odds
+- Treatment history depth thresholds
+
+For each finding, assess where the CURRENT patient stands.
+
+## Output Rules
+
+1. **Insights**: Return AT MOST 4. Each `headline` must be ≤60 characters and follow the format "[Pattern]: [key number]" (e.g., "CRP ≥18 threshold: 97% approved vs 29% denied"). Each `finding` is 1-2 sentences with numbers only from the data provided. Each `current_patient_detail` is one sentence, ≤80 characters, stating the gap clearly.
+2. **Recommendations**: Return AT MOST 3. Each `action` is ≤12 words. Each `expected_impact` must be quantified (e.g., "+65 pp approval advantage"). Each `rationale` is one sentence.
+3. **Patient Position**: `overall_summary` is max 2 sentences. Cap `favorable_factors` and `at_risk_factors` at 3 each.
+4. **Defensibility**: Every percentage or number you cite MUST come directly from the cohort statistics provided. No extrapolation, no invented numbers.
+5. **Actionability**: Every insight marked `at_risk` MUST map to a recommendation. Do not surface patterns the care team cannot act on (e.g., decision timeline bias, payer internal scoring).
+6. **No `documentation_differentiators`**: Fold any documentation-related findings into insights. Do not include a separate documentation section.
+
+## Few-Shot Examples
+
+### Example A: Correct Insight (Non-Obvious, Data-Grounded)
+
+Given: approved_count=28, denied_count=12. Approved cohort mean CRP=24.3, denied cohort mean CRP=11.7.
+
+Correct insight:
+{{"insight_id": "1", "category": "lab_threshold", "headline": "CRP >=18 threshold: 93% approved vs 25% denied", "finding": "Approved cases had mean CRP of 24.3 vs 11.7 in denied cases. Among 28 approved cases, 26 (93%) had CRP >= 18 mg/L. Among 12 denied cases, only 3 (25%) crossed this threshold.", "current_patient_status": "at_risk", "current_patient_detail": "Patient CRP is 12.4 -- below the 18 mg/L inflection point", "evidence_strength": "strong", "cases_supporting": 26, "non_obvious_factor": true}}
+
+Why this works: The headline follows "[Pattern]: [key number]" format. The finding cites exact numbers from cohort data. cases_supporting is derivable (93% * 28 = 26).
+
+### Example B: WRONG Insight (Obvious, Should Be Skipped)
+
+Do NOT produce insights like this:
+{{"insight_id": "1", "category": "documentation", "headline": "Complete documentation leads to approval", "finding": "Cases with all required documents were more likely to be approved.", "current_patient_status": "at_risk", "current_patient_detail": "Patient has 2 missing documents", "evidence_strength": "strong", "cases_supporting": 28, "non_obvious_factor": true}}
+
+This is WRONG because: "Complete documentation leads to approval" is obvious. The headline does not follow "[Pattern]: [key number]" format. The finding contains no specific numbers.
+
+### Example C: Small Cohort Handling (Evidence Strength Calibration)
+
+When cohorts are small (approved_count=6, denied_count=3), calibrate evidence_strength:
+- "strong": Pattern holds across 80%+ of sub-cohort AND sub-cohort >= 8 cases
+- "moderate": Pattern holds across 60%+ OR sub-cohort has 5-7 cases
+- "weak": Sub-cohort < 5 cases -- present as qualitative observation
+
+## Required Output (JSON)
+
+Return ONLY valid JSON:
+
+{{
+  "differentiating_insights": [
+    {{
+      "insight_id": "1",
+      "category": "lab_threshold|documentation|treatment_depth|timing|severity_combo|demographic",
+      "headline": "≤60 chars, [Pattern]: [key number]",
+      "finding": "1-2 sentences with data-backed numbers only",
+      "current_patient_status": "at_risk|favorable|neutral",
+      "current_patient_detail": "≤80 chars, state the gap clearly",
+      "evidence_strength": "strong|moderate|weak",
+      "cases_supporting": 0,
+      "non_obvious_factor": true
+    }}
+  ],
+  "actionable_recommendations": [
+    {{
+      "priority": 1,
+      "action": "≤12 words, specific",
+      "rationale": "One sentence with evidence",
+      "expected_impact": "Quantified, e.g. +65 pp approval advantage",
+      "effort_level": "low|medium|high"
+    }}
+  ],
+  "current_patient_position": {{
+    "favorable_factors": ["max 3 factors"],
+    "at_risk_factors": ["max 3 factors"],
+    "overall_summary": "Max 2 sentences",
+    "estimated_cohort_match": 0.0
+  }}
+}}
+
+CRITICAL RULES:
+- MAX 4 insights, MAX 3 recommendations, MAX 3 factors per category
+- Every insight MUST include specific numbers from the provided data
+- Every `at_risk` insight must have a corresponding recommendation
+- GROUNDING CONSTRAINT for cases_supporting: Must be derivable from cohort stats. Approved cohort = {approved_count}, denied = {denied_count}. Calculate as: (percentage cited) * (cohort size for that group). Do NOT invent case counts
+- Do NOT include `documentation_differentiators` in the output

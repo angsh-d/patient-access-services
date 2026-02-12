@@ -5,6 +5,7 @@ from enum import Enum
 
 from backend.models.enums import TaskCategory
 from backend.reasoning.llm_gateway import get_llm_gateway
+from backend.reasoning.prompt_loader import get_prompt_loader
 from backend.config.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -260,55 +261,16 @@ class NotificationService:
         recipient_type: str,
         context: Dict[str, Any]
     ) -> str:
-        """Build prompt for notification content generation."""
-        templates = {
-            NotificationType.PROVIDER_UPDATE: """
-Draft a professional update notification for a healthcare provider.
-Update Type: {update_type}
-Details: {details}
-
-Requirements:
-- Clear and concise
-- Include relevant action items
-- Professional medical terminology
-- HIPAA compliant
-""",
-            NotificationType.APPROVAL_NOTICE: """
-Draft an approval notification for a prior authorization case.
-Payer: {payer_name}
-Approval Details: {approval_details}
-
-Requirements:
-- Congratulatory but professional
-- Include key approval information (dates, quantities)
-- Next steps for prescription fulfillment
-""",
-            NotificationType.DENIAL_NOTICE: """
-Draft a denial notification with appeal information.
-Payer: {payer_name}
-Denial Reason: {denial_reason}
-Appeal Deadline: {appeal_deadline}
-
-Requirements:
-- Clear explanation of denial
-- Appeal options and deadline
-- Supportive tone
-- Action items for appeal
-""",
-            NotificationType.DOCUMENT_REQUEST: """
-Draft a document request notification.
-Payer: {payer_name}
-Required Documents: {required_documents}
-
-Requirements:
-- Clear list of needed documents
-- Urgency level if applicable
-- Submission instructions
-"""
-        }
-
-        template = templates.get(notification_type, "Draft a professional notification about: {details}")
-        return template.format(**context)
+        """Build prompt for notification content generation using prompt loader."""
+        import json
+        prompt_loader = get_prompt_loader()
+        return prompt_loader.load(
+            "general/draft_notification.txt",
+            {
+                "notification_type": notification_type.value,
+                "context": json.dumps(context, indent=2, default=str),
+            },
+        )
 
 
 # Global instance

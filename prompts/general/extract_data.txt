@@ -15,6 +15,13 @@ Extract structured information from the following text according to the schema p
 5. For clinical codes (ICD-10, HCPCS, CPT), extract only codes explicitly present in the text.
 6. Preserve exact clinical values (lab results, vital signs) without rounding or interpretation.
 
+## Clinical Coding Guardrails
+
+7. For ICD-10 codes, only extract codes that are valid billable codes. If a code appears malformed (e.g., extra digits, missing decimal), note it in a `coding_note` field.
+8. For J-codes/HCPCS codes, extract exactly as written in the source. Add `coding_note` if the code does not match the expected format (J#### or Q####).
+9. For NPI numbers, extract exactly 10 digits. Flag in `coding_note` if fewer or more digits are found.
+10. Cross-reference medication names with J-codes when both appear in the source — note discrepancies in `coding_note`.
+
 Respond with ONLY the JSON object, no additional text.
 
 Extracted JSON:

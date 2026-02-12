@@ -71,25 +71,25 @@ export interface PolicyMatchViewerProps {
 const STATUS_CONFIG = {
   met: {
     icon: CheckCircle2,
-    color: 'text-green-600',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-200',
+    color: 'text-grey-700',
+    bgColor: 'bg-grey-50',
+    borderColor: 'border-grey-300',
     label: 'MET',
     badgeVariant: 'success' as const,
   },
   partial: {
     icon: AlertCircle,
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-50',
-    borderColor: 'border-amber-200',
+    color: 'text-grey-500',
+    bgColor: 'bg-grey-50',
+    borderColor: 'border-grey-200',
     label: 'PARTIAL',
     badgeVariant: 'warning' as const,
   },
   not_met: {
     icon: XCircle,
-    color: 'text-red-600',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
+    color: 'text-grey-400',
+    bgColor: 'bg-grey-50',
+    borderColor: 'border-grey-200',
     label: 'GAP',
     badgeVariant: 'error' as const,
   },
@@ -165,19 +165,19 @@ export function PolicyMatchViewer({
       <div className="h-2 bg-grey-200 rounded-full overflow-hidden">
         <div className="h-full flex">
           <motion.div
-            className="bg-green-500"
+            className="bg-grey-700"
             initial={{ width: 0 }}
             animate={{ width: `${(metCount / totalCount) * 100}%` }}
             transition={{ duration: 0.5, delay: 0.2 }}
           />
           <motion.div
-            className="bg-amber-500"
+            className="bg-grey-500"
             initial={{ width: 0 }}
             animate={{ width: `${(partialCount / totalCount) * 100}%` }}
             transition={{ duration: 0.5, delay: 0.3 }}
           />
           <motion.div
-            className="bg-red-500"
+            className="bg-grey-400"
             initial={{ width: 0 }}
             animate={{ width: `${(gapCount / totalCount) * 100}%` }}
             transition={{ duration: 0.5, delay: 0.4 }}
@@ -253,7 +253,7 @@ export function PolicyMatchViewer({
                     </div>
                     {criterion.policyExcerpt && (
                       <button
-                        className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1 ml-7"
+                        className="text-xs text-grey-600 hover:text-grey-700 flex items-center gap-1 ml-7"
                         onClick={(e) => {
                           e.stopPropagation()
                           setSelectedCriterion(criterion)
@@ -276,7 +276,7 @@ export function PolicyMatchViewer({
                         </div>
                         {evidenceItem.source && (
                           <button
-                            className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                            className="text-xs text-grey-600 hover:text-grey-700 flex items-center gap-1"
                             onClick={(e) => {
                               e.stopPropagation()
                               onEvidenceClick?.(evidenceItem)
@@ -288,8 +288,8 @@ export function PolicyMatchViewer({
                         )}
                         {evidenceItem.gaps && evidenceItem.gaps.length > 0 && (
                           <div className="flex items-start gap-1 mt-1">
-                            <AlertTriangle className="w-3 h-3 text-amber-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-xs text-amber-700">
+                            <AlertTriangle className="w-3 h-3 text-grey-500 mt-0.5 flex-shrink-0" />
+                            <span className="text-xs text-grey-700">
                               Gap: {evidenceItem.gaps[0]}
                             </span>
                           </div>

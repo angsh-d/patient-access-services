@@ -15,6 +15,7 @@ export const ENDPOINTS = {
   // Cases
   cases: `${API_BASE_URL}/cases`,
   case: (id: string) => `${API_BASE_URL}/cases/${id}`,
+  deleteCase: (id: string) => `${API_BASE_URL}/cases/${id}`,
   processCase: (id: string) => `${API_BASE_URL}/cases/${id}/process`,
   caseAuditTrail: (id: string) => `${API_BASE_URL}/cases/${id}/audit-trail`,
   generateStrategies: (id: string) => `${API_BASE_URL}/cases/${id}/generate-strategies`,
@@ -23,6 +24,20 @@ export const ENDPOINTS = {
   selectStrategy: (id: string) => `${API_BASE_URL}/cases/${id}/select-strategy`,
   confirmDecision: (id: string) => `${API_BASE_URL}/cases/${id}/confirm-decision`,
   decisionStatus: (id: string) => `${API_BASE_URL}/cases/${id}/decision-status`,
+
+  // SSE Streaming
+  streamStage: (id: string, stage: string) => `${API_BASE_URL}/cases/${id}/stream-stage/${stage}`,
+
+  // Cohort Analysis
+  cohortAnalysis: (id: string) => `${API_BASE_URL}/cases/${id}/cohort-analysis`,
+  gapCohortAnalysis: (id: string) => `${API_BASE_URL}/cases/${id}/gap-cohort-analysis`,
+
+  // Policy Q&A Assistant
+  policyQA: (id: string) => `${API_BASE_URL}/cases/${id}/policy-qa`,
+
+  // Appeal Prediction & Letter Drafting
+  predictAppeal: (id: string) => `${API_BASE_URL}/cases/${id}/predict-appeal`,
+  draftAppealLetter: (id: string) => `${API_BASE_URL}/cases/${id}/draft-appeal-letter`,
 
   // Strategies
   scoreStrategies: `${API_BASE_URL}/strategies/score`,
@@ -44,6 +59,13 @@ export const ENDPOINTS = {
 
   // Activity Feed
   recentActivity: `${API_BASE_URL}/activity/recent`,
+
+  // Analytics
+  analyticsLLMCosts: `${API_BASE_URL}/analytics/llm-costs`,
+  analyticsPredictionAccuracy: `${API_BASE_URL}/analytics/prediction-accuracy`,
+
+  // Validation
+  validatePatient: (patientId: string) => `${API_BASE_URL}/validate/patient/${patientId}`,
 } as const
 
 /**
@@ -112,6 +134,8 @@ export const QUERY_KEYS = {
   case: (id: string) => ['case', id] as const,
   strategies: (caseId: string) => ['strategies', caseId] as const,
   strategicIntelligence: (caseId: string) => ['strategic-intelligence', caseId] as const,
+  cohortAnalysis: (caseId: string) => ['cohort-analysis', caseId] as const,
+  gapCohortAnalysis: (caseId: string) => ['gap-cohort-analysis', caseId] as const,
   trace: (caseId: string) => ['trace', caseId] as const,
   decisionStatus: (caseId: string) => ['decision-status', caseId] as const,
   patientData: (patientId: string) => ['patient-data', patientId] as const,
@@ -120,6 +144,9 @@ export const QUERY_KEYS = {
   policyDigitized: (payer: string, medication: string) => ['policy', 'digitized', payer, medication] as const,
   policyCriteria: (payer: string, medication: string) => ['policy', 'criteria', payer, medication] as const,
   aiActivity: ['ai-activity'] as const,
+  analyticsLLMCosts: ['analytics', 'llm-costs'] as const,
+  analyticsPredictionAccuracy: ['analytics', 'prediction-accuracy'] as const,
+  patientValidation: (patientId: string) => ['patient-validation', patientId] as const,
 } as const
 
 // Re-export cache times from centralized query cache config
@@ -142,29 +169,29 @@ export const AGENT_TYPES = {
  */
 export const AGENT_COLORS = {
   intake: {
-    primary: 'blue-600',
-    bg: 'blue-100',
-    border: 'blue-200',
+    primary: 'grey-900',
+    bg: 'grey-100',
+    border: 'grey-200',
   },
   policy_analyzer: {
-    primary: 'purple-600',
-    bg: 'purple-100',
-    border: 'purple-200',
+    primary: 'grey-800',
+    bg: 'grey-100',
+    border: 'grey-200',
   },
   strategy_generator: {
-    primary: 'green-600',
-    bg: 'green-100',
-    border: 'green-200',
+    primary: 'grey-700',
+    bg: 'grey-100',
+    border: 'grey-200',
   },
   action_coordinator: {
-    primary: 'orange-600',
-    bg: 'orange-100',
-    border: 'orange-200',
+    primary: 'grey-600',
+    bg: 'grey-100',
+    border: 'grey-200',
   },
   recovery: {
-    primary: 'red-600',
-    bg: 'red-100',
-    border: 'red-200',
+    primary: 'grey-500',
+    bg: 'grey-100',
+    border: 'grey-200',
   },
   human_review: {
     primary: 'grey-600',

@@ -35,9 +35,14 @@ import {
   Circle,
   Maximize2,
   Minimize2,
+  ShieldCheck,
+  ShieldAlert,
+  ShieldQuestion,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ENDPOINTS, QUERY_KEYS, CACHE_TIMES } from '@/lib/constants'
+import { usePatientValidation } from '@/hooks/useValidation'
 import type {
   PatientData,
   PatientDocument,
@@ -46,6 +51,11 @@ import type {
   LabPanel,
   LabResult,
 } from '@/hooks/usePatientData'
+import type {
+  CodeValidation,
+  HCPCSCodeValidation,
+  NPIValidation,
+} from '@/hooks/useValidation'
 
 // Section definition for navigation
 interface Section {
@@ -93,6 +103,168 @@ function DataField({
       )}>
         {value || <span className="text-grey-300">—</span>}
       </p>
+    </div>
+  )
+}
+
+/**
+ * ValidationBadge - Shows validation status for a clinical code
+ */
+function ValidationBadge({
+  isValid,
+  status,
+  description,
+  tooltip,
+}: {
+  isValid: boolean
+  status?: string
+  description?: string | null
+  tooltip?: string
+}) {
+  const isNeedsReview = status === 'needs_review'
+  return (
+    <span
+      className="inline-flex items-center gap-1 ml-1.5"
+      title={tooltip || description || (isValid ? 'Verified' : isNeedsReview ? 'Needs review' : 'Validation failed')}
+    >
+      {isValid && !isNeedsReview ? (
+        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+      ) : isNeedsReview ? (
+        <ShieldQuestion className="w-3.5 h-3.5 text-amber-500" />
+      ) : (
+        <ShieldAlert className="w-3.5 h-3.5 text-red-500" />
+      )}
+      {description && (
+        <span className="text-[10px] text-grey-500 max-w-[200px] truncate">{description}</span>
+      )}
+    </span>
+  )
+}
+
+/**
+ * ValidationSummaryBanner - Shows overall validation status at the top of the review
+ */
+function ValidationSummaryBanner({
+  patientId,
+}: {
+  patientId: string
+}) {
+  const { data: validation, isLoading, isError } = usePatientValidation(patientId)
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  if (isLoading) {
+    return (
+      <div className="mb-6 p-4 rounded-xl bg-grey-50 border border-grey-200 flex items-center gap-3">
+        <Loader2 className="w-5 h-5 text-grey-400 animate-spin" />
+        <div>
+          <h4 className="text-sm font-semibold text-grey-600">Validating Clinical Codes</h4>
+          <p className="text-xs text-grey-400 mt-0.5">Checking NPI, ICD-10, HCPCS codes and cross-verifying data consistency...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (isError || !validation) return null
+
+  const totalChecks = (validation.npi ? 1 : 0) + validation.icd10_codes.length + validation.hcpcs_codes.length
+  const passedChecks =
+    (validation.npi?.is_valid ? 1 : 0) +
+    validation.icd10_codes.filter(c => c.is_valid).length +
+    validation.hcpcs_codes.filter(c => c.is_valid).length
+  const issueCount = totalChecks - passedChecks
+  const crossFindings = validation.cross_verification?.findings?.filter(f => f.status !== 'consistent') || []
+  const totalIssues = issueCount + crossFindings.length
+
+  const isAllGood = validation.overall_status === 'validated'
+
+  return (
+    <div className={cn(
+      "mb-6 rounded-xl border overflow-hidden",
+      isAllGood ? "bg-emerald-50/50 border-emerald-200/60" : "bg-amber-50/50 border-amber-200/60"
+    )}>
+      <button
+        type="button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full p-4 flex items-center justify-between text-left"
+      >
+        <div className="flex items-center gap-3">
+          {isAllGood ? (
+            <ShieldCheck className="w-5 h-5 text-emerald-600" />
+          ) : (
+            <ShieldAlert className="w-5 h-5 text-amber-600" />
+          )}
+          <div>
+            <h4 className="text-sm font-semibold text-grey-900">
+              {isAllGood
+                ? `All ${totalChecks} codes verified`
+                : `${totalIssues} issue${totalIssues !== 1 ? 's' : ''} found`
+              }
+            </h4>
+            <p className="text-xs text-grey-500 mt-0.5">
+              {passedChecks}/{totalChecks} codes passed
+              {validation.cross_verification && ` | Cross-verification: ${validation.cross_verification.overall_status}`}
+            </p>
+          </div>
+        </div>
+        {isExpanded ? (
+          <ChevronDown className="w-4 h-4 text-grey-400" />
+        ) : (
+          <ChevronRight className="w-4 h-4 text-grey-400" />
+        )}
+      </button>
+
+      {isExpanded && (
+        <div className="px-4 pb-4 space-y-3 border-t border-grey-200/50 pt-3">
+          {/* NPI */}
+          {validation.npi && (
+            <div className="flex items-center gap-2 text-sm">
+              <ValidationBadge isValid={validation.npi.is_valid} />
+              <span className="font-mono text-xs text-grey-700">NPI {validation.npi.npi}</span>
+              {validation.npi.provider_name && (
+                <span className="text-xs text-grey-500">- {validation.npi.provider_name}</span>
+              )}
+            </div>
+          )}
+
+          {/* ICD-10 */}
+          {validation.icd10_codes.map(code => (
+            <div key={code.code} className="flex items-center gap-2 text-sm">
+              <ValidationBadge isValid={code.is_valid} description={code.description} />
+              <span className="font-mono text-xs text-grey-700">{code.code}</span>
+            </div>
+          ))}
+
+          {/* HCPCS */}
+          {validation.hcpcs_codes.map(code => (
+            <div key={code.code} className="flex items-center gap-2 text-sm">
+              <ValidationBadge isValid={code.is_valid} status={code.status} description={code.description} />
+              <span className="font-mono text-xs text-grey-700">{code.code}</span>
+              {code.drug_name && (
+                <span className="text-xs text-grey-500">- {code.drug_name}</span>
+              )}
+            </div>
+          ))}
+
+          {/* Cross-verification findings */}
+          {crossFindings.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-grey-200/50">
+              <p className="text-xs font-medium text-grey-500 uppercase tracking-wide mb-2">Cross-Verification</p>
+              {crossFindings.map((finding, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-sm mb-1.5">
+                  <span className={cn(
+                    "mt-0.5 w-1.5 h-1.5 rounded-full flex-shrink-0",
+                    finding.status === 'inconsistent' ? "bg-red-500" : "bg-amber-500"
+                  )} />
+                  <div>
+                    <span className="text-xs text-grey-700">{finding.field}</span>
+                    <p className="text-xs text-grey-500">{finding.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -207,6 +379,13 @@ export function ExtractedDataReview({
   const [activeSection, setActiveSection] = useState('demographics')
   const [pdfViewerDoc, setPdfViewerDoc] = useState<string | null>(null)
   const [isDocViewerMaximized, setIsDocViewerMaximized] = useState(false)
+
+  // Validation hook
+  const {
+    getICD10Status,
+    getNPIStatus,
+    getHCPCSStatus,
+  } = usePatientValidation(patientData.patient_id)
 
   // Get payer and medication for policy lookup
   const payerName = patientData.insurance?.primary?.payer_name?.toLowerCase() || ''
@@ -392,7 +571,7 @@ export function ExtractedDataReview({
         <div className="border-t border-grey-100 p-4">
           <p className="text-xs font-medium text-grey-400 uppercase tracking-wide mb-3">Source Documents</p>
           <div className="space-y-1">
-            {documents.slice(0, 4).map((doc) => (
+            {documents.map((doc) => (
               <button
                 key={doc.filename}
                 type="button"
@@ -403,15 +582,15 @@ export function ExtractedDataReview({
                 <span className="truncate">{doc.filename.replace(/^\d+_/, '').replace(/_/g, ' ').replace('.pdf', '')}</span>
               </button>
             ))}
-            {documents.length > 4 && (
-              <p className="text-xs text-grey-400 px-2 pt-1">+{documents.length - 4} more</p>
-            )}
           </div>
         </div>
       </nav>
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto p-8 bg-white/90 backdrop-blur-sm min-w-0">
+        {/* Validation Summary Banner */}
+        <ValidationSummaryBanner patientId={patientData.patient_id} />
+
         <AnimatePresence mode="wait">
           <motion.div
             key={activeSection}
@@ -442,6 +621,7 @@ export function ExtractedDataReview({
                 data={patientData.prescriber}
                 sourceDocument={patientData.prescriber?.source_document}
                 onViewDocument={() => handleViewDoc(patientData.prescriber?.source_document)}
+                npiValidation={getNPIStatus()}
               />
             )}
 
@@ -450,6 +630,7 @@ export function ExtractedDataReview({
                 data={patientData.medication_request}
                 sourceDocument={patientData.medication_request?.source_document}
                 onViewDocument={() => handleViewDoc(patientData.medication_request?.source_document)}
+                hcpcsValidation={patientData.medication_request?.j_code ? getHCPCSStatus(patientData.medication_request.j_code) : undefined}
               />
             )}
 
@@ -457,6 +638,7 @@ export function ExtractedDataReview({
               <DiagnosesSection
                 diagnoses={patientData.diagnoses || []}
                 onViewDocument={(doc) => handleViewDoc(doc)}
+                getICD10Status={getICD10Status}
               />
             )}
 
@@ -668,10 +850,12 @@ function PrescriberSection({
   data,
   sourceDocument,
   onViewDocument,
+  npiValidation,
 }: {
   data: PatientData['prescriber']
   sourceDocument?: string
   onViewDocument: () => void
+  npiValidation?: NPIValidation | null
 }) {
   if (!data) return <EmptySection title="Prescriber" />
 
@@ -682,7 +866,26 @@ function PrescriberSection({
       {/* Main Info Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-6 border-b border-grey-100">
         <DataField label="Physician Name" value={data.name} />
-        <DataField label="NPI" value={data.npi} mono />
+        <div className="py-3">
+          <p className="text-xs font-medium text-grey-400 uppercase tracking-wide mb-1">NPI</p>
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-grey-900 font-mono">{data.npi || <span className="text-grey-300">—</span>}</span>
+            {npiValidation && (
+              <ValidationBadge
+                isValid={npiValidation.is_valid}
+                tooltip={npiValidation.is_valid
+                  ? `Verified: ${npiValidation.provider_name || ''} (${npiValidation.specialty || ''})`
+                  : `Invalid: ${npiValidation.errors?.join(', ') || 'NPI not found'}`
+                }
+              />
+            )}
+          </div>
+          {npiValidation?.is_valid && npiValidation.provider_name && (
+            <p className="text-xs text-grey-500 mt-0.5">
+              {npiValidation.provider_name}{npiValidation.specialty ? ` — ${npiValidation.specialty}` : ''}
+            </p>
+          )}
+        </div>
         <DataField label="Specialty" value={data.specialty} />
         <DataField label="Phone" value={data.phone} />
         <DataField label="Fax" value={data.fax} />
@@ -702,10 +905,12 @@ function MedicationSection({
   data,
   sourceDocument,
   onViewDocument,
+  hcpcsValidation,
 }: {
   data: PatientData['medication_request']
   sourceDocument?: string
   onViewDocument: () => void
+  hcpcsValidation?: HCPCSCodeValidation
 }) {
   if (!data) return <EmptySection title="Medication Request" />
 
@@ -723,7 +928,22 @@ function MedicationSection({
         <h4 className="text-xl font-semibold text-white">{data.medication_name}</h4>
         {data.brand_name && <p className="text-sm text-grey-300 mt-1">{data.brand_name}</p>}
         {data.j_code && (
-          <p className="text-xs font-mono text-grey-400 mt-2">J-Code: {data.j_code}</p>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-xs font-mono text-grey-400">J-Code: {data.j_code}</span>
+            {hcpcsValidation && (
+              <ValidationBadge
+                isValid={hcpcsValidation.is_valid}
+                status={hcpcsValidation.status}
+                tooltip={hcpcsValidation.is_valid
+                  ? `Verified: ${hcpcsValidation.description || ''}`
+                  : `Issue: ${hcpcsValidation.errors?.join(', ') || 'Validation failed'}`
+                }
+              />
+            )}
+          </div>
+        )}
+        {hcpcsValidation?.is_valid && hcpcsValidation.description && (
+          <p className="text-xs text-grey-400 mt-1">{hcpcsValidation.description}</p>
         )}
       </div>
 
@@ -748,9 +968,11 @@ function MedicationSection({
 function DiagnosesSection({
   diagnoses,
   onViewDocument,
+  getICD10Status,
 }: {
   diagnoses: Diagnosis[]
   onViewDocument: (doc: string) => void
+  getICD10Status?: (code: string) => CodeValidation | undefined
 }) {
   if (!diagnoses.length) return <EmptySection title="Diagnoses" />
 
@@ -758,43 +980,60 @@ function DiagnosesSection({
     <div>
       <SectionHeader title="Diagnoses" />
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-        {diagnoses.map((dx, idx) => (
-          <div
-            key={idx}
-            className="bg-grey-50 rounded-xl p-5"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className={cn(
-                  "text-xs font-medium px-2 py-0.5 rounded",
-                  dx.rank === 'primary' ? "bg-grey-900 text-white" : "bg-grey-200 text-grey-600"
-                )}>
-                  {dx.rank === 'primary' ? 'Primary' : 'Secondary'}
-                </span>
+        {diagnoses.map((dx, idx) => {
+          const icd10Val = getICD10Status?.(dx.icd10_code)
+          return (
+            <div
+              key={idx}
+              className="bg-grey-50 rounded-xl p-5"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "text-xs font-medium px-2 py-0.5 rounded",
+                    dx.rank === 'primary' ? "bg-grey-900 text-white" : "bg-grey-200 text-grey-600"
+                  )}>
+                    {dx.rank === 'primary' ? 'Primary' : 'Secondary'}
+                  </span>
+                </div>
+                {dx.status && (
+                  <span className="text-xs font-medium text-grey-500 bg-grey-100 px-2 py-0.5 rounded">
+                    {dx.status}
+                  </span>
+                )}
               </div>
-              {dx.status && (
-                <span className="text-xs font-medium text-grey-500 bg-grey-100 px-2 py-0.5 rounded">
-                  {dx.status}
-                </span>
+              <div className="flex items-center gap-1 mb-2">
+                <code className="text-base font-mono font-semibold text-grey-900">{dx.icd10_code}</code>
+                {icd10Val && (
+                  <ValidationBadge
+                    isValid={icd10Val.is_valid}
+                    tooltip={icd10Val.is_valid
+                      ? `Verified: ${icd10Val.description || ''}`
+                      : `Invalid: ${icd10Val.errors?.join(', ') || 'Code not found'}`
+                    }
+                  />
+                )}
+              </div>
+              <p className="text-sm text-grey-700">{dx.description}</p>
+              {icd10Val?.is_valid && icd10Val.description && icd10Val.description !== dx.description && (
+                <p className="text-xs text-grey-500 mt-1">NLM: {icd10Val.description}</p>
+              )}
+              {dx.coding_note && (
+                <p className="text-xs text-grey-400 mt-2 italic">{dx.coding_note}</p>
+              )}
+              {dx.source_document && (
+                <button
+                  type="button"
+                  onClick={() => onViewDocument(dx.source_document!)}
+                  className="mt-3 text-xs text-grey-500 hover:text-grey-700 flex items-center gap-1 transition-colors"
+                >
+                  <FileText className="w-3 h-3" />
+                  View Source
+                </button>
               )}
             </div>
-            <code className="text-base font-mono font-semibold text-grey-900 block mb-2">{dx.icd10_code}</code>
-            <p className="text-sm text-grey-700">{dx.description}</p>
-            {dx.coding_note && (
-              <p className="text-xs text-grey-400 mt-2 italic">{dx.coding_note}</p>
-            )}
-            {dx.source_document && (
-              <button
-                type="button"
-                onClick={() => onViewDocument(dx.source_document!)}
-                className="mt-3 text-xs text-grey-500 hover:text-grey-700 flex items-center gap-1 transition-colors"
-              >
-                <FileText className="w-3 h-3" />
-                View Source
-              </button>
-            )}
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
@@ -1386,7 +1625,7 @@ function PolicyRequirementsSection({
                   {categoryTotal > 1 && (
                     <span className={cn(
                       "text-[10px] font-medium px-1.5 py-0.5 rounded",
-                      isOrLogic ? "bg-blue-100 text-blue-700" : "bg-grey-200 text-grey-600"
+                      isOrLogic ? "bg-grey-200 text-grey-700" : "bg-grey-200 text-grey-600"
                     )}>
                       {isOrLogic ? 'ANY ONE' : 'ALL REQUIRED'}
                     </span>

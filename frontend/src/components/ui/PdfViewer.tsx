@@ -134,10 +134,10 @@ export function PdfViewer({ url, className = '' }: PdfViewerProps) {
     return (
       <div className={`flex items-center justify-center h-full ${className}`}>
         <div className="text-center p-8">
-          <p className="text-red-400 text-sm">{error}</p>
+          <p className="text-grey-500 text-sm">{error}</p>
           <button
             onClick={loadPdf}
-            className="mt-2 text-xs text-blue-400 hover:text-blue-300 underline"
+            className="mt-2 text-xs text-grey-600 hover:text-grey-500 underline"
           >
             Retry
           </button>

@@ -1,11 +1,25 @@
 """LLM Gateway for task-based model routing."""
+import asyncio
 import json
 import math
+import time
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
+import anthropic
+import openai
+from google.api_core.exceptions import (
+    PermissionDenied as GooglePermissionDenied,
+    InvalidArgument as GoogleInvalidArgument,
+    TooManyRequests as GoogleTooManyRequests,
+    ServiceUnavailable as GoogleServiceUnavailable,
+    DeadlineExceeded as GoogleDeadlineExceeded,
+    GoogleAPIError,
+)
+
 from backend.models.enums import TaskCategory, LLMProvider
 from backend.config.logging_config import get_logger
+from backend.config.request_context import get_correlation_id
 from backend.reasoning.claude_pa_client import ClaudePAClient, ClaudePolicyReasoningError
 from backend.reasoning.gemini_client import GeminiClient, GeminiError
 from backend.reasoning.openai_client import AzureOpenAIClient, AzureOpenAIError
@@ -21,6 +35,71 @@ _PROVIDER_MAP = {
 
 # Task category name → enum mapping
 _TASK_MAP = {cat.value: cat for cat in TaskCategory}
+
+# Circuit breaker settings
+_CIRCUIT_BREAKER_THRESHOLD = 3   # consecutive failures before tripping
+_CIRCUIT_BREAKER_COOLDOWN = 60   # seconds to skip a tripped provider
+_TRANSIENT_RETRY_DELAY = 2       # seconds to wait before retrying a transient error
+
+# --- Permanent (non-retryable) error types per provider ---
+_PERMANENT_ERROR_TYPES = (
+    # Claude / Anthropic
+    anthropic.AuthenticationError,
+    anthropic.BadRequestError,
+    anthropic.NotFoundError,
+    anthropic.PermissionDeniedError,
+    # Azure OpenAI
+    openai.AuthenticationError,
+    openai.BadRequestError,
+    openai.NotFoundError,
+    openai.PermissionDeniedError,
+    # Google / Gemini
+    GooglePermissionDenied,
+    GoogleInvalidArgument,
+)
+
+# --- Transient (retryable) error types per provider ---
+_TRANSIENT_ERROR_TYPES = (
+    # Claude / Anthropic
+    anthropic.RateLimitError,
+    anthropic.APIConnectionError,
+    anthropic.APITimeoutError,
+    anthropic.InternalServerError,
+    # Azure OpenAI
+    openai.RateLimitError,
+    openai.APIConnectionError,
+    openai.APITimeoutError,
+    openai.InternalServerError,
+    # Google / Gemini
+    GoogleTooManyRequests,
+    GoogleServiceUnavailable,
+    GoogleDeadlineExceeded,
+    # Generic network errors
+    ConnectionError,
+    TimeoutError,
+)
+
+
+def _is_transient_error(error: Exception) -> bool:
+    """Classify an error as transient (retryable) or permanent.
+
+    Checks the error itself and its ``__cause__`` chain because the
+    per-client wrappers (ClaudePolicyReasoningError, GeminiError,
+    AzureOpenAIError) store the original SDK exception as __cause__.
+
+    Returns True for rate-limit, timeout, connection, and 5xx errors.
+    Returns False for auth, bad-request, and model-not-found errors.
+    """
+    # Walk the cause chain
+    current: Optional[BaseException] = error
+    while current is not None:
+        if isinstance(current, _PERMANENT_ERROR_TYPES):
+            return False
+        if isinstance(current, _TRANSIENT_ERROR_TYPES):
+            return True
+        current = getattr(current, "__cause__", None)
+    # Unknown errors are treated as transient (safer to retry once)
+    return True
 
 
 def _load_task_model_routing() -> Dict[TaskCategory, List[LLMProvider]]:
@@ -73,7 +152,15 @@ class LLMGateway:
     - Policy reasoning → Claude (primary) → Azure OpenAI (fallback)
     - Appeal strategy → Claude (primary) → Azure OpenAI (fallback)
     - General tasks → Gemini (primary) → Azure OpenAI (fallback)
+
+    Includes error classification (transient vs permanent) and a
+    per-provider circuit breaker that skips providers after repeated
+    consecutive failures.
     """
+
+    # Class-level circuit breaker state shared across instances
+    # (there is only one global instance via get_llm_gateway())
+    _provider_failures: Dict[LLMProvider, dict] = {}
 
     def __init__(self):
         """Initialize the LLM Gateway with all clients."""
@@ -103,6 +190,64 @@ class LLMGateway:
             self._azure_client = AzureOpenAIClient()
         return self._azure_client
 
+    # ------------------------------------------------------------------
+    # Circuit breaker helpers
+    # ------------------------------------------------------------------
+
+    def _is_circuit_open(self, provider: LLMProvider) -> bool:
+        """Return True if the provider's circuit breaker is tripped (open).
+
+        A tripped breaker means the provider had >= _CIRCUIT_BREAKER_THRESHOLD
+        consecutive failures and the cooldown period has not elapsed.
+        """
+        state = self._provider_failures.get(provider)
+        if state is None:
+            return False
+        if state["count"] < _CIRCUIT_BREAKER_THRESHOLD:
+            return False
+        elapsed = time.monotonic() - state["last_failure_time"]
+        if elapsed >= _CIRCUIT_BREAKER_COOLDOWN:
+            # Cooldown expired -- reset and allow a probe request
+            logger.info(
+                "Circuit breaker cooldown expired, resetting",
+                provider=provider.value,
+                elapsed_s=round(elapsed, 1),
+            )
+            self._provider_failures.pop(provider, None)
+            return False
+        logger.warning(
+            "Circuit breaker OPEN, skipping provider",
+            provider=provider.value,
+            consecutive_failures=state["count"],
+            remaining_cooldown_s=round(_CIRCUIT_BREAKER_COOLDOWN - elapsed, 1),
+        )
+        return True
+
+    def _record_provider_failure(self, provider: LLMProvider) -> None:
+        """Increment consecutive failure counter for a provider."""
+        state = self._provider_failures.get(provider)
+        if state is None:
+            state = {"count": 0, "last_failure_time": 0.0}
+            self._provider_failures[provider] = state
+        state["count"] += 1
+        state["last_failure_time"] = time.monotonic()
+        logger.info(
+            "Provider failure recorded",
+            provider=provider.value,
+            consecutive_failures=state["count"],
+            circuit_will_open=state["count"] >= _CIRCUIT_BREAKER_THRESHOLD,
+        )
+
+    def _record_provider_success(self, provider: LLMProvider) -> None:
+        """Reset consecutive failure counter on success."""
+        if provider in self._provider_failures:
+            self._provider_failures.pop(provider, None)
+            logger.debug("Provider failure counter reset", provider=provider.value)
+
+    # ------------------------------------------------------------------
+    # Core generate with error classification + circuit breaker
+    # ------------------------------------------------------------------
+
     async def generate(
         self,
         task_category: TaskCategory,
@@ -113,6 +258,9 @@ class LLMGateway:
     ) -> Dict[str, Any]:
         """
         Generate content using the appropriate model for the task.
+
+        Wraps _generate_inner() with a wall-clock timeout to prevent
+        indefinite hangs when providers stall without raising errors.
 
         Args:
             task_category: Category of task for routing
@@ -125,50 +273,129 @@ class LLMGateway:
             Generated response with metadata
 
         Raises:
-            LLMGatewayError: If all configured providers fail for the task
+            LLMGatewayError: If all configured providers fail or timeout
         """
-        providers = TASK_MODEL_ROUTING.get(task_category, [LLMProvider.GEMINI, LLMProvider.AZURE_OPENAI])
+        from backend.config.settings import get_settings
+        timeout = get_settings().llm_gateway_timeout_seconds
+        try:
+            return await asyncio.wait_for(
+                self._generate_inner(
+                    task_category=task_category,
+                    prompt=prompt,
+                    system_prompt=system_prompt,
+                    temperature=temperature,
+                    response_format=response_format,
+                ),
+                timeout=timeout,
+            )
+        except asyncio.TimeoutError:
+            raise LLMGatewayError(
+                f"LLM gateway timed out after {timeout}s for task {task_category.value}"
+            )
+
+    async def _generate_inner(
+        self,
+        task_category: TaskCategory,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.3,
+        response_format: str = "text"
+    ) -> Dict[str, Any]:
+        """Inner generate logic with provider routing, retries, and circuit breaker."""
+        providers = TASK_MODEL_ROUTING.get(
+            task_category, [LLMProvider.GEMINI, LLMProvider.AZURE_OPENAI]
+        )
+        cid = get_correlation_id()
 
         logger.info(
             "Routing LLM request",
+            correlation_id=cid,
             task_category=task_category.value,
-            providers=[p.value for p in providers]
+            providers=[p.value for p in providers],
         )
 
         last_error = None
 
         for provider in providers:
+            # --- Circuit breaker check ---
+            if self._is_circuit_open(provider):
+                logger.warning(
+                    "Skipping provider due to open circuit breaker",
+                    correlation_id=cid,
+                    provider=provider.value,
+                    task_category=task_category.value,
+                )
+                continue
+
             try:
                 result = await self._call_provider(
                     provider=provider,
                     prompt=prompt,
                     system_prompt=system_prompt,
                     temperature=temperature,
-                    response_format=response_format
+                    response_format=response_format,
                 )
                 result["provider"] = provider.value
                 result["task_category"] = task_category.value
+                self._record_provider_success(provider)
+                logger.info(
+                    "Provider succeeded",
+                    correlation_id=cid,
+                    provider=provider.value,
+                    task_category=task_category.value,
+                )
                 return result
 
-            except (ClaudePolicyReasoningError, GeminiError, AzureOpenAIError) as e:
-                last_error = e
+            except (ClaudePolicyReasoningError, GeminiError, AzureOpenAIError, Exception) as e:
+                transient = _is_transient_error(e)
                 logger.warning(
-                    "Provider failed, trying fallback",
+                    "Provider failed",
+                    correlation_id=cid,
                     provider=provider.value,
-                    error=str(e)
+                    task_category=task_category.value,
+                    error_type=type(e).__name__,
+                    error_classification="transient" if transient else "permanent",
+                    error=str(e),
                 )
-                continue
 
-            except Exception as e:
-                last_error = e
-                logger.error(
-                    "Unexpected error from provider",
-                    provider=provider.value,
-                    error=str(e)
-                )
-                continue
+                if transient:
+                    # Retry the SAME provider once after a short backoff
+                    logger.info(
+                        "Transient error -- retrying same provider after backoff",
+                        correlation_id=cid,
+                        provider=provider.value,
+                        backoff_s=_TRANSIENT_RETRY_DELAY,
+                    )
+                    await asyncio.sleep(_TRANSIENT_RETRY_DELAY)
+                    try:
+                        result = await self._call_provider(
+                            provider=provider,
+                            prompt=prompt,
+                            system_prompt=system_prompt,
+                            temperature=temperature,
+                            response_format=response_format,
+                        )
+                        result["provider"] = provider.value
+                        result["task_category"] = task_category.value
+                        self._record_provider_success(provider)
+                        return result
+                    except Exception as retry_err:
+                        logger.warning(
+                            "Transient retry also failed, moving to next provider",
+                            correlation_id=cid,
+                            provider=provider.value,
+                            error=str(retry_err),
+                        )
+                        last_error = retry_err
+                        self._record_provider_failure(provider)
+                        continue
+                else:
+                    # Permanent error -- no point retrying this provider
+                    last_error = e
+                    self._record_provider_failure(provider)
+                    continue
 
-        # All providers failed
+        # All providers exhausted
         raise LLMGatewayError(
             f"All providers failed for task {task_category.value}: {last_error}"
         )
@@ -179,29 +406,29 @@ class LLMGateway:
         prompt: str,
         system_prompt: Optional[str],
         temperature: float,
-        response_format: str
+        response_format: str,
     ) -> Dict[str, Any]:
-        """Call a specific provider."""
+        """Call a specific provider and let errors propagate for classification."""
         if provider == LLMProvider.CLAUDE:
             return await self.claude_client.analyze_policy(
                 prompt=prompt,
                 system_prompt=system_prompt,
                 temperature=temperature,
-                response_format=response_format
+                response_format=response_format,
             )
         elif provider == LLMProvider.GEMINI:
             return await self.gemini_client.generate(
                 prompt=prompt,
                 system_prompt=system_prompt,
                 temperature=temperature,
-                response_format=response_format
+                response_format=response_format,
             )
         elif provider == LLMProvider.AZURE_OPENAI:
             return await self.azure_client.generate(
                 prompt=prompt,
                 system_prompt=system_prompt,
                 temperature=temperature,
-                response_format=response_format
+                response_format=response_format,
             )
         else:
             raise ValueError(f"Unknown provider: {provider}")
@@ -301,6 +528,10 @@ class LLMGateway:
     async def embed(self, text: str, task_type: str = "SEMANTIC_SIMILARITY") -> List[float]:
         """Generate an embedding vector via Gemini embedding model."""
         return await self.gemini_client.embed(text, task_type=task_type)
+
+    async def embed_batch(self, texts: List[str], task_type: str = "SEMANTIC_SIMILARITY") -> List[List[float]]:
+        """Generate embedding vectors for multiple texts in a single API call."""
+        return await self.gemini_client.embed_batch(texts, task_type=task_type)
 
     @staticmethod
     def cosine_similarity(a: List[float], b: List[float]) -> float:

@@ -1,6 +1,6 @@
 """Case service for managing PA cases."""
 from typing import Dict, Any, List, Optional
-from datetime import datetime, date, timezone
+from datetime import datetime, date, timezone, timedelta
 from enum import Enum
 import json
 
@@ -399,6 +399,10 @@ class CaseService:
         # Build analysis result based on stage
         if stage == "policy_analysis":
             return await self._run_policy_analysis_stage(case_state, refresh=refresh)
+        elif stage == "cohort_analysis":
+            return await self._run_cohort_analysis_stage(case_state)
+        elif stage == "ai_recommendation":
+            return await self._run_ai_recommendation_stage(case_state)
         elif stage == "strategy_generation":
             return await self._run_strategy_generation_stage(case_state)
         elif stage == "action_coordination":
@@ -556,7 +560,8 @@ class CaseService:
             assessment = await reasoner.assess_coverage(
                 patient_info=patient_info,
                 medication_info=medication_info,
-                payer_name=payer
+                payer_name=payer,
+                skip_cache=refresh,
             )
 
             assessments[payer] = assessment.model_dump()
@@ -615,6 +620,605 @@ class CaseService:
             "assessments": assessments,
             "documentation_gaps": all_gaps
         }
+
+    async def stream_policy_analysis(self, case_id: str, refresh: bool = False):
+        """
+        Stream policy analysis with incremental SSE events.
+        Yields event dicts that the SSE endpoint serializes.
+
+        This is an async generator that mirrors _run_policy_analysis_stage
+        but yields progress events at key processing milestones, providing
+        real-time feedback during long-running Claude LLM calls.
+
+        Args:
+            case_id: Case identifier
+            refresh: If True, force fresh LLM call bypassing cache
+
+        Yields:
+            dict: Event objects with 'event' key and stage-specific data
+        """
+        case_state = await self.get_case_state(case_id)
+        if not case_state:
+            yield {"event": "error", "message": f"Case not found: {case_id}"}
+            return
+
+        # Check cache first
+        if not refresh and case_state.coverage_assessments:
+            cached = case_state.coverage_assessments
+            if isinstance(cached, dict) and any(cached.values()):
+                yield {"event": "progress", "message": "Using cached analysis results", "percent": 50}
+                result = await self._run_policy_analysis_stage(case_state, refresh=False)
+                yield {"event": "stage_complete", **result}
+                return
+
+        from backend.reasoning.policy_reasoner import get_policy_reasoner
+        from backend.agents.intake_agent import IntakeAgent
+
+        reasoner = get_policy_reasoner()
+        payers = list(case_state.payer_states.keys())
+        total_payers = len(payers)
+
+        yield {"event": "progress", "message": f"Analyzing {total_payers} payer(s)", "percent": 5}
+
+        # Load patient data
+        full_patient_data = {}
+        try:
+            intake_agent = IntakeAgent()
+            full_patient_data = await intake_agent.load_patient_data(case_state.patient.patient_id)
+        except FileNotFoundError:
+            logger.warning("Full patient data not found, using case state only",
+                          patient_id=case_state.patient.patient_id)
+
+        yield {"event": "progress", "message": "Patient data loaded", "percent": 10}
+
+        assessments = {}
+        findings = []
+        all_gaps = []
+
+        for idx, payer in enumerate(payers):
+            payer_percent_start = 10 + (80 * idx // total_payers)
+            payer_percent_end = 10 + (80 * (idx + 1) // total_payers)
+
+            yield {"event": "payer_start", "payer_name": payer, "percent": payer_percent_start}
+
+            # Build patient_info with full clinical context
+            patient_info = {
+                "patient_id": case_state.patient.patient_id,
+                "demographics": {
+                    "first_name": case_state.patient.first_name,
+                    "last_name": case_state.patient.last_name,
+                    "date_of_birth": case_state.patient.date_of_birth,
+                },
+                "clinical_profile": {
+                    "diagnosis_codes": case_state.patient.diagnosis_codes,
+                    "allergies": case_state.patient.allergies,
+                },
+                "insurance": {
+                    "primary": {"payer_name": case_state.patient.primary_payer},
+                    "secondary": {"payer_name": case_state.patient.secondary_payer} if case_state.patient.secondary_payer else None,
+                },
+                "prescriber": {
+                    "name": case_state.medication.prescriber_name,
+                    "npi": case_state.medication.prescriber_npi,
+                    "specialty": full_patient_data.get("prescriber", {}).get("specialty", ""),
+                    "credentials": full_patient_data.get("prescriber", {}).get("credentials", ""),
+                },
+            }
+
+            if full_patient_data:
+                patient_info["disease_activity"] = full_patient_data.get("disease_activity", {})
+                patient_info["laboratory_results"] = full_patient_data.get("laboratory_results", {})
+                patient_info["procedures"] = full_patient_data.get("procedures", {})
+                patient_info["pre_biologic_screening"] = full_patient_data.get("pre_biologic_screening", {})
+
+            medication_info = {
+                "medication_name": case_state.medication.medication_name,
+                "generic_name": case_state.medication.generic_name,
+                "dose": case_state.medication.dose,
+                "frequency": case_state.medication.frequency,
+                "diagnosis": case_state.medication.diagnosis,
+                "icd10_code": case_state.medication.icd10_code,
+                "clinical_rationale": case_state.medication.clinical_rationale,
+                "prescriber_name": case_state.medication.prescriber_name,
+                "prescriber_npi": case_state.medication.prescriber_npi,
+                "prior_treatments": case_state.medication.prior_treatments,
+                "supporting_labs": case_state.medication.supporting_labs,
+            }
+
+            yield {"event": "progress", "message": f"Running Claude assessment for {payer}...", "percent": payer_percent_start + 5}
+
+            assessment = await reasoner.assess_coverage(
+                patient_info=patient_info,
+                medication_info=medication_info,
+                payer_name=payer,
+                skip_cache=refresh,
+            )
+
+            assessments[payer] = assessment.model_dump()
+
+            likelihood = assessment.approval_likelihood
+            status = "positive" if likelihood > 0.7 else "warning" if likelihood > 0.4 else "negative"
+            criteria_not_met = assessment.criteria_total_count - assessment.criteria_met_count
+            findings.append({
+                "title": f"{payer} Coverage Assessment",
+                "detail": f"Approval likelihood: {likelihood:.0%}. {assessment.criteria_met_count} criteria met, {criteria_not_met} not met.",
+                "status": status,
+            })
+
+            for gap in assessment.documentation_gaps:
+                all_gaps.append(gap.model_dump())
+
+            yield {
+                "event": "payer_complete",
+                "payer_name": payer,
+                "coverage_status": assessment.coverage_status.value,
+                "approval_likelihood": likelihood,
+                "criteria_met": assessment.criteria_met_count,
+                "criteria_total": assessment.criteria_total_count,
+                "percent": payer_percent_end,
+            }
+
+        # Build final result
+        yield {"event": "progress", "message": "Finalizing analysis...", "percent": 92}
+
+        best_payer = max(assessments.keys(), key=lambda p: assessments[p]["approval_likelihood"])
+        best_likelihood = assessments[best_payer]["approval_likelihood"]
+
+        reasoning = f"I analyzed coverage policies for {len(payers)} payers. "
+        reasoning += f"{best_payer} shows the highest approval likelihood at {best_likelihood:.0%}. "
+        if all_gaps:
+            reasoning += f"I identified {len(all_gaps)} documentation gaps that should be addressed. "
+
+        recommendations = []
+        if best_likelihood > 0.7:
+            recommendations.append(f"Proceed with {best_payer} as primary target - high confidence")
+        else:
+            recommendations.append("Consider gathering additional documentation before submission")
+        if all_gaps:
+            recommendations.append(f"Address {len(all_gaps)} documentation gaps to improve approval chances")
+
+        # Update case with analysis results
+        await self.repository.update(
+            case_id=case_state.case_id,
+            updates={
+                "coverage_assessments": serialize_for_json(assessments),
+                "documentation_gaps": serialize_for_json(all_gaps),
+            },
+            change_description="Policy analysis completed (streamed)"
+        )
+
+        yield {
+            "event": "stage_complete",
+            "stage": "policy_analysis",
+            "reasoning": reasoning,
+            "confidence": best_likelihood,
+            "findings": findings,
+            "recommendations": recommendations,
+            "warnings": [f"Documentation gap: {gap['description']}" for gap in all_gaps[:3]] if all_gaps else [],
+            "assessments": serialize_for_json(assessments),
+            "documentation_gaps": serialize_for_json(all_gaps),
+            "percent": 100,
+        }
+
+    async def _run_cohort_analysis_stage(self, case_state) -> Dict[str, Any]:
+        """Run cohort analysis — gap-driven when documentation_gaps exist."""
+        from backend.agents.strategic_intelligence_agent import get_strategic_intelligence_agent
+        from backend.agents.intake_agent import IntakeAgent
+
+        case_dict = await self.get_case(case_state.case_id)
+        patient_id = case_state.patient.patient_id
+
+        # Load patient data
+        full_patient_data = {}
+        try:
+            intake_agent = IntakeAgent()
+            full_patient_data = await intake_agent.load_patient_data(patient_id)
+        except FileNotFoundError:
+            logger.warning("Full patient data not found", patient_id=patient_id)
+
+        agent = get_strategic_intelligence_agent()
+
+        # Use gap-driven analysis when documentation gaps exist from policy analysis
+        documentation_gaps = case_dict.get("documentation_gaps", [])
+
+        if documentation_gaps:
+            analysis = await agent.generate_gap_driven_cohort_analysis(
+                case_data=case_dict,
+                patient_data=full_patient_data,
+                documentation_gaps=documentation_gaps,
+            )
+
+            # Build findings from gap-driven analysis
+            findings = []
+            cohort_size = analysis.get("total_cohort_size", 0)
+            gap_count = len(analysis.get("gap_analyses", []))
+
+            if cohort_size > 0:
+                findings.append({
+                    "title": "Gap-Driven Analysis",
+                    "detail": f"Analyzed {gap_count} documentation gaps across {cohort_size} similar historical cases",
+                    "status": "neutral",
+                })
+
+            for ga in (analysis.get("gap_analyses") or [])[:3]:
+                delta = ga.get("overall", {}).get("impact_delta", 0)
+                findings.append({
+                    "title": ga.get("gap_description", "Gap")[:60],
+                    "detail": f"{abs(delta):.0%} higher denial rate when missing (n={ga.get('overall', {}).get('sample_size_missing', 0)})",
+                    "status": "negative" if delta > 0.3 else "warning" if delta > 0.1 else "neutral",
+                })
+
+            synthesis = analysis.get("llm_synthesis", {})
+            reasoning = synthesis.get("overall_risk_assessment", f"Analyzed {gap_count} gaps across {cohort_size} similar cases.")
+
+            recommendations = [
+                rec.get("action", "")
+                for rec in (synthesis.get("recommended_actions") or [])[:3]
+            ]
+
+            warnings = []
+            for ga in (analysis.get("gap_analyses") or []):
+                for reason in (ga.get("top_denial_reasons") or [])[:1]:
+                    warnings.append(f"{ga.get('gap_description', 'Gap')[:40]}: {reason.get('reason', '')}")
+        else:
+            # No gaps — run standard cohort analysis
+            analysis = await agent.generate_cohort_analysis(
+                case_data=case_dict,
+                patient_data=full_patient_data,
+            )
+
+            findings = []
+            total = analysis.get("total_similar_cases", 0)
+            approved = analysis.get("approved_count", 0)
+            denied = analysis.get("denied_count", 0)
+
+            if total > 0:
+                approval_rate = round((approved / total) * 100)
+                findings.append({
+                    "title": "Cohort Approval Rate",
+                    "detail": f"{approval_rate}% approval from {total} similar cases ({approved} approved, {denied} denied)",
+                    "status": "positive" if approval_rate > 70 else "warning" if approval_rate > 40 else "negative",
+                })
+
+            for insight in (analysis.get("differentiating_insights") or [])[:3]:
+                status_map = {"favorable": "positive", "at_risk": "negative", "neutral": "neutral"}
+                findings.append({
+                    "title": insight.get("headline", "Insight"),
+                    "detail": insight.get("current_patient_detail", insight.get("finding", "")),
+                    "status": status_map.get(insight.get("current_patient_status", "neutral"), "neutral"),
+                })
+
+            position = analysis.get("current_patient_position", {})
+            reasoning = position.get("overall_summary", f"Analyzed {total} similar historical cases.")
+
+            recommendations = [
+                rec.get("action", "")
+                for rec in (analysis.get("actionable_recommendations") or [])[:3]
+            ]
+
+            warnings = [
+                f"Top denial reason: {r.get('reason', '')}" for r in (analysis.get("top_denial_reasons") or [])[:2]
+            ]
+
+        # Update case stage
+        await self.repository.update(
+            case_id=case_state.case_id,
+            updates={"stage": CaseStage.COHORT_ANALYSIS.value},
+            change_description="Cohort analysis completed",
+        )
+
+        return {
+            "stage": "cohort_analysis",
+            "reasoning": reasoning,
+            "confidence": 0.7 if documentation_gaps else analysis.get("current_patient_position", {}).get("estimated_cohort_match", 0.5),
+            "findings": findings,
+            "recommendations": recommendations,
+            "warnings": warnings,
+            "cohort_data": serialize_for_json(analysis),
+        }
+
+    def _build_cohort_summary_for_recommendation(
+        self,
+        cohort_analysis: Dict[str, Any],
+        gap_driven_analysis: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Build a rich cohort analysis summary for the AI recommendation prompt.
+
+        Combines basic cohort stats with gap-driven synthesis (cross-gap insights,
+        patient position, gap priority ranking, recommended actions).
+        """
+        summary: Dict[str, Any] = {
+            "total_similar_cases": cohort_analysis.get("total_similar_cases", 0),
+            "approved_count": cohort_analysis.get("approved_count", 0),
+            "denied_count": cohort_analysis.get("denied_count", 0),
+            "patient_position": cohort_analysis.get("current_patient_position", {}),
+            "top_denial_reasons": cohort_analysis.get("top_denial_reasons", []),
+            "differentiating_insights": cohort_analysis.get("differentiating_insights", []),
+        }
+
+        # Enrich with gap-driven cohort synthesis if available
+        llm_synthesis = gap_driven_analysis.get("llm_synthesis", {})
+        if llm_synthesis:
+            summary["gap_driven_synthesis"] = {
+                "overall_risk_assessment": llm_synthesis.get("overall_risk_assessment", ""),
+                "patient_position_summary": llm_synthesis.get("patient_position_summary", ""),
+                "hidden_insights": llm_synthesis.get("hidden_insights", []),
+                "gap_priority_ranking": llm_synthesis.get("gap_priority_ranking", []),
+                "recommended_actions": llm_synthesis.get("recommended_actions", []),
+            }
+
+        # Include per-gap key findings (compact — just gap_id + differentiator highlights)
+        gap_analyses = gap_driven_analysis.get("gap_analyses", [])
+        if gap_analyses:
+            gap_findings = []
+            for ga in gap_analyses:
+                diff = ga.get("gap_differentiators", {})
+                finding = {
+                    "gap_id": ga.get("gap_id", ""),
+                    "denial_rate_with_gap": ga.get("overall", {}).get("denial_rate_missing", 0),
+                    "denial_rate_without_gap": ga.get("overall", {}).get("denial_rate_present", 0),
+                }
+                if diff.get("status") == "complete":
+                    insights = diff.get("differentiating_insights", [])
+                    finding["key_differentiators"] = [
+                        {"factor": i.get("factor", ""), "insight": i.get("insight", "")}
+                        for i in insights[:3]
+                    ]
+                    finding["patient_position"] = diff.get("current_patient_position", {})
+                gap_findings.append(finding)
+            summary["per_gap_findings"] = gap_findings
+
+        return summary
+
+    async def _run_ai_recommendation_stage(self, case_state) -> Dict[str, Any]:
+        """Synthesize policy analysis + cohort evidence into a final AI recommendation."""
+        import hashlib as _hashlib
+        from backend.reasoning.llm_gateway import get_llm_gateway
+        from backend.reasoning.prompt_loader import get_prompt_loader
+        from backend.models.enums import TaskCategory
+
+        case_dict = await self.get_case(case_state.case_id)
+
+        # Gather policy analysis results
+        coverage_assessments = case_dict.get("coverage_assessments", {})
+        documentation_gaps = case_dict.get("documentation_gaps", [])
+
+        # Check cache: patient_id + medication + payer + sorted gap IDs
+        patient_id = case_state.patient.patient_id
+        medication = case_state.medication.medication_name.lower().strip()
+        payer = case_state.patient.primary_payer.lower().strip()
+        gap_ids = sorted(
+            (g.get("gap_id") or g.get("id") or g.get("description", "")[:30])
+            for g in documentation_gaps
+        )
+        rec_cache_key = _hashlib.sha256(
+            f"ai_rec::{patient_id}::{medication}::{payer}::{'|'.join(gap_ids)}".encode()
+        ).hexdigest()
+
+        cached = await self._get_cached_ai_recommendation(rec_cache_key)
+        if cached:
+            logger.info("AI recommendation cache hit", patient_id=patient_id, cache_key=rec_cache_key[:12])
+            # Still update case stage
+            await self.repository.update(
+                case_id=case_state.case_id,
+                updates={"stage": CaseStage.AI_RECOMMENDATION.value},
+                change_description="AI recommendation (cached)",
+            )
+            return cached
+
+        # Gather cohort analysis (from the prior stage stored in strategic intelligence cache)
+        from backend.agents.strategic_intelligence_agent import get_strategic_intelligence_agent
+        from backend.agents.intake_agent import IntakeAgent
+
+        full_patient_data = {}
+        try:
+            intake_agent = IntakeAgent()
+            full_patient_data = await intake_agent.load_patient_data(case_state.patient.patient_id)
+        except FileNotFoundError:
+            logger.warning("Full patient data not found", patient_id=case_state.patient.patient_id)
+
+        agent = get_strategic_intelligence_agent()
+        cohort_analysis = await agent.generate_cohort_analysis(
+            case_data=case_dict,
+            patient_data=full_patient_data,
+        )
+
+        # Also run gap-driven cohort analysis if documentation gaps exist
+        gap_driven_analysis = {}
+        if documentation_gaps:
+            try:
+                gap_driven_analysis = await agent.generate_gap_driven_cohort_analysis(
+                    case_data=case_dict,
+                    patient_data=full_patient_data,
+                    documentation_gaps=documentation_gaps,
+                )
+            except Exception as e:
+                logger.warning("Gap-driven cohort analysis failed", error=str(e))
+
+        # Build patient clinical summary — include key clinical data to prevent hallucination
+        disease_activity = full_patient_data.get("disease_activity", {})
+        lab_panels = full_patient_data.get("laboratory_results", {}).get("panels", {})
+        procedures = full_patient_data.get("procedures", {})
+        screening = full_patient_data.get("pre_biologic_screening", {})
+        prior_tx = full_patient_data.get("prior_treatments", [])
+
+        # Extract key lab values
+        lab_values = {}
+        for panel_name, panel in lab_panels.items():
+            for result in panel.get("results", []):
+                test = result.get("test", "")
+                if test in ("CRP", "ESR", "Albumin", "Hemoglobin", "Fecal Calprotectin"):
+                    lab_values[test] = f"{result.get('value')} {result.get('unit', '')}"
+
+        # Extract procedure dates
+        procedure_dates = {}
+        for proc_name, proc in procedures.items():
+            if isinstance(proc, dict) and "procedure_date" in proc:
+                procedure_dates[proc.get("procedure_name", proc_name)] = proc["procedure_date"]
+
+        patient_summary = {
+            "name": f"{case_state.patient.first_name} {case_state.patient.last_name}",
+            "diagnosis": case_state.medication.diagnosis,
+            "icd10_code": case_state.medication.icd10_code,
+            "medication": case_state.medication.medication_name,
+            "clinical_rationale": case_state.medication.clinical_rationale,
+            "primary_payer": case_state.patient.primary_payer,
+            "secondary_payer": case_state.patient.secondary_payer,
+            "disease_severity": disease_activity.get("disease_severity"),
+            "cdai_score": disease_activity.get("cdai_score"),
+            "hbi_score": disease_activity.get("harvey_bradshaw_index"),
+            "ses_cd_score": disease_activity.get("ses_cd_score"),
+            "disease_phenotype": disease_activity.get("disease_phenotype"),
+            "lab_values": lab_values,
+            "procedures_with_dates": procedure_dates,
+            "prior_treatments": [
+                {"medication": t.get("medication_name"), "outcome": t.get("outcome"), "duration_weeks": t.get("duration_weeks")}
+                for t in prior_tx
+            ] if prior_tx else case_state.medication.prior_treatments,
+            "screening_status": {
+                "tb": screening.get("tuberculosis_screening", {}).get("status"),
+                "hepatitis_b": screening.get("hepatitis_b_screening", {}).get("status"),
+                "hepatitis_c": screening.get("hepatitis_c_screening", {}).get("status"),
+            },
+        }
+
+        # Load and fill prompt
+        prompt_loader = get_prompt_loader()
+        prompt = prompt_loader.load(
+            "strategy/ai_recommendation_synthesis.txt",
+            variables={
+                "patient_summary": patient_summary,
+                "coverage_assessments": coverage_assessments,
+                "documentation_gaps": documentation_gaps,
+                "cohort_analysis_summary": self._build_cohort_summary_for_recommendation(
+                    cohort_analysis, gap_driven_analysis,
+                ),
+            },
+        )
+
+        # Call Claude for synthesis (high-stakes clinical decision)
+        gateway = get_llm_gateway()
+        result = await gateway.generate(
+            task_category=TaskCategory.POLICY_REASONING,
+            prompt=prompt,
+            temperature=0.0,
+            response_format="json",
+        )
+
+        # The LLM gateway returns the parsed JSON dict directly (with provider/task_category added).
+        # If the response was wrapped in a "content" or "response" key, unwrap it.
+        import json as _json
+        if "content" in result:
+            content = result["content"]
+            try:
+                recommendation = _json.loads(content) if isinstance(content, str) else content
+            except _json.JSONDecodeError:
+                recommendation = {"recommended_action": "submit_to_payer", "summary": str(content), "evidence": [], "risk_factors": []}
+        elif "response" in result:
+            response_text = result["response"]
+            if isinstance(response_text, str) and response_text.strip().startswith("{"):
+                try:
+                    recommendation = _json.loads(response_text)
+                except _json.JSONDecodeError:
+                    recommendation = {"recommended_action": "submit_to_payer", "summary": response_text, "evidence": [], "risk_factors": []}
+            else:
+                recommendation = {"recommended_action": "submit_to_payer", "summary": str(response_text), "evidence": [], "risk_factors": []}
+        else:
+            # Result IS the recommendation dict (Claude JSON mode returns parsed dict directly)
+            recommendation = {k: v for k, v in result.items() if k not in ("provider", "task_category")}
+
+        # Build stage response
+        action = recommendation.get("recommended_action", "submit_to_payer")
+        summary = recommendation.get("summary", "AI recommendation generated.")
+        evidence = recommendation.get("evidence", [])
+        risk_factors = recommendation.get("risk_factors", [])
+        provider_actions = recommendation.get("provider_actions", [])
+
+        findings = [{
+            "title": "Recommended Action",
+            "detail": f"{action.replace('_', ' ').title()}: {summary}",
+            "status": "positive" if action == "submit_to_payer" else "warning",
+        }]
+        for item in evidence[:3]:
+            findings.append({
+                "title": item.get("label", "Evidence"),
+                "detail": item.get("detail", str(item)),
+                "status": "positive",
+            })
+
+        warnings = [f"Risk: {rf}" if isinstance(rf, str) else f"Risk: {rf.get('description', rf)}" for rf in risk_factors[:3]]
+
+        # Update case stage
+        await self.repository.update(
+            case_id=case_state.case_id,
+            updates={"stage": CaseStage.AI_RECOMMENDATION.value},
+            change_description="AI recommendation synthesized",
+        )
+
+        stage_result = {
+            "stage": "ai_recommendation",
+            "reasoning": summary,
+            "confidence": recommendation.get("confidence", 0.7),
+            "findings": findings,
+            "recommendations": [action.replace("_", " ").title()] + provider_actions[:2],
+            "warnings": warnings,
+            "recommendation": serialize_for_json(recommendation),
+        }
+
+        # Cache the recommendation indefinitely
+        await self._store_cached_ai_recommendation(rec_cache_key, patient_id, medication, payer, stage_result)
+
+        return stage_result
+
+    async def _get_cached_ai_recommendation(self, cache_key: str) -> Optional[Dict[str, Any]]:
+        """Retrieve cached AI recommendation if available."""
+        from backend.storage.database import get_db
+        from backend.storage.models import CohortAnalysisCacheModel
+        from sqlalchemy import select
+        try:
+            async with get_db() as session:
+                row = (await session.execute(
+                    select(CohortAnalysisCacheModel)
+                    .where(CohortAnalysisCacheModel.cache_key_hash == cache_key)
+                )).scalar_one_or_none()
+                if row is None:
+                    return None
+                logger.info("AI recommendation cache hit", cache_key=cache_key[:12])
+                return row.analysis_data
+        except Exception as e:
+            logger.warning("AI recommendation cache read error", error=str(e))
+            return None
+
+    async def _store_cached_ai_recommendation(
+        self, cache_key: str, patient_id: str, medication: str, payer: str, result: Dict[str, Any],
+    ) -> None:
+        """Store AI recommendation in cache indefinitely."""
+        from backend.storage.database import get_db
+        from backend.storage.models import CohortAnalysisCacheModel
+        from sqlalchemy import delete
+        import uuid as _uuid
+        try:
+            async with get_db() as session:
+                await session.execute(
+                    delete(CohortAnalysisCacheModel).where(CohortAnalysisCacheModel.cache_key_hash == cache_key)
+                )
+                session.add(CohortAnalysisCacheModel(
+                    id=str(_uuid.uuid4()),
+                    cache_key_hash=cache_key,
+                    medication_name=medication,
+                    icd10_family="",
+                    payer_name=payer,
+                    cached_at=datetime.now(timezone.utc),
+                    expires_at=datetime.now(timezone.utc) + timedelta(days=365 * 10),
+                    analysis_data=result,
+                    approved_cohort_size=0,
+                    denied_cohort_size=0,
+                    total_similar_cases=0,
+                ))
+                await session.commit()
+                logger.info("Cached AI recommendation", cache_key=cache_key[:12], patient_id=patient_id)
+        except Exception as e:
+            logger.warning("AI recommendation cache write error", error=str(e))
 
     async def _run_strategy_generation_stage(self, case_state) -> Dict[str, Any]:
         """Run strategy generation and return agent reasoning."""
@@ -830,7 +1434,9 @@ class CaseService:
         # Stage progression map
         next_stage_map = {
             "intake": CaseStage.POLICY_ANALYSIS,
-            "policy_analysis": CaseStage.STRATEGY_GENERATION,
+            "policy_analysis": CaseStage.COHORT_ANALYSIS,
+            "cohort_analysis": CaseStage.AI_RECOMMENDATION,
+            "ai_recommendation": CaseStage.AWAITING_HUMAN_DECISION,
             "strategy_generation": CaseStage.STRATEGY_SELECTION,
             "strategy_selection": CaseStage.ACTION_COORDINATION,
             "action_coordination": CaseStage.MONITORING,
@@ -977,6 +1583,15 @@ class CaseService:
         if decision_action == HumanDecisionAction.APPROVE:
             next_stage = CaseStage.STRATEGY_GENERATION.value
             change_description = f"Human approved - proceeding to strategy generation"
+        elif decision_action == HumanDecisionAction.SUBMIT_TO_PAYER:
+            next_stage = CaseStage.STRATEGY_GENERATION.value
+            change_description = "Human chose to submit to payer - proceeding to strategy generation"
+        elif decision_action == HumanDecisionAction.FOLLOW_RECOMMENDATION:
+            next_stage = CaseStage.STRATEGY_GENERATION.value
+            change_description = "Human accepted AI recommendation - proceeding to strategy generation"
+        elif decision_action == HumanDecisionAction.RETURN_TO_PROVIDER:
+            next_stage = CaseStage.COMPLETED.value
+            change_description = f"Returned to provider for additional documentation: {reason or notes or 'See AI recommendation'}"
         elif decision_action == HumanDecisionAction.REJECT:
             next_stage = CaseStage.FAILED.value
             change_description = f"Human rejected: {reason or 'No reason provided'}"

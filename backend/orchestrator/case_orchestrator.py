@@ -8,7 +8,6 @@ from langgraph.graph import StateGraph, END
 from backend.orchestrator.state import OrchestratorState, create_initial_state
 from backend.orchestrator.transitions import (
     should_continue_processing,
-    should_proceed_to_strategy,
     check_payer_responses,
     needs_recovery,
     apply_stage_transition,
@@ -147,11 +146,67 @@ class CaseOrchestrator:
 
         # Import here to avoid circular dependency
         from backend.reasoning.policy_reasoner import get_policy_reasoner
+        from backend.agents.strategic_intelligence_agent import get_strategic_intelligence_agent
 
         reasoner = get_policy_reasoner()
         payers = state.get("payers", [])
         patient_data = state.get("patient_data", {})
         medication_data = state.get("medication_data", {})
+
+        # Query strategic intelligence for historical patterns (non-fatal)
+        historical_context = None
+        try:
+            si_agent = get_strategic_intelligence_agent()
+            medication_info_for_si = medication_data.get("medication_request", medication_data)
+            case_data_for_si = {
+                "case_id": state.get("case_id", "unknown"),
+                "medication": medication_info_for_si,
+                "payer_states": {p: {} for p in payers} if payers else {},
+            }
+            insights = await si_agent.generate_strategic_intelligence(
+                case_data=case_data_for_si,
+                patient_data=patient_data,
+            )
+            # Format insights into a concise context string for the policy reasoner
+            insights_dict = insights.to_dict()
+            context_parts = []
+
+            similar = insights_dict.get("similar_cases", {})
+            if similar.get("count", 0) > 0:
+                context_parts.append(
+                    f"Similar historical cases: {similar['count']} found. "
+                    f"Approval rate: {similar.get('approval_rate', 0):.0%}, "
+                    f"Denial rate: {similar.get('denial_rate', 0):.0%}, "
+                    f"Avg days to decision: {similar.get('avg_days_to_decision', 0):.1f}."
+                )
+
+            risk_factors = insights_dict.get("risk_factors", [])
+            if risk_factors:
+                risk_lines = [f"- {rf.get('factor', '')}: {rf.get('description', '')}" for rf in risk_factors[:5]]
+                context_parts.append("Key risk factors from historical data:\n" + "\n".join(risk_lines))
+
+            doc_insights = insights_dict.get("documentation_insights", [])
+            if doc_insights:
+                doc_lines = [f"- {di.get('insight', di.get('description', ''))}" for di in doc_insights[:3]]
+                context_parts.append("Documentation patterns from similar cases:\n" + "\n".join(doc_lines))
+
+            payer_insights = insights_dict.get("payer_insights", {})
+            if payer_insights:
+                context_parts.append(f"Payer-specific patterns: {json.dumps(payer_insights, default=str)}")
+
+            if context_parts:
+                historical_context = "\n\n".join(context_parts)
+                logger.info(
+                    "Strategic intelligence context prepared for policy analysis",
+                    case_id=state.get("case_id"),
+                    context_length=len(historical_context),
+                )
+        except Exception as e:
+            logger.warning(
+                "Strategic intelligence lookup failed (non-fatal), proceeding without historical context",
+                case_id=state.get("case_id"),
+                error=str(e),
+            )
 
         assessments = {}
         all_gaps = []
@@ -174,7 +229,8 @@ class CaseOrchestrator:
                 assessment = await reasoner.assess_coverage(
                     patient_info=patient_info,
                     medication_info=medication_info,
-                    payer_name=payer
+                    payer_name=payer,
+                    historical_context=historical_context,
                 )
 
                 assessments[payer] = assessment.model_dump()

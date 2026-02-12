@@ -1,0 +1,166 @@
+You are an expert prior authorization analyst. Analyze a sub-cohort of historical cases that were ALL MISSING "{doc_key}" documentation. Among these {total_missing_cases} resolved cases, {approved_count} were APPROVED and {denied_count} were DENIED despite the same documentation gap.
+
+Your task: discover what clinical factors **correlate with** approval vs denial within this missing-documentation sub-cohort.
+
+## Clinical Safety Constraint (MANDATORY)
+
+Missing {doc_key} documentation may represent a **clinical safety requirement** (e.g., latent TB screening before immunosuppression, hepatitis screening before biologics). Your analysis identifies **payer decision patterns** — correlations in historical approval/denial data. These patterns are useful for **PA submission strategy** (what to emphasize in the submission), but:
+
+- **NEVER state or imply that clinical factors "compensate for" or "replace" missing safety screenings.** Missing screening documentation is a clinical gap regardless of payer decision patterns.
+- **Frame findings as submission strategy insights**: "Payers have historically approved cases with this gap when severity markers were high — include severity documentation prominently in submission."
+- **Always recommend pursuing the missing documentation**: Every overall_summary MUST end with a statement that the missing {doc_key} should still be obtained.
+
+## Context
+
+- **Medication:** {medication_name}
+- **Payer:** {payer_name}
+- **ICD-10 Family:** {icd10_family}
+- **Documentation Gap:** {doc_key} (missing in ALL cases below)
+
+## Current Patient Profile
+{current_patient_profile}
+
+## Approved Sub-Cohort Statistics (cases missing {doc_key} but APPROVED)
+{approved_cohort_stats}
+
+## Denied Sub-Cohort Statistics (cases missing {doc_key} but DENIED)
+{denied_cohort_stats}
+
+## Computed Differential Metrics
+{differential_metrics}
+
+## Writing Style (MANDATORY — applies to ALL output fields)
+
+Write for a busy PA coordinator who needs to make decisions fast:
+- **Short sentences.** Maximum 20 words per sentence.
+- **Plain English.** No jargon. Say "TB screening" not "TB_SCREENING_PENDING". Say "fecal calprotectin test" not "fecal calprotectin documentation."
+- **Lead with the number.** "85% of approved cases had CRP above 35" — NOT "Cases with higher CRP were more likely to be approved."
+- **One idea per sentence.** Never chain with "but", "despite", "suggesting", or "creating."
+- **Headlines must be plain statements.** "CRP above 35: 85% approved" — NOT "Severe inflammation signal overcomes screening gaps."
+
+## Task
+
+Among patients who were ALL missing {doc_key} documentation, identify what clinical factors **correlate with** approval vs denial. Focus on:
+
+- **Clinical markers associated with approval** (e.g., "Cases with CRP >= 40 were approved at 85% vs 30% among those with CRP < 40 — higher disease severity correlates with approval despite this gap")
+- **Specific numeric inflection points** (lab values, treatment counts, timing windows)
+- **Multi-variable interactions** (e.g., high CDAI + elevated CRP together correlate with approval) — ONLY report these if BOTH sub-cohorts have >= 5 cases; with smaller cohorts, multi-variable interactions are unreliable noise
+- **Other documentation that correlates with approval** (e.g., having vaccination records present correlates with approval despite missing Hep B/C screening)
+
+For each finding, assess where the CURRENT patient stands relative to this differentiator.
+
+## Statistical Validity Rules
+
+- Sub-cohort sizes: approved={approved_count}, denied={denied_count}. Total resolved={total_missing_cases}.
+- **If either sub-cohort has < 5 cases**: Findings are preliminary observations, NOT reliable thresholds. Evidence strength MUST be "weak". Do NOT claim specific thresholds from <5 cases.
+- **If both sub-cohorts have >= 8 cases**: Findings can be presented as moderate-to-strong patterns.
+- **For hidden_patterns (multi-variable interactions)**: ONLY report if BOTH sub-cohorts have >= 5 cases. With fewer cases, multi-variable slicing produces noise. Return an empty array if sub-cohorts are too small.
+
+## Output Rules
+
+1. **Insights**: Return AT MOST 4. Each `headline` must be ≤60 characters and follow the format "[Differentiator]: [key number]" (e.g., "CRP above 40: 85% approved vs 30%"). Each `finding` is 1-2 short sentences framed as **payer decision pattern** (correlation), NOT clinical compensation. Each finding must be understandable on its own — state which sub-cohort you mean, name the metric plainly, and give the exact number. Each `current_patient_detail` is one sentence, ≤80 characters, stating the patient's position directly (e.g., "Patient CRP is 42 — above the 40 threshold" or "Patient does not have fecal calprotectin on file").
+2. **Recommendations**: Return AT MOST 3. Every insight marked `at_risk` MUST have a corresponding recommendation. Each `action` is ≤12 words. Each `expected_impact` must reference cohort data.
+3. **Patient Position**: `overall_summary` is max 2 sentences assessing submission positioning, PLUS a final sentence recommending the missing documentation still be obtained. Cap `favorable_factors` and `at_risk_factors` at 3 each.
+4. **Hidden Patterns**: Return AT MOST 2. ONLY if both sub-cohorts have >= 5 cases. Otherwise return empty array.
+5. **Defensibility**: Every percentage or number you cite MUST come directly from the cohort statistics provided. No extrapolation, no invented numbers.
+6. **Non-obvious only**: Each insight must have `non_obvious_factor: true`. Do NOT surface obvious findings like "having more documentation correlates with approval."
+
+## Few-Shot Examples
+
+### Example A: Correct Insight (Payer Decision Pattern, Data-Grounded)
+
+Given: Cases missing TB screening. Approved sub-cohort (n=14) mean CRP=38.5, denied sub-cohort (n=6) mean CRP=12.3.
+
+Correct insight:
+{{"insight_id": "1", "category": "lab_threshold", "headline": "CRP >=35 correlated: 82% approved vs 20%", "finding": "Among cases missing TB screening, approved cases had mean CRP of 38.5 vs 12.3 in denied cases. Higher disease severity as measured by CRP correlates with payer approval despite this pending documentation.", "current_patient_status": "favorable", "current_patient_detail": "Patient CRP is 42 mg/L — above the 35 mg/L inflection point", "evidence_strength": "moderate", "cases_supporting": 14, "non_obvious_factor": true}}
+
+Why this works: Uses "correlated" not "compensates." Cites exact numbers. Evidence strength is "moderate" (not "strong") because denied sub-cohort is only 6 cases.
+
+### Example B: WRONG Insight (Should Not Appear)
+
+Do NOT produce insights like this:
+{{"insight_id": "1", "category": "documentation", "headline": "Having TB screening leads to approval", "finding": "Cases with TB screening were more likely approved."}}
+
+This is WRONG because: ALL cases in this analysis are MISSING the documentation. You cannot compare present vs absent — you must find what ELSE differentiates within the missing-doc sub-cohort.
+
+### Example C: WRONG Framing (Clinically Dangerous)
+
+Do NOT produce findings like: "CRP compensates for missing TB screening" or "Disease severity replaces the need for hepatitis screening."
+
+This is WRONG because: It implies a clinical safety screening is optional. Frame as: "Higher CRP correlated with payer approval despite this pending gap — include severity markers in submission."
+
+### Example D: Small Cohort Handling
+
+When sub-cohorts are small (approved=4, denied=3):
+- ALL evidence_strength MUST be "weak"
+- hidden_patterns MUST be empty array (multi-variable interactions unreliable with <5 per group)
+- Do NOT claim specific thresholds — use directional language: "Approved cases trended toward higher CRP (mean 35 vs 18) but sample is too small for threshold identification"
+
+## Anti-Hallucination Rules
+
+1. **Only cite data from the cohort statistics and current_patient_profile.** Do NOT infer, assume, or generate clinical values not explicitly present.
+2. **Do NOT use general medical knowledge to fill gaps.** If a metric is not in the provided statistics, it does not exist for this analysis.
+3. **Quote precisely.** Use exact values from the data. Do not round, approximate, or paraphrase.
+4. **Do NOT claim causal relationships.** These are correlational patterns from historical payer decisions.
+
+## Required Output (JSON)
+
+Return ONLY valid JSON:
+
+{{
+  "differentiating_insights": [
+    {{
+      "insight_id": "1",
+      "category": "lab_threshold|treatment_depth|severity_combo|compensating_doc|timing",
+      "headline": "≤60 chars, [Pattern]: [key number]",
+      "finding": "1-2 sentences framed as payer decision pattern (correlation)",
+      "current_patient_status": "at_risk|favorable|neutral",
+      "current_patient_detail": "≤80 chars, patient's position relative to this pattern",
+      "evidence_strength": "strong|moderate|weak",
+      "cases_supporting": 0,
+      "non_obvious_factor": true
+    }}
+  ],
+  "actionable_recommendations": [
+    {{
+      "priority": 1,
+      "action": "≤12 words, specific",
+      "rationale": "One sentence with evidence from cohort data",
+      "expected_impact": "Quantified from cohort data, e.g. +52 pp approval correlation"
+    }}
+  ],
+  "current_patient_position": {{
+    "favorable_factors": ["max 3 factors — framed as submission strengths"],
+    "at_risk_factors": ["max 3 factors — framed as submission gaps to address"],
+    "overall_summary": "Max 2 sentences on submission positioning + 1 sentence recommending obtaining {doc_key}.",
+    "estimated_cohort_match": 0.0
+  }},
+  "hidden_patterns": [
+    {{
+      "headline": "≤60 chars",
+      "finding": "1-2 sentences describing the multi-variable interaction",
+      "variables_involved": ["variable1", "variable2"]
+    }}
+  ]
+}}
+
+CRITICAL RULES:
+- MAX 4 insights, MAX 3 recommendations, MAX 2 hidden patterns
+- ALL cases in this analysis are missing {doc_key} — do NOT compare doc-present vs doc-absent
+- Every insight MUST include specific numbers from the provided data
+- Every `at_risk` insight MUST have a corresponding recommendation
+- GROUNDING CONSTRAINT for cases_supporting: Must be derivable from cohort stats. Approved sub-cohort = {approved_count}, denied = {denied_count}. Calculate as: (percentage cited) * (cohort size for that group). Do NOT invent case counts
+- Evidence strength calibration: "strong" requires pattern across 80%+ AND BOTH sub-cohorts >= 8 cases; "moderate" for 60%+ OR one sub-cohort 5-7 cases; "weak" for ANY sub-cohort < 5 cases
+- hidden_patterns MUST be empty array [] if either sub-cohort < 5 cases
+- NEVER use the word "compensate" or "replace" — use "correlate", "associated with", "historically approved"
+- overall_summary MUST recommend obtaining the missing {doc_key}
+
+## Self-Validation Checklist (Verify Before Responding)
+
+1. **Language check**: Scan your response — did you use "compensate", "replace", "substitute", or "offset"? Replace with correlational language.
+2. **Evidence strength check**: If either sub-cohort < 5, is every evidence_strength "weak"? If not, downgrade.
+3. **Hidden patterns check**: If either sub-cohort < 5, is hidden_patterns an empty array? If not, remove entries.
+4. **Grounding check**: For every number you cited, can you point to the exact field in the provided statistics? If not, remove it.
+5. **Recommendation coverage**: Does every at_risk insight have a matching recommendation? If not, add one.
+6. **Safety check**: Does overall_summary recommend obtaining {doc_key}? If not, add that sentence.
+7. **Non-obvious check**: Would a PA coordinator already know this finding without data? If yes, remove it.

@@ -46,7 +46,7 @@ export function WizardStepper({
   const isStepClickable = (index: number) => onStepClick && (isStepCompleted(index) || isStepCurrent(index))
 
   return (
-    <div className={cn('w-full', className)}>
+    <nav aria-label="Case processing steps" className={cn('w-full', className)}>
       {/* Step counter for mobile/compact */}
       {variant === 'compact' && (
         <div className="flex items-center justify-center gap-2 text-sm text-grey-600 mb-4">
@@ -71,7 +71,7 @@ export function WizardStepper({
 
       {/* Full stepper for horizontal variant */}
       {variant === 'horizontal' && (
-        <div className="flex items-center justify-between">
+        <div role="list" className="flex items-center justify-between">
           {steps.map((step, index) => {
             const completed = isStepCompleted(index)
             const current = isStepCurrent(index)
@@ -81,6 +81,7 @@ export function WizardStepper({
             return (
               <div
                 key={step.id}
+                role="listitem"
                 className={cn(
                   'flex items-center',
                   !isLast && 'flex-1'
@@ -91,6 +92,8 @@ export function WizardStepper({
                   type="button"
                   onClick={() => clickable && onStepClick?.(index)}
                   disabled={!clickable}
+                  aria-current={current ? 'step' : undefined}
+                  aria-label={`Step ${index + 1}: ${step.label}${completed ? ' - Completed' : current ? ' - Current' : ''}`}
                   className={cn(
                     'flex flex-col items-center group',
                     clickable && 'cursor-pointer',
@@ -153,15 +156,15 @@ export function WizardStepper({
           })}
         </div>
       )}
-    </div>
+    </nav>
   )
 }
 
 /**
  * Predefined wizard steps for PA case processing
- * These match the 5-step wizard defined in the UX redesign plan
+ * 5-step wizard: Review -> Policy Analysis -> Cohort Analysis -> AI Recommendation -> Decision
  */
-export const PA_WIZARD_STEPS: WizardStep[] = [
+const BASE_WIZARD_STEPS: WizardStep[] = [
   {
     id: 'review',
     label: 'Review',
@@ -170,42 +173,62 @@ export const PA_WIZARD_STEPS: WizardStep[] = [
   },
   {
     id: 'analysis',
-    label: 'AI Analysis',
+    label: 'Policy Analysis',
     shortLabel: 'Analysis',
-    description: 'AI analyzes policy criteria',
+    description: 'AI analyzes payer policies',
+  },
+  {
+    id: 'cohort',
+    label: 'Cohort Analysis',
+    shortLabel: 'Cohort',
+    description: 'Historical evidence validation',
+  },
+  {
+    id: 'recommendation',
+    label: 'AI Recommendation',
+    shortLabel: 'AI Rec',
+    description: 'Synthesized AI recommendation',
   },
   {
     id: 'decision',
     label: 'Decision',
     shortLabel: 'Decision',
-    description: 'Confirm AI assessment',
-  },
-  {
-    id: 'strategy',
-    label: 'Strategy',
-    shortLabel: 'Strategy',
-    description: 'Select submission strategy',
-  },
-  {
-    id: 'submit',
-    label: 'Submit',
-    shortLabel: 'Submit',
-    description: 'Execute and monitor',
+    description: 'Human decision and next steps',
   },
 ]
 
+const RECOVERY_STEP: WizardStep = {
+  id: 'recovery',
+  label: 'Recovery',
+  shortLabel: 'Recovery',
+  description: 'Appeal denied decisions',
+}
+
+/** Default 5-step wizard */
+export const PA_WIZARD_STEPS: WizardStep[] = BASE_WIZARD_STEPS
+
+/** Returns 5 or 6 steps depending on whether recovery is needed */
+export function getWizardSteps(includeRecovery: boolean): WizardStep[] {
+  return includeRecovery ? [...BASE_WIZARD_STEPS, RECOVERY_STEP] : BASE_WIZARD_STEPS
+}
+
 /**
- * Maps backend CaseStage to wizard step index
+ * Maps backend CaseStage to wizard step index.
+ *
+ * 5-step wizard: Review(0) -> Policy Analysis(1) -> Cohort(2) -> AI Rec(3) -> Decision(4)
  */
 export function stageToWizardStep(stage: string): number {
   const stageMapping: Record<string, number> = {
     intake: 0,
     policy_analysis: 1,
-    awaiting_human_decision: 2,
-    strategy_generation: 3,
-    strategy_selection: 3,
-    action_coordination: 4,
-    monitoring: 4,
+    cohort_analysis: 2,
+    ai_recommendation: 3,
+    awaiting_human_decision: 4,
+    strategy_generation: 5,  // Post-decision (hidden from wizard)
+    strategy_selection: 5,
+    action_coordination: 5,
+    monitoring: 5,
+    recovery: 6,
     completed: 4,
     failed: -1,
   }
@@ -219,9 +242,11 @@ export function wizardStepToStage(step: number): string {
   const stepMapping: Record<number, string> = {
     0: 'intake',
     1: 'policy_analysis',
-    2: 'awaiting_human_decision',
-    3: 'strategy_selection',
-    4: 'monitoring',
+    2: 'cohort_analysis',
+    3: 'ai_recommendation',
+    4: 'awaiting_human_decision',
+    5: 'monitoring',
+    6: 'recovery',
   }
   return stepMapping[step] ?? 'intake'
 }

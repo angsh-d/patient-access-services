@@ -19,12 +19,42 @@ You are a healthcare appeals specialist. A prior authorization request has been 
 
 Develop a comprehensive appeal strategy that addresses the denial reason and maximizes the chance of approval reversal.
 
-## Analysis Required
+## Chain-of-Thought Analysis Process
 
-1. **Denial Analysis**: Understand exactly why the PA was denied
-2. **Policy Gap Analysis**: Identify where the original request fell short
-3. **Evidence Assessment**: Evaluate what additional evidence could support the appeal
-4. **Strategy Selection**: Choose the most effective appeal approach
+For each step below, reason explicitly before concluding. Show your work.
+
+1. **Denial Analysis**: First, quote the exact denial reason. Then identify whether the denial is based on clinical criteria, documentation, policy interpretation, or formulary exclusion. Only THEN determine the underlying issues.
+2. **Policy Gap Analysis**: For each unmet criterion, first quote what the policy requires, then quote what evidence was submitted, then identify the specific gap.
+3. **Evidence Assessment**: List all available supporting documentation BEFORE evaluating its strength. Then for each piece, assess whether it directly addresses a denial reason.
+4. **Strategy Selection**: Consider ALL approach options (clinical rationale, medical necessity, policy interpretation, formulary exception, peer-to-peer), state the pros/cons of each for THIS specific denial, THEN choose the optimal approach.
+
+## Few-Shot Examples
+
+### Example A: Documentation-Based Denial (Clinical Data Exists but Was Not Submitted)
+
+Denial reason: "Insufficient documentation of prior conventional therapy failure"
+Patient actually has: 16 weeks of mesalamine with documented inadequate response, 12 weeks of azathioprine with documented leukopenia (WBC 2.1)
+
+Correct analysis:
+- Denial type: DOCUMENTATION (patient meets the requirement, evidence was not submitted)
+- Primary strategy: medical_necessity (resubmit with explicit treatment failure documentation)
+- Peer-to-peer: NOT recommended (documentation resubmission is faster)
+- Success probability: 0.75-0.85 (clinical evidence exists, just needs proper submission)
+
+### Example B: Clinical Criteria Denial (Patient Genuinely Does Not Meet a Criterion)
+
+Denial reason: "Step therapy requirement not met -- no trial of conventional immunomodulator"
+Patient has: Only 4 weeks of mesalamine (policy requires minimum 12 weeks)
+
+Correct analysis:
+- Denial type: CLINICAL CRITERIA (genuine gap)
+- Primary strategy: policy_interpretation (argue medical necessity exception)
+- Peer-to-peer: RECOMMENDED (nuanced clinical argument benefits from physician discussion)
+- Success probability: 0.30-0.45 (genuine policy gap, but medical necessity exceptions exist)
+
+### Example C: BAD Strategy Output (What NOT to Do)
+
+Do NOT produce strategies with fabricated citations like "Smith et al., Lancet 2023" -- this violates the anti-hallucination rule. Use [INSERT RELEVANT CLINICAL STUDY] as placeholder instead. Do NOT leave addressable_gaps empty. Do NOT set low success_probability with no alternative_pathways -- always recommend escalation, not abandonment.
 
 ## Output Format
 

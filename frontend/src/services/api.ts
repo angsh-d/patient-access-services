@@ -42,6 +42,15 @@ export interface StageAnalysisResponse {
 }
 
 /**
+ * Response from the Policy Q&A assistant endpoint
+ */
+export interface PolicyQAResponse {
+  answer: string
+  question: string
+  case_id: string
+}
+
+/**
  * Custom error class for API errors
  */
 export class ApiRequestError extends Error {
@@ -155,17 +164,46 @@ function buildUrl(base: string, params?: Record<string, unknown>): string {
   return queryString ? `${base}?${queryString}` : base
 }
 
+/**
+ * Retry wrapper with exponential backoff for retryable errors.
+ * Only retries on 5xx, 408, 429, timeout, and network errors.
+ */
+async function requestWithRetry<T>(
+  url: string,
+  options: RequestInit = {},
+  timeout: number = DEFAULT_TIMEOUT,
+  maxRetries: number = 2
+): Promise<T> {
+  let lastError: ApiRequestError | null = null
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await request<T>(url, options, timeout)
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.isRetryable && attempt < maxRetries) {
+        lastError = error
+        const delay = Math.min(1000 * Math.pow(2, attempt), 5000)
+        await new Promise(resolve => setTimeout(resolve, delay))
+        continue
+      }
+      throw error
+    }
+  }
+
+  throw lastError || new ApiRequestError('UNKNOWN', 'All retries exhausted')
+}
+
 // Export base request function for hooks that need direct access
-export { request }
+export { request, requestWithRetry }
 
 // === Patient API ===
 
 export const patientsApi = {
   getData: (patientId: string): Promise<unknown> => {
-    return request<unknown>(`${ENDPOINTS.cases.replace('/cases', '')}/patients/${patientId}/data`)
+    return requestWithRetry<unknown>(`${ENDPOINTS.cases.replace('/cases', '')}/patients/${patientId}/data`)
   },
   getDocuments: (patientId: string): Promise<unknown> => {
-    return request<unknown>(`${ENDPOINTS.cases.replace('/cases', '')}/patients/${patientId}/documents`)
+    return requestWithRetry<unknown>(`${ENDPOINTS.cases.replace('/cases', '')}/patients/${patientId}/documents`)
   },
 }
 
@@ -173,7 +211,7 @@ export const patientsApi = {
 
 export const activityApi = {
   getRecent: (): Promise<{ activities: unknown[]; total: number }> => {
-    return request<{ activities: unknown[]; total: number }>(ENDPOINTS.recentActivity)
+    return requestWithRetry<{ activities: unknown[]; total: number }>(ENDPOINTS.recentActivity)
   },
 }
 
@@ -184,7 +222,7 @@ export const casesApi = {
    * List all cases with optional pagination
    */
   list: (params?: PaginationParams): Promise<ListCasesResponse> => {
-    return request<ListCasesResponse>(buildUrl(ENDPOINTS.cases, params as Record<string, unknown>))
+    return requestWithRetry<ListCasesResponse>(buildUrl(ENDPOINTS.cases, params as Record<string, unknown>))
   },
 
   /**
@@ -192,7 +230,7 @@ export const casesApi = {
    * Note: Backend returns CaseState directly, we wrap it for consistency
    */
   get: async (caseId: string): Promise<GetCaseResponse> => {
-    const caseState = await request<import('@/types/case').CaseState>(ENDPOINTS.case(caseId))
+    const caseState = await requestWithRetry<import('@/types/case').CaseState>(ENDPOINTS.case(caseId))
     return { case: caseState }
   },
 
@@ -203,6 +241,15 @@ export const casesApi = {
     return request<CreateCaseResponse>(ENDPOINTS.cases, {
       method: 'POST',
       body: JSON.stringify(data),
+    })
+  },
+
+  /**
+   * Delete a case (soft-delete)
+   */
+  delete: (caseId: string): Promise<{ message: string; case_id: string }> => {
+    return request<{ message: string; case_id: string }>(ENDPOINTS.deleteCase(caseId), {
+      method: 'DELETE',
     })
   },
 
@@ -220,7 +267,7 @@ export const casesApi = {
    * Get audit trail (decision trace) for a case
    */
   getAuditTrail: (caseId: string): Promise<AuditTrailResponse> => {
-    return request<AuditTrailResponse>(ENDPOINTS.caseAuditTrail(caseId))
+    return requestWithRetry<AuditTrailResponse>(ENDPOINTS.caseAuditTrail(caseId))
   },
 
   /**
@@ -282,7 +329,20 @@ export const casesApi = {
    * Check if a case requires human decision
    */
   checkDecisionStatus: (caseId: string): Promise<DecisionStatusResponse> => {
-    return request<DecisionStatusResponse>(ENDPOINTS.decisionStatus(caseId))
+    return requestWithRetry<DecisionStatusResponse>(ENDPOINTS.decisionStatus(caseId))
+  },
+
+  /**
+   * Ask the Policy Assistant a question about a case's policy analysis.
+   * Uses Claude via the backend policy_qa task category.
+   * 90s timeout since Claude Q&A can take time.
+   */
+  policyQA: (caseId: string, question: string): Promise<PolicyQAResponse> => {
+    return request<PolicyQAResponse>(
+      ENDPOINTS.policyQA(caseId),
+      { method: 'POST', body: JSON.stringify({ question }) },
+      90000
+    )
   },
 }
 
@@ -379,7 +439,7 @@ export const strategiesApi = {
    * Get strategy templates
    */
   getTemplates: (): Promise<{ templates: unknown[] }> => {
-    return request<{ templates: unknown[] }>(ENDPOINTS.strategyTemplates)
+    return requestWithRetry<{ templates: unknown[] }>(ENDPOINTS.strategyTemplates)
   },
 }
 

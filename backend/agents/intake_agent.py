@@ -20,8 +20,11 @@ class ValidationResult:
     npi_details: Optional[Dict[str, Any]] = None
     icd10_valid: bool = False
     icd10_details: List[Dict[str, Any]] = field(default_factory=list)
+    hcpcs_valid: bool = False
+    hcpcs_details: List[Dict[str, Any]] = field(default_factory=list)
     cms_coverage_found: bool = False
     cms_policies: List[Dict[str, Any]] = field(default_factory=list)
+    cross_verification: Optional[Dict[str, Any]] = None
     validation_errors: List[str] = field(default_factory=list)
     validation_warnings: List[str] = field(default_factory=list)
 
@@ -37,17 +40,15 @@ class IntakeAgent:
     - CMS Coverage - Medicare policy lookup
     """
 
-    def __init__(self, patients_dir: Optional[Path] = None, enable_mcp_validation: bool = True):
+    def __init__(self, patients_dir: Optional[Path] = None):
         """
         Initialize the intake agent.
 
         Args:
             patients_dir: Directory containing patient data files
-            enable_mcp_validation: Enable external MCP validation (default True)
         """
         self.patients_dir = patients_dir or Path(get_settings().patients_dir)
-        self.enable_mcp_validation = enable_mcp_validation
-        logger.info("Intake agent initialized", mcp_validation=enable_mcp_validation)
+        logger.info("Intake agent initialized")
 
     async def process_intake(
         self,
@@ -100,19 +101,18 @@ class IntakeAgent:
             }
         )
 
-        # Run MCP validations if enabled
-        if self.enable_mcp_validation:
-            validation_result = await self.run_mcp_validations(patient_data)
-            case_state.metadata["mcp_validation"] = {
-                "npi_valid": validation_result.npi_valid,
-                "npi_details": validation_result.npi_details,
-                "icd10_valid": validation_result.icd10_valid,
-                "icd10_details": validation_result.icd10_details,
-                "cms_coverage_found": validation_result.cms_coverage_found,
-                "cms_policies": validation_result.cms_policies,
-                "validation_errors": validation_result.validation_errors,
-                "validation_warnings": validation_result.validation_warnings
-            }
+        # Run clinical validations (always mandatory)
+        validation_result = await self.run_mcp_validations(patient_data)
+        case_state.metadata["clinical_validation"] = {
+            "npi_valid": validation_result.npi_valid,
+            "npi_details": validation_result.npi_details,
+            "icd10_valid": validation_result.icd10_valid,
+            "icd10_details": validation_result.icd10_details,
+            "cms_coverage_found": validation_result.cms_coverage_found,
+            "cms_policies": validation_result.cms_policies,
+            "validation_errors": validation_result.validation_errors,
+            "validation_warnings": validation_result.validation_warnings
+        }
 
         logger.info(
             "Intake complete",
@@ -125,12 +125,14 @@ class IntakeAgent:
 
     async def run_mcp_validations(self, patient_data: Dict[str, Any]) -> ValidationResult:
         """
-        Run external MCP validations for patient data.
+        Run external validations for patient data.
 
         Validates:
         - Provider NPI against CMS NPI Registry
         - ICD-10 diagnosis codes against clinical coding database
+        - HCPCS/J-codes via LLM validation
         - CMS coverage policies for medication/indication
+        - LLM cross-verification of clinical data consistency
 
         Args:
             patient_data: Patient data dictionary
@@ -138,6 +140,7 @@ class IntakeAgent:
         Returns:
             ValidationResult with all validation outcomes
         """
+        import asyncio
         from backend.mcp.npi_validator import get_npi_validator
         from backend.mcp.icd10_validator import get_icd10_validator
         from backend.mcp.cms_coverage import get_cms_coverage_client
@@ -153,94 +156,97 @@ class IntakeAgent:
         diagnosis_codes = [d.get("icd10_code") for d in diagnoses if d.get("icd10_code")]
         medication_name = medication.get("medication_name")
 
-        # Get indication from medication_request or derive from primary diagnosis
-        indication = medication.get("diagnosis") or medication.get("indication")
-        if not indication and diagnoses:
-            primary_diag = next((d for d in diagnoses if d.get("rank") == "primary"), diagnoses[0] if diagnoses else {})
-            indication = primary_diag.get("description")
-
         # Get primary ICD-10 from medication_request or diagnoses
         primary_icd10 = medication.get("icd10_code")
         if not primary_icd10 and diagnoses:
             primary_diag = next((d for d in diagnoses if d.get("rank") == "primary"), diagnoses[0] if diagnoses else {})
             primary_icd10 = primary_diag.get("icd10_code")
 
-        # Validate NPI
-        if npi:
-            try:
-                npi_validator = get_npi_validator()
-                npi_result = await npi_validator.validate_npi(npi)
-                result.npi_valid = npi_result.is_valid
-                result.npi_details = {
-                    "npi": npi_result.npi,
-                    "provider_name": npi_result.provider_name,
-                    "specialty": npi_result.specialty,
-                    "status": npi_result.status
+        # Build concurrent validation tasks
+        # NOTE: Only run fast API-based validations (NPI, ICD-10, CMS) during intake.
+        # Slow LLM-based validations (HCPCS, cross-verification) are handled by the
+        # dedicated /validate/patient/{patient_id} endpoint called from the frontend.
+        async def _npi_task():
+            if not npi:
+                return
+            npi_validator = get_npi_validator()
+            npi_result = await npi_validator.validate_npi(npi)
+            result.npi_valid = npi_result.is_valid
+            result.npi_details = {
+                "npi": npi_result.npi,
+                "provider_name": npi_result.provider_name,
+                "specialty": npi_result.specialty,
+                "status": npi_result.status
+            }
+            if not npi_result.is_valid:
+                result.validation_errors.extend(npi_result.errors)
+            logger.info("NPI validation complete", npi=npi, valid=npi_result.is_valid)
+
+        async def _icd10_task():
+            if not diagnosis_codes:
+                return
+            icd10_validator = get_icd10_validator()
+            icd10_result = await icd10_validator.validate_batch(diagnosis_codes)
+            result.icd10_valid = icd10_result.all_valid
+            result.icd10_details = [
+                {
+                    "code": c.code,
+                    "valid": c.is_valid,
+                    "description": c.description,
+                    "category": c.category
                 }
-                if not npi_result.is_valid:
-                    result.validation_errors.extend(npi_result.errors)
-                logger.info("NPI validation complete", npi=npi, valid=npi_result.is_valid)
-            except Exception as e:
-                logger.warning("NPI validation failed", npi=npi, error=str(e))
-                result.validation_warnings.append(f"NPI validation unavailable: {str(e)}")
+                for c in icd10_result.codes
+            ]
+            if not icd10_result.all_valid:
+                result.validation_errors.extend(icd10_result.errors)
+            logger.info(
+                "ICD-10 validation complete",
+                codes=len(diagnosis_codes),
+                valid=icd10_result.valid_count,
+                invalid=icd10_result.invalid_count
+            )
 
-        # Validate ICD-10 codes
-        if diagnosis_codes:
-            try:
-                icd10_validator = get_icd10_validator()
-                icd10_result = await icd10_validator.validate_batch(diagnosis_codes)
-                result.icd10_valid = icd10_result.all_valid
-                result.icd10_details = [
-                    {
-                        "code": c.code,
-                        "valid": c.is_valid,
-                        "description": c.description,
-                        "category": c.category
-                    }
-                    for c in icd10_result.codes
-                ]
-                if not icd10_result.all_valid:
-                    result.validation_errors.extend(icd10_result.errors)
-                logger.info(
-                    "ICD-10 validation complete",
-                    codes=len(diagnosis_codes),
-                    valid=icd10_result.valid_count,
-                    invalid=icd10_result.invalid_count
-                )
-            except Exception as e:
-                logger.warning("ICD-10 validation failed", error=str(e))
-                result.validation_warnings.append(f"ICD-10 validation unavailable: {str(e)}")
+        async def _cms_task():
+            if not medication_name:
+                return
+            cms_client = get_cms_coverage_client()
+            icd10_for_search = [primary_icd10] if primary_icd10 else diagnosis_codes[:3]
+            cms_result = await cms_client.search_coverage(
+                medication_name=medication_name,
+                icd10_codes=icd10_for_search
+            )
+            result.cms_coverage_found = cms_result.total_found > 0
+            result.cms_policies = [
+                {
+                    "policy_id": p.policy_id,
+                    "title": p.title,
+                    "type": p.coverage_type.value,
+                    "indications": p.indications,
+                    "limitations": p.limitations
+                }
+                for p in cms_result.policies
+            ]
+            if cms_result.errors:
+                result.validation_warnings.extend(cms_result.errors)
+            logger.info(
+                "CMS coverage search complete",
+                medication=medication_name,
+                policies_found=cms_result.total_found
+            )
 
-        # Check CMS coverage
-        if medication_name:
-            try:
-                cms_client = get_cms_coverage_client()
-                icd10_for_search = [primary_icd10] if primary_icd10 else diagnosis_codes[:3]
-                cms_result = await cms_client.search_coverage(
-                    medication_name=medication_name,
-                    icd10_codes=icd10_for_search
-                )
-                result.cms_coverage_found = cms_result.total_found > 0
-                result.cms_policies = [
-                    {
-                        "policy_id": p.policy_id,
-                        "title": p.title,
-                        "type": p.coverage_type.value,
-                        "indications": p.indications,
-                        "limitations": p.limitations
-                    }
-                    for p in cms_result.policies
-                ]
-                if cms_result.errors:
-                    result.validation_warnings.extend(cms_result.errors)
-                logger.info(
-                    "CMS coverage search complete",
-                    medication=medication_name,
-                    policies_found=cms_result.total_found
-                )
-            except Exception as e:
-                logger.warning("CMS coverage search failed", error=str(e))
-                result.validation_warnings.append(f"CMS coverage search unavailable: {str(e)}")
+        # Run API-based validations concurrently, catching individual failures
+        task_funcs = [_npi_task, _icd10_task, _cms_task]
+        task_names = ["NPI", "ICD-10", "CMS"]
+
+        outcomes = await asyncio.gather(
+            *[fn() for fn in task_funcs],
+            return_exceptions=True
+        )
+
+        for name, outcome in zip(task_names, outcomes):
+            if isinstance(outcome, Exception):
+                logger.warning(f"{name} validation failed", error=str(outcome))
+                result.validation_warnings.append(f"{name} validation unavailable: {str(outcome)}")
 
         return result
 

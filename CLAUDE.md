@@ -129,6 +129,14 @@ async with get_db() as session:
 - `POST /api/v1/cases/{id}/run-stage/{stage}` — Run specific workflow stage
 - `POST /api/v1/cases/{id}/approve-stage/{stage}` — Approve stage results
 - `POST /api/v1/cases/{id}/confirm-decision` — Human decision gate
+- `GET /api/v1/cases/{id}/cohort-analysis` — Cohort similarity analysis (approved vs denied differentiators)
+- `GET /api/v1/cases/{id}/stream-stage/{stage}` — SSE streaming for long-running stage analysis
+- `POST /api/v1/cases/{id}/policy-qa` — Policy Q&A assistant (Claude-powered)
+- `POST /api/v1/cases/{id}/predict-appeal` — Appeal success prediction
+- `POST /api/v1/cases/{id}/draft-appeal-letter` — LLM-drafted appeal letter (Gemini)
+- `POST /api/v1/cases/{id}/record-outcome` — Record actual payer outcome for prediction tracking
+- `GET /api/v1/analytics/prediction-accuracy` — Prediction accuracy statistics
+- `GET /api/v1/analytics/llm-costs` — LLM cost analytics with breakdowns
 - `POST /api/v1/strategies/score` — Score strategies
 - `GET /api/v1/patients` — List patients
 - `GET /api/v1/activity/recent` — Activity feed
@@ -162,7 +170,7 @@ Scenario and health endpoints are defined directly in `backend/main.py`, not in 
 
 ### Database
 
-NeonDB PostgreSQL via `EXTERNAL_DATABASE_URL` (primary) or SQLite via `DATABASE_URL` (local fallback). Auto-initialized on startup via `init_db()`. PostgreSQL URLs are auto-converted to use `asyncpg` driver; prepared statement cache is disabled to avoid `InvalidCachedStatementError` after schema changes. Core tables in `backend/storage/models.py`: `cases`, `decision_events`, `case_state_snapshots`, `policy_cache`, `strategic_intelligence_cache`, `policy_diff_cache`, `policy_qa_cache`.
+NeonDB PostgreSQL via `EXTERNAL_DATABASE_URL` (primary) or SQLite via `DATABASE_URL` (local fallback). Auto-initialized on startup via `init_db()`. PostgreSQL URLs are auto-converted to use `asyncpg` driver; prepared statement cache is disabled to avoid `InvalidCachedStatementError` after schema changes. Core tables in `backend/storage/models.py`: `cases`, `decision_events`, `case_state_snapshots`, `policy_cache`, `strategic_intelligence_cache`, `cohort_analysis_cache`, `policy_diff_cache`, `policy_qa_cache`.
 
 Settings loaded via `backend/config/settings.py` (Pydantic `BaseSettings` with `.env` file). Access with `from backend.config.settings import get_settings`. Settings are cached via `@lru_cache`.
 

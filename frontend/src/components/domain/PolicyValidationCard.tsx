@@ -49,7 +49,7 @@ export function PolicyValidationCard({
   medicationName,
   coverageAssessment,
 }: PolicyValidationCardProps) {
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['all']))
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
 
   // Fetch patient data (for indication matching display)
   const { data: patientData, isLoading: patientLoading } = usePatientData(patientId)
@@ -276,20 +276,20 @@ export function PolicyValidationCard({
   return (
     <div className="space-y-6">
       {/* Indication Match Header */}
-      <div className="bg-grey-900 rounded-xl p-5">
+      <div className="bg-grey-200 rounded-xl p-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-grey-400 uppercase tracking-wide mb-1">Matched Indication</p>
-            <h4 className="text-lg font-semibold text-white">{matchedIndication.indication_name}</h4>
+            <p className="text-xs font-medium text-grey-500 uppercase tracking-wide mb-1">Matched Indication</p>
+            <h4 className="text-lg font-semibold text-grey-900">{matchedIndication.indication_name}</h4>
             {matchedIndication.indication_codes?.length > 0 && (
-              <p className="text-xs font-mono text-grey-400 mt-1">
+              <p className="text-xs font-mono text-grey-500 mt-1">
                 {matchedIndication.indication_codes.map((c: any) => `${c.system}: ${c.code}`).join(' | ')}
               </p>
             )}
           </div>
           <div className="text-right">
-            <p className="text-xs text-grey-400">Initial Approval</p>
-            <p className="text-sm font-medium text-white">{matchedIndication.initial_approval_duration_months} months</p>
+            <p className="text-xs text-grey-500">Initial Approval</p>
+            <p className="text-sm font-semibold text-grey-900">{matchedIndication.initial_approval_duration_months} months</p>
           </div>
         </div>
       </div>
@@ -372,7 +372,7 @@ export function PolicyValidationCard({
                   {categoryTotal > 1 && (
                     <span className={cn(
                       "text-[10px] font-medium px-1.5 py-0.5 rounded",
-                      (isOrLogic || isMixedLogic) ? "bg-blue-100 text-blue-700" : "bg-grey-200 text-grey-600"
+                      (isOrLogic || isMixedLogic) ? "bg-grey-200 text-grey-700" : "bg-grey-200 text-grey-600"
                     )}>
                       {isOrLogic
                         ? 'ANY ONE'
@@ -401,12 +401,17 @@ export function PolicyValidationCard({
                     // OR-group criteria aren't "required" failures when group is already satisfied
                     const isRequired = isInOrGroup ? !orGroupMet : criterion.is_required !== false
                     const llmAssessment = assessmentMap[criterion.criterion_id]
+                    const confidence = llmAssessment?.confidence as number | undefined
+                    // Confidence-based left border accent
+                    const borderColor = confidence != null
+                      ? confidence > 0.8 ? 'border-l-grey-700' : confidence > 0.5 ? 'border-l-grey-500' : 'border-l-grey-300'
+                      : 'border-l-transparent'
                     return (
-                      <div key={idx} className="px-4 py-3 flex items-start gap-3">
+                      <div key={idx} className={cn("px-4 py-3 flex items-start gap-3 border-l-2", borderColor)}>
                         <div className="mt-0.5">
                           {status === 'met' && <CheckCircle className="w-4 h-4 text-grey-900" />}
-                          {status === 'not_met' && <XCircle className={cn("w-4 h-4", isRequired ? "text-red-500" : "text-grey-400")} />}
-                          {status === 'partial' && <MinusCircle className="w-4 h-4 text-amber-500" />}
+                          {status === 'not_met' && <XCircle className={cn("w-4 h-4", isRequired ? "text-grey-600" : "text-grey-400")} />}
+                          {status === 'partial' && <MinusCircle className="w-4 h-4 text-grey-500" />}
                           {status === 'pending' && <Circle className="w-4 h-4 text-grey-300" />}
                         </div>
 
@@ -417,7 +422,7 @@ export function PolicyValidationCard({
                           )}>
                             {criterion.name}
                             {isInOrGroup && (
-                              <span className="ml-1.5 text-[10px] font-medium px-1 py-0.5 bg-blue-50 text-blue-600 rounded align-middle">OR</span>
+                              <span className="ml-1.5 text-[10px] font-medium px-1 py-0.5 bg-grey-100 text-grey-600 rounded align-middle">OR</span>
                             )}
                           </p>
                           <p className="text-xs text-grey-500 mt-0.5">{criterion.description}</p>
@@ -442,6 +447,28 @@ export function PolicyValidationCard({
                             </div>
                           )}
 
+                          {/* Source attribution badges */}
+                          {llmAssessment && (
+                            <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                              {llmAssessment.evidence_source && (
+                                <span className={cn(
+                                  "text-[10px] font-medium px-1.5 py-0.5 rounded",
+                                  llmAssessment.evidence_source === 'rubric' && 'bg-grey-100 text-grey-600',
+                                  llmAssessment.evidence_source === 'rag' && 'bg-grey-100 text-grey-600',
+                                  llmAssessment.evidence_source === 'consensus' && 'bg-grey-100 text-grey-600',
+                                  !['rubric', 'rag', 'consensus'].includes(llmAssessment.evidence_source) && 'bg-grey-100 text-grey-500',
+                                )}>
+                                  {String(llmAssessment.evidence_source).replace(/_/g, ' ').toUpperCase()}
+                                </span>
+                              )}
+                              {llmAssessment.evidence_date && (
+                                <span className="text-[10px] text-grey-400">
+                                  {llmAssessment.evidence_date}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
                           {criterion.policy_text && criterion.policy_text !== criterion.description && !llmAssessment && (
                             <p className="text-xs text-grey-400 mt-1 italic">"{criterion.policy_text}"</p>
                           )}
@@ -463,9 +490,9 @@ export function PolicyValidationCard({
                           <span className={cn(
                             "px-2 py-0.5 text-xs font-medium rounded",
                             status === 'met' && 'bg-grey-900 text-white',
-                            status === 'not_met' && isRequired && 'bg-red-100 text-red-700',
+                            status === 'not_met' && isRequired && 'bg-grey-200 text-grey-700',
                             status === 'not_met' && !isRequired && 'bg-grey-200 text-grey-600',
-                            status === 'partial' && 'bg-amber-100 text-amber-700',
+                            status === 'partial' && 'bg-grey-150 text-grey-700',
                             status === 'pending' && 'bg-grey-100 text-grey-500'
                           )}>
                             {status === 'met' ? 'Met' : status === 'not_met' ? 'Not Met' : status === 'partial' ? 'Partial' : 'Pending'}

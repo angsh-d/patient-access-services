@@ -25,6 +25,8 @@ import {
   BarChart3,
   Sparkles,
   Lightbulb,
+  Activity,
+  ShieldAlert,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { QUERY_KEYS, CACHE_TIMES } from '@/lib/constants'
@@ -138,6 +140,19 @@ interface StrategicIntelligenceData {
     sample_denied_case_ids: string[]
     methodology: string
   }
+  patient_position?: {
+    favorable_factors: string[]
+    at_risk_factors: string[]
+    overall_summary: string
+    estimated_cohort_match: number
+  }
+  cohort_summary?: {
+    total_similar_cases: number
+    approved_count: number
+    denied_count: number
+    info_request_count: number
+    total_historical_cases: number
+  }
 }
 
 async function fetchStrategicIntelligence(caseId: string): Promise<StrategicIntelligenceData> {
@@ -181,6 +196,8 @@ async function fetchStrategicIntelligence(caseId: string): Promise<StrategicInte
     compensating_factors: data.compensating_factors || [],
     agentic_insights: data.agentic_insights || [],
     evidence_summary: data.evidence_summary || undefined,
+    patient_position: data.patient_position || undefined,
+    cohort_summary: data.cohort_summary || undefined,
   }
 }
 
@@ -206,7 +223,7 @@ async function fetchPatientData(patientId: string) {
   try {
     const { request } = await import('@/services/api')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return await request<any>(`/api/v1/intake/patient/${patientId}`)
+    return await request<any>(`/api/v1/patients/${patientId}/data`)
   } catch { return null }
 }
 
@@ -270,19 +287,19 @@ export function StrategicIntelligence({ caseId, caseData: providedCaseData, clas
     queryFn: () => fetchStrategicIntelligence(caseId),
     staleTime: CACHE_TIMES.STATIC,
     gcTime: CACHE_TIMES.GC_TIME,
-    refetchOnMount: 'always',
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     enabled: !!caseId,
   })
 
-  // Loading timeout - show retry after 10 seconds
+  // Loading timeout - show retry after 60 seconds (strategic intelligence involves LLM calls on cache miss)
   useEffect(() => {
     if (!isLoading && !caseLoading) {
       setLoadingTimedOut(false)
       return
     }
-    const timer = setTimeout(() => setLoadingTimedOut(true), 10000)
+    const timer = setTimeout(() => setLoadingTimedOut(true), 60000)
     return () => clearTimeout(timer)
   }, [isLoading, caseLoading])
 
@@ -440,7 +457,7 @@ export function StrategicIntelligence({ caseId, caseData: providedCaseData, clas
           <div className="grid grid-cols-3 gap-4">
             <MetricCard
               label="Avg. Turnaround"
-              value={`${effectiveData.timing_insights?.avg_turnaround_days || effectiveData.similar_cases.avg_days_to_decision || 5} days`}
+              value={`${effectiveData.timing_insights?.avg_turnaround_days ?? effectiveData.similar_cases.avg_days_to_decision ?? '\u2014'} days`}
               icon={<Clock className="w-4 h-4" />}
             />
             <MetricCard
@@ -484,7 +501,7 @@ export function StrategicIntelligence({ caseId, caseData: providedCaseData, clas
                 <div className="px-6 pb-5 space-y-3">
                   <ReasoningItem
                     step={1}
-                    text={`Searched 350 historical PA cases, matched ${totalCases} by medication (${medicationName || 'unknown'}), diagnosis family, payer (${payerName || 'unknown'}), disease severity, and prior treatments`}
+                    text={`Searched ${effectiveData.cohort_summary?.total_historical_cases ?? totalCases} historical PA cases, matched ${totalCases} by medication (${medicationName || 'unknown'}), diagnosis family, payer (${payerName || 'unknown'}), disease severity, and prior treatments`}
                   />
                   <ReasoningItem
                     step={2}
@@ -545,6 +562,61 @@ export function StrategicIntelligence({ caseId, caseData: providedCaseData, clas
           )}
         </div>
       </div>
+
+      {/* Patient Position - favorable vs at-risk factors from cohort analysis */}
+      {effectiveData.patient_position && (
+        <div className="bg-white rounded-2xl border border-grey-200 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="w-4 h-4 text-grey-500" />
+            <h4 className="text-xs font-medium text-grey-400 uppercase tracking-wider">
+              Patient Position
+            </h4>
+            {effectiveData.patient_position.estimated_cohort_match > 0 && (
+              <span className="ml-auto text-xs font-semibold text-grey-900">
+                {Math.round(effectiveData.patient_position.estimated_cohort_match * 100)}% match
+              </span>
+            )}
+          </div>
+
+          <p className="text-sm text-grey-700 mb-4">{effectiveData.patient_position.overall_summary}</p>
+
+          <div className="grid grid-cols-2 gap-4">
+            {effectiveData.patient_position.favorable_factors?.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-grey-900" />
+                  <span className="text-xs font-medium text-grey-700">Favorable ({effectiveData.patient_position.favorable_factors.length})</span>
+                </div>
+                <div className="space-y-1.5">
+                  {effectiveData.patient_position.favorable_factors.slice(0, 3).map((factor, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-xs text-grey-600">
+                      <CheckCircle className="w-3 h-3 text-grey-400 mt-0.5 shrink-0" />
+                      <span>{factor}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {effectiveData.patient_position.at_risk_factors?.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-grey-400" />
+                  <span className="text-xs font-medium text-grey-700">At Risk ({effectiveData.patient_position.at_risk_factors.length})</span>
+                </div>
+                <div className="space-y-1.5">
+                  {effectiveData.patient_position.at_risk_factors.slice(0, 3).map((factor, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-xs text-grey-600">
+                      <ShieldAlert className="w-3 h-3 text-grey-400 mt-0.5 shrink-0" />
+                      <span>{factor}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Agentic Pattern Discovery - Non-obvious compensating factors */}
       {effectiveData.compensating_factors && effectiveData.compensating_factors.length > 0 && (
@@ -660,7 +732,7 @@ export function StrategicIntelligence({ caseId, caseData: providedCaseData, clas
               {unmetSafetyScreenings.map((req, idx) => (
                 <div key={`screen-${idx}`} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2 text-grey-600">
-                    <ShieldCheck className="w-3.5 h-3.5 text-red-400" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-grey-500" />
                     <span>{req.name}</span>
                   </div>
                   <span className="text-xs font-medium text-semantic-error px-1.5 py-0.5 bg-semantic-error/10 rounded">

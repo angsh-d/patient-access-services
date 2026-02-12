@@ -1,4 +1,5 @@
-"""Recovery agent for handling denials and setbacks."""
+"""Recovery agent for handling denials and setbacks — LLM-powered."""
+import json
 from typing import Dict, Any, List, Optional, Literal
 from datetime import datetime
 from uuid import uuid4
@@ -37,11 +38,8 @@ class RecoveryAgent:
     """
     Agent responsible for handling denials and setbacks.
 
-    Key capabilities:
-    - Denial classification (categorize denial type)
-    - Root cause analysis (link to intake gaps)
-    - Recovery strategy generation (score multiple options)
-    - Appeal strategy generation (using Claude)
+    All classification, strategy generation, and selection are LLM-powered
+    via task-routed prompts through the LLM gateway.
     """
 
     def __init__(self):
@@ -50,13 +48,13 @@ class RecoveryAgent:
         self.prompt_loader = get_prompt_loader()
         logger.info("Recovery agent initialized")
 
-    def classify_denial(
+    async def classify_denial(
         self,
         denial_response: Dict[str, Any],
         case_state: Dict[str, Any]
     ) -> DenialClassification:
         """
-        Classify a denial to determine recovery approach.
+        Classify a denial using LLM reasoning.
 
         Args:
             denial_response: Payer denial response
@@ -65,329 +63,176 @@ class RecoveryAgent:
         Returns:
             DenialClassification with recovery guidance
         """
-        reason_code = denial_response.get("denial_reason_code") or denial_response.get("denial_code", "")
-        reason_text = denial_response.get("denial_reason", "")
-        appeal_deadline = denial_response.get("appeal_deadline")
-
-        # Classify denial type
-        denial_type = self._determine_denial_type(reason_code, reason_text)
-
-        # Check if recoverable — doc_incomplete and prior_auth_expired are recoverable
-        # even without an appeal_deadline (resubmission, not appeal)
-        is_recoverable = (
-            denial_type != "not_covered" and
-            (appeal_deadline is not None or denial_type in ("documentation_incomplete", "prior_auth_expired"))
+        prompt = self.prompt_loader.load(
+            "recovery/denial_classification.txt",
+            {
+                "denial_response": json.dumps(denial_response, indent=2, default=str),
+                "case_context": json.dumps({
+                    "case_id": case_state.get("case_id", ""),
+                    "stage": case_state.get("stage", ""),
+                    "patient_data": case_state.get("patient_data", {}),
+                    "medication_data": case_state.get("medication_data", {}),
+                    "coverage_assessments": case_state.get("coverage_assessments", {}),
+                }, indent=2, default=str),
+                "documentation_gaps": json.dumps(
+                    case_state.get("documentation_gaps", []), indent=2, default=str
+                ),
+            },
         )
 
-        # Find root cause and linked intake gap (use evaluator results if available)
-        payer_name = denial_response.get("payer_name", "")
-        evaluation_result = None
-        eval_results = case_state.get("policy_evaluation_results", {})
-        if payer_name and payer_name in eval_results:
-            evaluation_result = eval_results[payer_name]
-
-        root_cause, linked_gap = self._analyze_root_cause(
-            denial_type,
-            reason_text,
-            case_state.get("documentation_gaps", []),
-            evaluation_result=evaluation_result,
+        result = await self.llm_gateway.generate(
+            task_category=TaskCategory.DENIAL_CLASSIFICATION,
+            prompt=prompt,
+            temperature=0.0,
+            response_format="json",
         )
 
-        # Determine urgency based on patient condition
-        urgency = self._assess_urgency(case_state)
+        # Parse LLM response
+        denial_type = result.get("denial_type", "other")
+        valid_types = {
+            "medical_necessity", "documentation_incomplete",
+            "step_therapy", "prior_auth_expired", "not_covered", "other",
+        }
+        if denial_type not in valid_types:
+            denial_type = "other"
+
+        is_recoverable = result.get("is_recoverable", True)
+        root_cause = result.get("root_cause", denial_response.get("denial_reason", "Unknown"))
+
+        linked_gaps = result.get("linked_intake_gaps", [])
+        linked_gap = linked_gaps[0] if linked_gaps else None
+
+        urgency = result.get("urgency", "standard")
+        if urgency not in ("standard", "urgent", "emergent"):
+            urgency = "standard"
 
         classification = DenialClassification(
             denial_type=denial_type,
             is_recoverable=is_recoverable,
             root_cause=root_cause,
             linked_intake_gap=linked_gap,
-            urgency=urgency
+            urgency=urgency,
         )
 
         logger.info(
-            "Denial classified",
+            "Denial classified (LLM)",
             denial_type=denial_type,
             is_recoverable=is_recoverable,
             root_cause=root_cause,
-            linked_gap=linked_gap
+            linked_gap=linked_gap,
         )
 
         return classification
 
-    def _determine_denial_type(
-        self,
-        reason_code: str,
-        reason_text: str
-    ) -> Literal["medical_necessity", "documentation_incomplete",
-                  "step_therapy", "prior_auth_expired", "not_covered", "other"]:
-        """Determine denial type from code and text."""
-        reason_lower = reason_text.lower()
-        code_upper = reason_code.upper()
-
-        # Check multi-word specific phrases FIRST to avoid false matches from generic keywords
-        if "medical necessity" in reason_lower or "MED_NEC" in code_upper:
-            return "medical_necessity"
-        elif "step therapy" in reason_lower or "step-therapy" in reason_lower or "STEP_THERAPY" in code_upper or "ST_REQ" in code_upper:
-            return "step_therapy"
-        elif "not covered" in reason_lower or "excluded" in reason_lower or "NOT_COVERED" in code_upper or "EXCLUDED" in code_upper:
-            return "not_covered"
-        elif "expired" in reason_lower or "EXPIRED" in code_upper:
-            return "prior_auth_expired"
-        # Generic single-word keywords last
-        elif "missing" in reason_lower or "incomplete" in reason_lower or "documentation" in reason_lower:
-            return "documentation_incomplete"
-        else:
-            return "other"
-
-    def _analyze_root_cause(
-        self,
-        denial_type: str,
-        reason_text: str,
-        documentation_gaps: List[Dict[str, Any]],
-        evaluation_result: Optional[Dict[str, Any]] = None,
-    ) -> tuple:
-        """Analyze root cause and find linked intake gap or criterion ID."""
-        root_cause = reason_text
-
-        # Try to link to an intake gap
-        linked_gap = None
-        reason_lower = reason_text.lower()
-
-        # First, try to map to specific criterion IDs from evaluation result
-        if evaluation_result and evaluation_result.get("gaps"):
-            for gap in evaluation_result["gaps"]:
-                gap_name = gap.get("criterion_name", "").lower()
-                cid = gap.get("criterion_id", "")
-                if any(kw in gap_name for kw in reason_lower.split() if len(kw) > 3):
-                    linked_gap = cid
-                    root_cause = f"Denial linked to criterion {cid}: {gap.get('criterion_name', '')}"
-                    break
-
-        # Fall back to documentation gaps
-        if not linked_gap:
-            for gap in documentation_gaps:
-                gap_desc = gap.get("description", "").lower()
-                gap_type = gap.get("gap_type", "").lower()
-
-                if "tb" in reason_lower and "tb" in gap_desc:
-                    linked_gap = gap.get("gap_id")
-                    root_cause = f"Missing TB screening identified at intake (gap: {linked_gap})"
-                    break
-                elif "screening" in reason_lower and "screening" in gap_desc:
-                    linked_gap = gap.get("gap_id")
-                    root_cause = f"Missing screening identified at intake (gap: {linked_gap})"
-                    break
-                elif "step" in reason_lower and "step" in gap_type:
-                    linked_gap = gap.get("gap_id")
-                    root_cause = f"Step therapy gap identified at intake (gap: {linked_gap})"
-                    break
-
-        return root_cause, linked_gap
-
-    def _assess_urgency(self, case_state: Dict[str, Any]) -> Literal["standard", "urgent", "emergent"]:
-        """Assess urgency based on patient clinical status."""
-        patient_data = case_state.get("patient_data", {})
-        clinical = patient_data.get("clinical_profile", {})
-
-        # Check for urgent indicators
-        diagnoses = clinical.get("diagnoses", [])
-        for dx in diagnoses:
-            if dx.get("is_urgent") or "active" in dx.get("description", "").lower():
-                return "urgent"
-
-        return "standard"
-
-    def generate_recovery_strategies(
+    async def generate_recovery_strategies(
         self,
         classification: DenialClassification,
         case_state: Dict[str, Any],
         payer_name: str
     ) -> List[Dict[str, Any]]:
         """
-        Generate and score recovery strategy options.
+        Generate recovery strategies using LLM reasoning.
 
         Args:
-            classification: Denial classification
+            classification: LLM-generated denial classification
             case_state: Current case state
             payer_name: Payer that denied
 
         Returns:
-            List of recovery options with scores
+            List of recovery options ranked by success probability
         """
-        options = []
+        # Build policy context
+        policy_context = ""
+        try:
+            from backend.reasoning.policy_reasoner import get_policy_reasoner
+            med_name = case_state.get("medication_data", {}).get(
+                "medication_request", case_state.get("medication_data", {})
+            ).get("medication_name", "unknown")
+            policy_context = get_policy_reasoner().load_policy(payer_name, med_name)
+        except (FileNotFoundError, Exception) as e:
+            logger.debug("Policy text unavailable for recovery strategy", error=str(e))
+            policy_context = "Policy document not available"
 
-        if classification.denial_type == "documentation_incomplete":
-            # Option 1: Urgent document chase
-            options.append({
-                "option_id": "URGENT_DOCUMENT_CHASE",
-                "name": "Urgent Document Chase",
-                "description": "Priority escalation to obtain missing documentation and resubmit",
-                "score": 7.2,
-                "actions": [
-                    {"action": "escalate_to_provider", "priority": "urgent"},
-                    {"action": "track_documentation", "deadline_hours": 48},
-                    {"action": "resubmit_pa", "after": "documents_received"}
-                ],
-                "pros": ["Fastest path to approval if docs obtained", "No appeal needed"],
-                "cons": ["Depends on provider responsiveness"],
-                "success_probability": 0.85
-            })
+        available_payers = list(case_state.get("payer_states", {}).keys())
 
-            # Option 2: Parallel recovery
-            options.append({
-                "option_id": "PARALLEL_RECOVERY",
-                "name": "Parallel Recovery",
-                "description": "Chase documentation AND prepare appeal simultaneously",
-                "score": 6.8,
-                "actions": [
-                    {"action": "escalate_to_provider", "priority": "standard"},
-                    {"action": "prepare_appeal", "parallel": True},
-                    {"action": "submit_first_available"}
-                ],
-                "pros": ["Hedges risk", "Uses time efficiently"],
-                "cons": ["More coordination effort"],
-                "success_probability": 0.78
-            })
+        prompt = self.prompt_loader.load(
+            "recovery/recovery_strategy.txt",
+            {
+                "denial_classification": json.dumps({
+                    "denial_type": classification.denial_type,
+                    "root_cause": classification.root_cause,
+                    "is_recoverable": classification.is_recoverable,
+                    "urgency": classification.urgency,
+                    "linked_intake_gap": classification.linked_intake_gap,
+                }, indent=2),
+                "patient_profile": json.dumps(
+                    case_state.get("patient_data", {}), indent=2, default=str
+                ),
+                "policy_context": policy_context[:3000],
+                "available_payers": json.dumps(available_payers),
+            },
+        )
 
-        elif classification.denial_type == "medical_necessity":
-            # Option 1: Peer-to-peer review
-            options.append({
-                "option_id": "PEER_TO_PEER_REVIEW",
-                "name": "Peer-to-Peer Review",
-                "description": "Request P2P review with payer medical director",
-                "score": 7.5,
-                "actions": [
-                    {"action": "prepare_p2p_materials"},
-                    {"action": "schedule_p2p", "urgency": classification.urgency},
-                    {"action": "conduct_p2p"}
-                ],
-                "pros": ["High success rate for valid cases", "Fast turnaround"],
-                "cons": ["Requires physician time"],
-                "success_probability": 0.72
-            })
+        result = await self.llm_gateway.generate(
+            task_category=TaskCategory.RECOVERY_STRATEGY,
+            prompt=prompt,
+            temperature=0.2,
+            response_format="json",
+        )
 
-            # Option 2: Written appeal
-            options.append({
-                "option_id": "WRITTEN_APPEAL",
-                "name": "Written Appeal",
-                "description": "Submit comprehensive written appeal with clinical evidence",
-                "score": 6.5,
-                "actions": [
-                    {"action": "generate_appeal_strategy"},
-                    {"action": "draft_appeal_letter"},
-                    {"action": "submit_appeal"}
-                ],
-                "pros": ["Thorough documentation", "Creates audit trail"],
-                "cons": ["Longer timeline"],
-                "success_probability": 0.65
-            })
+        # Parse: result may be a list directly or wrapped in {"response": ...}
+        options = result if isinstance(result, list) else result.get("response", result)
+        if isinstance(options, str):
+            try:
+                options = json.loads(options)
+            except json.JSONDecodeError as e:
+                logger.error(
+                    "Failed to parse recovery strategy LLM response as JSON",
+                    error=str(e),
+                    raw_response=options[:500],
+                )
+                raise ValueError(f"LLM returned invalid JSON for recovery strategies: {e}") from e
+        if isinstance(options, dict):
+            # Unwrap common wrapper keys
+            for key in ("strategies", "recovery_strategies", "options"):
+                if key in options and isinstance(options[key], list):
+                    options = options[key]
+                    break
+            else:
+                options = [options]
 
-        elif classification.denial_type == "step_therapy":
-            # Option 1: Document step therapy completion
-            options.append({
-                "option_id": "DOCUMENT_STEP_THERAPY",
-                "name": "Document Step Therapy Completion",
-                "description": "Gather documentation showing required step therapy was completed or provide clinical justification for exception",
-                "score": 7.0,
-                "actions": [
-                    {"action": "gather_treatment_history", "priority": "urgent"},
-                    {"action": "document_step_therapy_compliance"},
-                    {"action": "resubmit_pa", "after": "documentation_complete"}
-                ],
-                "pros": ["Addresses denial reason directly", "High success if history available"],
-                "cons": ["Depends on prior treatment documentation"],
-                "success_probability": 0.75
-            })
+        # Ensure each option has required fields
+        for opt in options:
+            opt.setdefault("option_id", str(uuid4())[:8].upper())
+            opt.setdefault("score", opt.get("success_probability", 0.5) * 10)
+            opt.setdefault("success_probability", opt.get("score", 5.0) / 10)
 
-            # Option 2: Step therapy exception request
-            options.append({
-                "option_id": "STEP_THERAPY_EXCEPTION",
-                "name": "Request Step Therapy Exception",
-                "description": "Appeal for step therapy exception based on clinical contraindication or prior failure",
-                "score": 6.5,
-                "actions": [
-                    {"action": "prepare_exception_request"},
-                    {"action": "submit_appeal"}
-                ],
-                "pros": ["Can bypass step therapy requirement", "Based on clinical grounds"],
-                "cons": ["Requires clinical justification", "May take longer"],
-                "success_probability": 0.60
-            })
+        # Sort by success_probability descending
+        options.sort(key=lambda x: x.get("success_probability", 0), reverse=True)
 
-        elif classification.denial_type == "prior_auth_expired":
-            # Option 1: Resubmit new PA
-            options.append({
-                "option_id": "RESUBMIT_NEW_PA",
-                "name": "Submit New Prior Authorization",
-                "description": "Submit a fresh PA request with updated clinical documentation",
-                "score": 7.5,
-                "actions": [
-                    {"action": "update_clinical_documentation"},
-                    {"action": "submit_new_pa", "priority": "urgent"}
-                ],
-                "pros": ["Clean start with current data", "Often faster than appeal"],
-                "cons": ["Restarts the clock on approval timeline"],
-                "success_probability": 0.80
-            })
-
-        else:
-            # Catch-all for 'not_covered' and 'other' denial types
-            options.append({
-                "option_id": "WRITTEN_APPEAL_GENERAL",
-                "name": "Written Appeal",
-                "description": "Submit comprehensive written appeal with clinical evidence and coverage arguments",
-                "score": 5.5,
-                "actions": [
-                    {"action": "generate_appeal_strategy"},
-                    {"action": "draft_appeal_letter"},
-                    {"action": "submit_appeal"}
-                ],
-                "pros": ["Applicable to any denial type", "Creates audit trail"],
-                "cons": ["Lower success rate for coverage exclusions", "Longer timeline"],
-                "success_probability": 0.45
-            })
-
-        # Option for pivoting (lower score generally)
-        if len(case_state.get("payers", [])) > 1:
-            options.append({
-                "option_id": "PIVOT_TO_OTHER_PAYER",
-                "name": f"Pivot Away from {payer_name}",
-                "description": "Focus on other payer instead",
-                "score": 4.0,
-                "actions": [
-                    {"action": "deprioritize_payer", "payer": payer_name},
-                    {"action": "submit_to_other_payer"}
-                ],
-                "pros": ["May be faster if other payer approves"],
-                "cons": ["Abandons potential approval", "May still need this payer"],
-                "success_probability": 0.50
-            })
-
-        # Sort by score
-        options.sort(key=lambda x: x["score"], reverse=True)
-
-        # Mark top option as recommended
-        if options:
+        # Mark recommended
+        recommended_count = sum(1 for o in options if o.get("is_recommended"))
+        if recommended_count == 0 and options:
             options[0]["is_recommended"] = True
 
         logger.info(
-            "Recovery strategies generated",
+            "Recovery strategies generated (LLM)",
             num_options=len(options),
-            recommended=options[0]["option_id"] if options else None
+            recommended=next((o["option_id"] for o in options if o.get("is_recommended")), None),
         )
 
         return options
 
-    def select_recovery_strategy(
+    async def select_recovery_strategy(
         self,
         options: List[Dict[str, Any]],
         case_state: Dict[str, Any]
     ) -> RecoveryStrategy:
         """
-        Select the best recovery strategy.
+        Select the best recovery strategy (LLM-recommended option).
 
         Args:
-            options: Available recovery options
+            options: Available recovery options (already ranked by LLM)
             case_state: Current case state
 
         Returns:
@@ -396,10 +241,15 @@ class RecoveryAgent:
         if not options:
             raise ValueError("No recovery options available")
 
-        selected = options[0]  # Highest scored
+        # Use the LLM-recommended option, or fall back to highest-ranked
+        selected = next(
+            (o for o in options if o.get("is_recommended")),
+            options[0],
+        )
 
-        # Determine if we should run parallel actions
-        parallel = selected.get("option_id") == "PARALLEL_RECOVERY"
+        parallel = "parallel" in selected.get("name", "").lower() or any(
+            a.get("parallel") for a in selected.get("actions", [])
+        )
 
         return RecoveryStrategy(
             case_id=case_state.get("case_id", ""),
@@ -408,12 +258,16 @@ class RecoveryAgent:
             root_cause_analysis=case_state.get("recovery_reason", "Unknown denial"),
             linked_to_intake_gap=case_state.get("linked_intake_gap"),
             recovery_options=[{
-                "id": opt["option_id"],
-                "name": opt["name"],
-                "score": opt["score"]
+                "id": opt.get("option_id", ""),
+                "name": opt.get("name", ""),
+                "score": opt.get("score", 0),
+                "success_probability": opt.get("success_probability", 0),
             } for opt in options],
-            selected_option=selected["option_id"],
-            selection_reasoning=f"Highest score ({selected['score']}) with {selected['success_probability']*100:.0f}% success probability",
+            selected_option=selected.get("option_id", ""),
+            selection_reasoning=selected.get(
+                "success_reasoning",
+                f"LLM-recommended with {selected.get('success_probability', 0)*100:.0f}% estimated success",
+            ),
             recovery_actions=selected.get("actions", []),
             deadline_tracking={},
             parallel_actions=parallel,

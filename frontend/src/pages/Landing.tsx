@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { motion, useScroll, useTransform, useInView } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 
-const platformTitle = 'Patient Access Strategy'
+const platformTitle = 'Prior Auth Agent'
 
 function NavBar() {
   const navigate = useNavigate()
@@ -20,7 +20,7 @@ function NavBar() {
         borderBottom: '0.5px solid rgba(0, 0, 0, 0.06)',
       }}
     >
-      <div className="max-w-[1024px] mx-auto flex items-center justify-between h-[44px] px-6">
+      <div className="flex items-center justify-between h-[44px] px-6">
         <div className="flex items-center gap-0">
           <img
             src="/saama_logo.svg"
@@ -128,7 +128,7 @@ function HeroSection() {
             }}
           >
             <span className="w-[5px] h-[5px] rounded-full bg-semantic-success animate-pulse" />
-            Agentic Access Strategy Platform
+            Prior Auth Agent
           </span>
         </motion.div>
 
@@ -143,14 +143,14 @@ function HeroSection() {
             letterSpacing: '-0.04em',
           }}
         >
-          <>Patient access,{' '}<br className="hidden sm:block" />without the barriers.</>
+          <>Approvals faster.{' '}<br className="hidden sm:block" />Denials fewer.</>
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-8 mx-auto max-w-[480px]"
+          className="mb-8 mx-auto max-w-[520px]"
           style={{
             fontSize: 'clamp(1rem, 2vw, 1.1875rem)',
             lineHeight: '1.5',
@@ -158,13 +158,37 @@ function HeroSection() {
             color: '#86868b',
           }}
         >
-          AI agents that navigate benefit verification, prior authorization, and payer strategy — so your team can focus on what matters.
+          AI that reads payer policies, interprets patient data, prevents denials before they happen, and learns from every past submission.
         </motion.p>
+
+        {/* Four key functions */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="grid grid-cols-2 gap-x-8 gap-y-3 mb-8 max-w-[480px] mx-auto"
+        >
+          {[
+            { label: 'Policy Interpretation', desc: 'Reads and reasons over payer coverage criteria' },
+            { label: 'Patient Data Analysis', desc: 'Matches clinical evidence to policy requirements' },
+            { label: 'Proactive Denial Prevention', desc: 'Flags gaps and compensating factors before submission' },
+            { label: 'Predictive Intelligence', desc: 'Learns from historical submissions to forecast outcomes' },
+          ].map((item, idx) => (
+            <div key={idx} className="text-left">
+              <p className="text-[13px] font-semibold text-grey-900" style={{ letterSpacing: '-0.01em' }}>
+                {item.label}
+              </p>
+              <p className="text-[11px] text-grey-500 mt-0.5" style={{ lineHeight: '1.4' }}>
+                {item.desc}
+              </p>
+            </div>
+          ))}
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.5, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
           className="flex items-center justify-center gap-3"
         >
           <button

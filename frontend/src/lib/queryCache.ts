@@ -102,7 +102,7 @@ export const persistOptions = {
   persister: indexedDBPersister,
   maxAge: CACHE_TIMES.PERSIST_MAX_AGE,
   // Bump this string to invalidate all cached data
-  buster: 'v5-bcbs-policies',
+  buster: 'v11-plain-language-cohort',
   // Don't persist error states or loading states
   dehydrateOptions: {
     shouldDehydrateQuery: (query: { queryKey: readonly unknown[]; state: { status: string } }) => {

@@ -310,11 +310,10 @@ export function usePatientData(patientId: string | undefined) {
       return request<PatientData>(`${API_BASE}/patients/${normalizedId}/data`)
     },
     enabled: !!normalizedId,
-    // Indefinite caching - patient data is immutable during session
-    staleTime: CACHE_TIMES.STATIC,
+    // Semi-static: patient data rarely changes but must recover from stale cache
+    staleTime: CACHE_TIMES.SEMI_STATIC,
     gcTime: CACHE_TIMES.GC_TIME,
-    // Explicitly disable all automatic refetching
-    refetchOnMount: false,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   })
@@ -322,7 +321,6 @@ export function usePatientData(patientId: string | undefined) {
 
 /**
  * Hook to fetch patient documents list
- * Uses indefinite caching - document list is static during session
  */
 export function usePatientDocuments(patientId: string | undefined) {
   // Normalize patientId to prevent cache key issues with empty strings
@@ -337,11 +335,9 @@ export function usePatientDocuments(patientId: string | undefined) {
       return request<PatientDocumentsResponse>(`${API_BASE}/patients/${normalizedId}/documents`)
     },
     enabled: !!normalizedId,
-    // Indefinite caching - document list is immutable during session
-    staleTime: CACHE_TIMES.STATIC,
+    staleTime: CACHE_TIMES.SEMI_STATIC,
     gcTime: CACHE_TIMES.GC_TIME,
-    // Explicitly disable all automatic refetching
-    refetchOnMount: false,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   })

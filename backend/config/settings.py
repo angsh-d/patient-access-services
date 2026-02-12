@@ -57,6 +57,9 @@ class Settings(BaseSettings):
     claude_max_output_tokens: int = Field(default=8192, description="Max output tokens for Claude")
     azure_max_output_tokens: int = Field(default=16384, description="Max output tokens for Azure OpenAI")
 
+    # LLM Gateway
+    llm_gateway_timeout_seconds: int = Field(default=180, description="Wall-clock timeout for LLM gateway generate() calls")
+
     # Data directories (relative to project root)
     patients_dir: str = Field(default="data/patients", description="Directory containing patient JSON files")
     policies_dir: str = Field(default="data/policies", description="Directory containing policy files")

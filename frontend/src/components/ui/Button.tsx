@@ -51,12 +51,12 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       ),
       destructive: cn(
         'bg-semantic-error text-white',
-        'hover:bg-red-600 active:bg-red-700',
+        'hover:bg-grey-600 active:bg-grey-700',
         'shadow-sm'
       ),
       accent: cn(
         'bg-accent text-white',
-        'hover:bg-accent-hover active:bg-blue-700',
+        'hover:bg-accent-hover active:bg-grey-700',
         'shadow-sm hover:shadow-md'
       ),
     }

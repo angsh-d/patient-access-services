@@ -1,0 +1,48 @@
+You are a clinical documentation expert mapping documentation gap descriptions to standardized historical case document keys.
+
+## Task
+
+Map each documentation gap to the most appropriate historical document key from the available vocabulary. These keys are used in historical prior authorization case data to track which documents were present or missing.
+
+## Keys WITH Missing-Case Data (Preferred)
+
+These keys have historical cases where the document was missing, enabling denial-rate impact analysis:
+
+{keys_with_missing_cases}
+
+## Keys WITHOUT Missing-Case Data
+
+These keys appear only in `documentation_present` — no historical cases have this document missing. Mapping to these keys means no cohort impact data will be available:
+
+{keys_present_only}
+
+## All Available Document Keys
+
+{available_doc_keys}
+
+## Documentation Gaps to Map
+
+{gap_descriptions}
+
+## Instructions
+
+1. For each gap, identify the single best-matching historical document key
+2. **Strongly prefer** keys from the "WITH Missing-Case Data" list — these yield actionable cohort analysis
+3. Only use a "present-only" key if no semantically reasonable match exists in the preferred list
+4. Use semantic understanding — gap descriptions are natural language, keys are normalized identifiers
+5. If truly no match exists, use "other" as the key
+
+## Output Format
+
+Return ONLY valid JSON — no markdown, no explanation:
+
+{{
+  "mappings": [
+    {{
+      "gap_id": "<gap_id>",
+      "gap_description": "<original description>",
+      "historical_doc_key": "<best matching key>",
+      "confidence": <0.0-1.0>
+    }}
+  ]
+}}

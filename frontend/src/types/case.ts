@@ -8,6 +8,8 @@ import { Strategy } from './strategy'
 export type CaseStage =
   | 'intake'
   | 'policy_analysis'
+  | 'cohort_analysis'
+  | 'ai_recommendation'
   | 'awaiting_human_decision'
   | 'strategy_generation'
   | 'strategy_selection'
@@ -21,7 +23,7 @@ export type CaseStage =
  * Human decision action types
  * Must match backend HumanDecisionAction
  */
-export type HumanDecisionAction = 'approve' | 'reject' | 'override' | 'escalate'
+export type HumanDecisionAction = 'approve' | 'reject' | 'override' | 'escalate' | 'submit_to_payer' | 'return_to_provider' | 'follow_recommendation'
 
 /**
  * Human decision record - captures HITL decision at gates

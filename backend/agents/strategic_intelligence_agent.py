@@ -11,8 +11,9 @@ This demonstrates genuine agentic AI capabilities:
 """
 import json
 import hashlib
+import math
 import uuid
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
@@ -24,7 +25,7 @@ from backend.reasoning.prompt_loader import get_prompt_loader
 from backend.config.logging_config import get_logger
 from backend.config.settings import get_settings
 from backend.storage.database import get_db
-from backend.storage.models import StrategicIntelligenceCacheModel
+from backend.storage.models import StrategicIntelligenceCacheModel, CohortAnalysisCacheModel
 
 logger = get_logger(__name__)
 
@@ -69,7 +70,11 @@ class StrategicInsights:
         confidence_reasoning: str,
         compensating_factors: Optional[List[Dict[str, Any]]] = None,
         agentic_insights: Optional[List[Dict[str, Any]]] = None,
-        evidence_summary: Optional[Dict[str, Any]] = None
+        evidence_summary: Optional[Dict[str, Any]] = None,
+        cohort_summary: Optional[Dict[str, Any]] = None,
+        patient_position: Optional[Dict[str, Any]] = None,
+        statistical_validity: Optional[str] = None,
+        statistical_warnings: Optional[List[str]] = None,
     ):
         self.similar_cases_count = similar_cases_count
         self.approval_rate_for_similar = approval_rate_for_similar
@@ -88,6 +93,10 @@ class StrategicInsights:
         self.compensating_factors = compensating_factors or []
         self.agentic_insights = agentic_insights or []
         self.evidence_summary = evidence_summary or {}
+        self.cohort_summary = cohort_summary
+        self.patient_position = patient_position
+        self.statistical_validity = statistical_validity
+        self.statistical_warnings = statistical_warnings or []
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for API response matching frontend interface."""
@@ -110,7 +119,11 @@ class StrategicInsights:
             "confidence_reasoning": self.confidence_reasoning,
             "compensating_factors": self.compensating_factors,
             "agentic_insights": self.agentic_insights,
-            "evidence_summary": self.evidence_summary
+            "evidence_summary": self.evidence_summary,
+            "cohort_summary": self.cohort_summary,
+            "patient_position": self.patient_position,
+            "statistical_validity": self.statistical_validity,
+            "statistical_warnings": self.statistical_warnings,
         }
 
 
@@ -210,13 +223,7 @@ class StrategicIntelligenceAgent:
             payer_name.lower().strip(),
         ]
 
-        # Include severity classification if provided
-        if disease_severity:
-            severity_class = disease_severity.get("severity_classification", "")
-            if severity_class:
-                key_parts.append(severity_class.lower())
-
-        # Generate SHA-256 hash
+        # Generate SHA-256 hash (no severity — intentionally broad, matching cohort cache key)
         key_string = "::".join(key_parts)
         return hashlib.sha256(key_string.encode()).hexdigest()
 
@@ -242,19 +249,9 @@ class StrategicIntelligenceAgent:
                     logger.debug("Cache miss", cache_key_hash=cache_key_hash[:16])
                     return None
 
-                if cache_entry.is_expired():
-                    logger.info(
-                        "Cache expired, will regenerate",
-                        cache_key_hash=cache_key_hash[:16],
-                        expired_at=cache_entry.expires_at.isoformat()
-                    )
-                    # Delete expired entry
-                    await db.execute(
-                        delete(StrategicIntelligenceCacheModel).where(
-                            StrategicIntelligenceCacheModel.id == cache_entry.id
-                        )
-                    )
-                    return None
+                # Cache never expires — manual invalidation only
+                # if cache_entry.is_expired():
+                #     ...
 
                 logger.info(
                     "Cache hit",
@@ -606,11 +603,13 @@ class StrategicIntelligenceAgent:
         current_documentation = current_documentation or []
         current_docs_lower = {d.lower() for d in current_documentation}
 
-        # Calculate outcome rates
+        # Calculate outcome rates — use resolved_total (approved + denied) for
+        # approval/denial rates to match cohort analysis denominator
         total = len(similar_cases)
         approved = sum(1 for c in similar_cases if c.case_data.get("outcome") == "approved")
         info_requests = sum(1 for c in similar_cases if c.case_data.get("outcome") == "info_request")
         denied = sum(1 for c in similar_cases if c.case_data.get("outcome") == "denied")
+        resolved_total = approved + denied  # Excludes info_request for approval/denial rates
 
         sample_approved_ids = [c.case_id for c in similar_cases if c.case_data.get("outcome") == "approved"][:5]
         sample_denied_ids = [c.case_id for c in similar_cases if c.case_data.get("outcome") == "denied"][:5]
@@ -650,9 +649,9 @@ class StrategicIntelligenceAgent:
         avg_days = sum(days_list) / len(days_list) if days_list else 7.0
 
         return {
-            "approval_rate": approved / total,
-            "info_request_rate": info_requests / total,
-            "denial_rate": denied / total,
+            "approval_rate": approved / resolved_total if resolved_total > 0 else 0.0,
+            "info_request_rate": info_requests / total if total > 0 else 0.0,
+            "denial_rate": denied / resolved_total if resolved_total > 0 else 0.0,
             "avg_days_to_decision": round(avg_days, 1),
             "documentation_patterns": doc_patterns,
             "timing_patterns": timing_patterns,
@@ -1127,6 +1126,189 @@ class StrategicIntelligenceAgent:
 
         return compensating_patterns
 
+    @staticmethod
+    def _wilson_interval(successes: int, total: int, z: float = 1.96) -> Tuple[float, float]:
+        """
+        Calculate Wilson score confidence interval for a proportion.
+
+        This is preferred over the normal approximation for small samples
+        because it never produces negative lower bounds or bounds > 1.
+
+        Args:
+            successes: Number of successes (e.g. approvals)
+            total: Total sample size
+            z: Z-score for confidence level (1.96 = 95% CI)
+
+        Returns:
+            Tuple of (lower_bound, upper_bound) as proportions in [0, 1]
+        """
+        if total == 0:
+            return (0.0, 0.0)
+        p = successes / total
+        denominator = 1 + z ** 2 / total
+        center = (p + z ** 2 / (2 * total)) / denominator
+        margin = z * math.sqrt((p * (1 - p) + z ** 2 / (4 * total)) / total) / denominator
+        return (max(0.0, center - margin), min(1.0, center + margin))
+
+    def _validate_statistical_claims(self, insights: StrategicInsights, sample_size: int) -> StrategicInsights:
+        """
+        Add statistical rigor annotations to insights based on sample size.
+
+        Applies Wilson score confidence intervals to all proportion claims
+        and flags low-sample-size warnings so downstream consumers (UI, LLM
+        prompts) can display appropriate caveats.
+
+        Args:
+            insights: The StrategicInsights object to annotate
+            sample_size: Number of similar cases the insights are based on
+
+        Returns:
+            The same StrategicInsights object, mutated with statistical metadata
+        """
+        warnings: List[str] = []
+
+        # --- Determine statistical_validity tier ---
+        if sample_size >= 30:
+            validity = "reliable"
+        elif sample_size >= 20:
+            validity = "moderate"
+        elif sample_size >= 10:
+            validity = "low"
+        else:
+            validity = "insufficient"
+
+        insights.statistical_validity = validity
+
+        # --- LOW_SAMPLE_SIZE warning for n < 10 ---
+        if sample_size < 10:
+            warnings.append(
+                f"LOW_SAMPLE_SIZE: Only {sample_size} similar cases found. "
+                f"All pattern claims should be treated as preliminary signals, not established trends."
+            )
+
+        # --- LOW_CONFIDENCE flag for n < 20 ---
+        if sample_size < 20:
+            warnings.append(
+                f"LOW_CONFIDENCE: Sample size ({sample_size}) is below 20. "
+                f"Quantified patterns (approval rates, percentages) have wide confidence intervals."
+            )
+
+        # --- Add confidence intervals to top-level rates ---
+        # Compute approved/denied counts from the rates and sample_size
+        approved_count = round(insights.approval_rate_for_similar * sample_size)
+        denied_count = round(insights.denial_rate_for_similar * sample_size)
+        info_request_count = round(insights.info_request_rate_for_similar * sample_size)
+
+        approval_ci = self._wilson_interval(approved_count, sample_size)
+        denial_ci = self._wilson_interval(denied_count, sample_size)
+        info_request_ci = self._wilson_interval(info_request_count, sample_size)
+
+        if not insights.evidence_summary:
+            insights.evidence_summary = {}
+
+        insights.evidence_summary["confidence_intervals"] = {
+            "confidence_level": "95%",
+            "method": "wilson_score",
+            "sample_size": sample_size,
+            "approval_rate": {
+                "point_estimate": round(insights.approval_rate_for_similar, 3),
+                "ci_lower": round(approval_ci[0], 3),
+                "ci_upper": round(approval_ci[1], 3),
+            },
+            "denial_rate": {
+                "point_estimate": round(insights.denial_rate_for_similar, 3),
+                "ci_lower": round(denial_ci[0], 3),
+                "ci_upper": round(denial_ci[1], 3),
+            },
+            "info_request_rate": {
+                "point_estimate": round(insights.info_request_rate_for_similar, 3),
+                "ci_lower": round(info_request_ci[0], 3),
+                "ci_upper": round(info_request_ci[1], 3),
+            },
+        }
+
+        # --- Annotate documentation insights with confidence intervals ---
+        for doc_insight in insights.documentation_insights:
+            if isinstance(doc_insight, dict):
+                # Add CI to impact_on_approval if present
+                impact = doc_insight.get("impact_on_approval")
+                cases_with = doc_insight.get("cases_with", 0)
+                cases_without = doc_insight.get("cases_without", 0)
+                approval_rate_with = doc_insight.get("approval_rate_with")
+                approval_rate_without = doc_insight.get("approval_rate_without")
+
+                if approval_rate_with is not None and cases_with > 0:
+                    successes_with = round(approval_rate_with * cases_with)
+                    ci_with = self._wilson_interval(successes_with, cases_with)
+                    doc_insight["approval_rate_with_ci"] = {
+                        "lower": round(ci_with[0], 3),
+                        "upper": round(ci_with[1], 3),
+                    }
+
+                if approval_rate_without is not None and cases_without > 0:
+                    successes_without = round(approval_rate_without * cases_without)
+                    ci_without = self._wilson_interval(successes_without, cases_without)
+                    doc_insight["approval_rate_without_ci"] = {
+                        "lower": round(ci_without[0], 3),
+                        "upper": round(ci_without[1], 3),
+                    }
+
+                # Flag low-sample doc patterns
+                total_doc_cases = cases_with + cases_without
+                if total_doc_cases < 10:
+                    doc_insight["statistical_warning"] = "LOW_SAMPLE_SIZE"
+                elif total_doc_cases < 20:
+                    doc_insight["statistical_warning"] = "LOW_CONFIDENCE"
+
+        # --- Annotate compensating factors with confidence intervals ---
+        for factor in insights.compensating_factors:
+            if isinstance(factor, dict):
+                n_with = factor.get("cases_with_compensation", 0)
+                n_without = factor.get("cases_without_compensation", 0)
+                rate_with = factor.get("approval_rate_with_compensation")
+                rate_without = factor.get("approval_rate_without_compensation")
+
+                if rate_with is not None and n_with > 0:
+                    successes = round(rate_with * n_with)
+                    ci = self._wilson_interval(successes, n_with)
+                    factor["approval_with_ci"] = {
+                        "lower": round(ci[0], 3),
+                        "upper": round(ci[1], 3),
+                    }
+
+                if rate_without is not None and n_without > 0:
+                    successes = round(rate_without * n_without)
+                    ci = self._wilson_interval(successes, n_without)
+                    factor["approval_without_ci"] = {
+                        "lower": round(ci[0], 3),
+                        "upper": round(ci[1], 3),
+                    }
+
+                # Flag low-sample compensating patterns
+                total_factor_cases = n_with + n_without
+                if total_factor_cases < 10:
+                    factor["statistical_warning"] = "LOW_SAMPLE_SIZE"
+                elif total_factor_cases < 20:
+                    factor["statistical_warning"] = "LOW_CONFIDENCE"
+
+        # --- Annotate agentic insights ---
+        for agentic in insights.agentic_insights:
+            if isinstance(agentic, dict) and sample_size < 10:
+                agentic["statistical_warning"] = "LOW_SAMPLE_SIZE"
+            elif isinstance(agentic, dict) and sample_size < 20:
+                agentic["statistical_warning"] = "LOW_CONFIDENCE"
+
+        insights.statistical_warnings = warnings
+
+        logger.info(
+            "Statistical validation applied",
+            sample_size=sample_size,
+            validity=validity,
+            warnings_count=len(warnings),
+        )
+
+        return insights
+
     async def generate_strategic_intelligence(
         self,
         case_data: Dict[str, Any],
@@ -1184,7 +1366,9 @@ class StrategicIntelligenceAgent:
             icd10_code=icd10_code,
             payer_name=payer_name,
             disease_severity=disease_severity,
-            prior_treatments=prior_treatments
+            prior_treatments=prior_treatments,
+            min_similarity=0.4,
+            max_results=50,
         )
 
         # Analyze patterns (including compensating factors)
@@ -1196,6 +1380,18 @@ class StrategicIntelligenceAgent:
             medication_name=medication_name
         )
 
+        # Build cohort summary from the same pool (matches cohort analysis denominator)
+        approved_cases = [c for c in similar_cases if c.case_data.get("outcome") == "approved"]
+        denied_cases = [c for c in similar_cases if c.case_data.get("outcome") == "denied"]
+        info_requested_cases = [c for c in similar_cases if c.case_data.get("outcome") == "info_request"]
+        cohort_summary = {
+            "total_similar_cases": len(approved_cases) + len(denied_cases),
+            "approved_count": len(approved_cases),
+            "denied_count": len(denied_cases),
+            "info_request_count": len(info_requested_cases),
+            "total_historical_cases": len(self.historical_cases),
+        }
+
         # Use LLM to synthesize insights
         insights = await self._synthesize_insights_with_llm(
             case_data=case_data,
@@ -1205,6 +1401,29 @@ class StrategicIntelligenceAgent:
             payer_name=payer_name,
             current_documentation=current_documentation
         )
+
+        # Assess patient position against cohort patterns
+        current_patient_profile = {
+            "medication": medication_name,
+            "payer": payer_name,
+            "icd10_code": icd10_code,
+            "disease_severity": disease_severity,
+            "prior_treatments": prior_treatments,
+            "documentation_present": current_documentation,
+        }
+        patient_position = await self._assess_patient_position(
+            current_patient_profile=current_patient_profile,
+            insights=pattern_analysis.get("documentation_patterns", []),
+            medication_name=medication_name,
+            payer_name=payer_name,
+        )
+
+        # Attach cohort_summary and patient_position to the insights object
+        insights.cohort_summary = cohort_summary
+        insights.patient_position = patient_position
+
+        # Validate statistical claims and add confidence intervals
+        insights = self._validate_statistical_claims(insights, sample_size=len(similar_cases))
 
         # Cache the results
         await self._set_cached_intelligence(
@@ -1245,7 +1464,11 @@ class StrategicIntelligenceAgent:
             confidence_reasoning=data.get("confidence_reasoning", "Restored from cache"),
             compensating_factors=data.get("compensating_factors", []),
             agentic_insights=data.get("agentic_insights", []),
-            evidence_summary=data.get("evidence_summary", {})
+            evidence_summary=data.get("evidence_summary", {}),
+            cohort_summary=data.get("cohort_summary"),
+            patient_position=data.get("patient_position"),
+            statistical_validity=data.get("statistical_validity"),
+            statistical_warnings=data.get("statistical_warnings", []),
         )
 
     def _extract_medication_name(
@@ -1317,14 +1540,14 @@ class StrategicIntelligenceAgent:
         """Extract disease severity metrics from patient and case data."""
         severity = {}
 
-        # Try clinical_profile first
-        clinical = patient_data.get("clinical_profile", {})
-        disease_activity = clinical.get("disease_activity", {})
+        disease_activity = patient_data.get("disease_activity", {})
 
         if disease_activity:
             severity["cdai_score"] = disease_activity.get("cdai_score")
-            severity["hbi_score"] = disease_activity.get("hbi_score")
-            severity["severity_classification"] = disease_activity.get("severity_classification")
+            severity["hbi_score"] = disease_activity.get("hbi_score") or disease_activity.get("harvey_bradshaw_index")
+            severity["ses_cd_score"] = disease_activity.get("ses_cd_score")
+            severity["severity_classification"] = disease_activity.get("severity_classification") or disease_activity.get("disease_severity")
+            severity["disease_phenotype"] = disease_activity.get("disease_phenotype")
 
         # Extract from case data medication supporting_labs
         if case_data:
@@ -1379,6 +1602,48 @@ class StrategicIntelligenceAgent:
                 else:
                     severity["severity_classification"] = "mild"
 
+        # Also check top-level laboratory_results.panels (patient JSON format)
+        # Fill in any lab values not already extracted from case_data
+        panels = patient_data.get("laboratory_results", {}).get("panels", {})
+        if panels:
+            if "crp" not in severity:
+                for result in panels.get("inflammatory_markers", {}).get("results", []):
+                    if result.get("test") == "CRP":
+                        try:
+                            v = result.get("value")
+                            severity["crp"] = float(str(v).replace(">", "").replace("<", "")) if v else None
+                        except (ValueError, TypeError):
+                            pass
+                    elif result.get("test") == "ESR" and "esr" not in severity:
+                        try:
+                            severity["esr"] = float(result["value"])
+                        except (ValueError, TypeError):
+                            pass
+            if "albumin" not in severity:
+                for result in panels.get("cmp", {}).get("results", []):
+                    if result.get("test") == "Albumin":
+                        try:
+                            severity["albumin"] = float(result["value"])
+                        except (ValueError, TypeError):
+                            pass
+            # Fecal calprotectin
+            for result in panels.get("gi_markers", {}).get("results", []):
+                if "calprotectin" in result.get("test", "").lower():
+                    try:
+                        severity["fecal_calprotectin"] = float(result["value"])
+                    except (ValueError, TypeError):
+                        pass
+
+        # Check top-level diagnoses for fistula
+        if "fistula_present" not in severity:
+            for dx in patient_data.get("diagnoses", []):
+                if "fistula" in dx.get("description", "").lower():
+                    severity["fistula_present"] = True
+                    break
+
+        # Clean out None values
+        severity = {k: v for k, v in severity.items() if v is not None}
+
         return severity if severity else None
 
     def _extract_prior_treatments(
@@ -1386,14 +1651,17 @@ class StrategicIntelligenceAgent:
         patient_data: Dict[str, Any]
     ) -> Optional[List[Dict[str, Any]]]:
         """Extract prior treatment history."""
-        clinical = patient_data.get("clinical_profile", {})
-        treatment_history = clinical.get("treatment_history", {})
-
-        prior_auths = treatment_history.get("prior_authorizations", [])
-        if prior_auths:
+        prior_treatments = patient_data.get("prior_treatments", [])
+        if prior_treatments:
             return [
-                {"medication": pa.get("drug_name", pa.get("medication", ""))}
-                for pa in prior_auths
+                {
+                    "medication": t.get("medication_name", ""),
+                    "drug_class": t.get("drug_class", ""),
+                    "outcome": t.get("outcome", ""),
+                    "duration_weeks": t.get("duration_weeks"),
+                    "outcome_description": t.get("outcome_description", ""),
+                }
+                for t in prior_treatments
             ]
 
         return None
@@ -1423,16 +1691,485 @@ class StrategicIntelligenceAgent:
             if "mri" in doc_lower or "imaging" in doc_lower:
                 docs.append("imaging_results")
 
-        # From clinical profile
-        clinical = patient_data.get("clinical_profile", {})
-        if clinical.get("disease_activity", {}).get("fecal_calprotectin"):
-            docs.append("fecal_calprotectin")
-        if clinical.get("screening", {}).get("tuberculosis"):
+        # From laboratory_results.panels
+        panels = patient_data.get("laboratory_results", {}).get("panels", {})
+        gi_markers = panels.get("gi_markers", {}).get("results", [])
+        for result in gi_markers:
+            if "calprotectin" in result.get("test", "").lower():
+                docs.append("fecal_calprotectin")
+                break
+
+        # From pre_biologic_screening status
+        screening = patient_data.get("pre_biologic_screening", {})
+        tb = screening.get("tuberculosis_screening", {})
+        if tb.get("documentation_available") or tb.get("status") == "COMPLETED":
             docs.append("tb_screening")
-        if clinical.get("screening", {}).get("hepatitis"):
+        hep_b = screening.get("hepatitis_b_screening", {})
+        if hep_b.get("documentation_available") or hep_b.get("status") == "COMPLETED":
             docs.append("hepatitis_panel")
 
         return list(set(docs))
+
+    # ── Cohort Similarity Analysis ──────────────────────────────────────
+
+    def _generate_cohort_cache_key(
+        self,
+        medication_name: str,
+        icd10_code: str,
+        payer_name: str,
+    ) -> str:
+        """Generate cache key for cohort analysis (no severity — intentionally broad)."""
+        key_parts = [
+            medication_name.lower().strip(),
+            icd10_code[:3].upper() if icd10_code else "",
+            payer_name.lower().strip(),
+        ]
+        key_string = "::".join(key_parts)
+        return hashlib.sha256(key_string.encode()).hexdigest()
+
+    async def _get_cached_cohort_analysis(self, cache_key_hash: str) -> Optional[Dict[str, Any]]:
+        """Retrieve cached cohort analysis if available and not expired."""
+        try:
+            async with get_db() as db:
+                stmt = select(CohortAnalysisCacheModel).where(
+                    CohortAnalysisCacheModel.cache_key_hash == cache_key_hash
+                )
+                result = await db.execute(stmt)
+                cache_entry = result.scalar_one_or_none()
+
+                if cache_entry is None:
+                    return None
+
+                # Cache never expires — manual invalidation only
+                # if cache_entry.is_expired():
+                #     ...
+
+                logger.info("Cohort analysis cache hit", cache_key_hash=cache_key_hash[:16])
+                return cache_entry.analysis_data
+        except Exception as e:
+            logger.warning("Cohort cache retrieval error", error=str(e))
+            return None
+
+    async def _set_cached_cohort_analysis(
+        self,
+        cache_key_hash: str,
+        medication_name: str,
+        icd10_family: str,
+        payer_name: str,
+        analysis_data: Dict[str, Any],
+        approved_count: int,
+        denied_count: int,
+        total_count: int,
+    ) -> None:
+        """Store cohort analysis in cache."""
+        try:
+            async with get_db() as db:
+                await db.execute(
+                    delete(CohortAnalysisCacheModel).where(
+                        CohortAnalysisCacheModel.cache_key_hash == cache_key_hash
+                    )
+                )
+                cache_entry = CohortAnalysisCacheModel(
+                    id=str(uuid.uuid4()),
+                    cache_key_hash=cache_key_hash,
+                    medication_name=medication_name,
+                    icd10_family=icd10_family,
+                    payer_name=payer_name,
+                    cached_at=datetime.now(timezone.utc),
+                    expires_at=datetime.now(timezone.utc) + timedelta(hours=self.cache_ttl_hours),
+                    analysis_data=analysis_data,
+                    approved_cohort_size=approved_count,
+                    denied_cohort_size=denied_count,
+                    total_similar_cases=total_count,
+                )
+                db.add(cache_entry)
+                await db.commit()
+                logger.info("Cached cohort analysis", cache_key_hash=cache_key_hash[:16])
+        except Exception as e:
+            logger.warning("Cohort cache storage error", error=str(e))
+
+    def _build_cohort_comparison(
+        self,
+        approved_cases: List[SimilarCase],
+        denied_cases: List[SimilarCase],
+    ) -> Dict[str, Any]:
+        """Build statistical comparison between approved and denied cohorts."""
+
+        def _cohort_stats(cases: List[SimilarCase]) -> Dict[str, Any]:
+            if not cases:
+                return {"count": 0}
+
+            severities = []
+            crp_values = []
+            esr_values = []
+            albumin_values = []
+            days_to_decision = []
+            doc_presence: Dict[str, int] = {}
+            severity_classes: Dict[str, int] = {}
+            prior_treatment_counts = []
+
+            for c in cases:
+                data = c.case_data
+                severity = data.get("disease_severity", {})
+
+                if severity.get("cdai_score"):
+                    severities.append(severity["cdai_score"])
+                if severity.get("crp"):
+                    crp_values.append(severity["crp"])
+                if severity.get("esr"):
+                    esr_values.append(severity["esr"])
+                if severity.get("albumin"):
+                    albumin_values.append(severity["albumin"])
+                if severity.get("severity_classification"):
+                    cls = severity["severity_classification"]
+                    severity_classes[cls] = severity_classes.get(cls, 0) + 1
+
+                if data.get("days_to_decision"):
+                    days_to_decision.append(data["days_to_decision"])
+
+                for doc in data.get("documentation_present", []):
+                    doc_presence[doc.lower()] = doc_presence.get(doc.lower(), 0) + 1
+
+                prior = data.get("prior_treatments", [])
+                prior_treatment_counts.append(len(prior))
+
+            count = len(cases)
+
+            def avg(vals):
+                return round(sum(vals) / len(vals), 2) if vals else None
+
+            def pct(vals, threshold, op='gt'):
+                if not vals:
+                    return None
+                if op == 'gt':
+                    return round(sum(1 for v in vals if v > threshold) / len(vals), 3)
+                return round(sum(1 for v in vals if v < threshold) / len(vals), 3)
+
+            return {
+                "count": count,
+                "severity_distribution": severity_classes,
+                "cdai": {"avg": avg(severities), "values": sorted(severities)} if severities else None,
+                "crp": {
+                    "avg": avg(crp_values),
+                    "pct_above_10": pct(crp_values, 10),
+                    "pct_above_18": pct(crp_values, 18),
+                    "pct_above_25": pct(crp_values, 25),
+                } if crp_values else None,
+                "esr": {"avg": avg(esr_values), "pct_above_30": pct(esr_values, 30), "pct_above_40": pct(esr_values, 40)} if esr_values else None,
+                "albumin": {"avg": avg(albumin_values), "pct_below_3": pct(albumin_values, 3, 'lt'), "pct_below_3_5": pct(albumin_values, 3.5, 'lt')} if albumin_values else None,
+                "avg_days_to_decision": avg(days_to_decision),
+                "documentation_rates": {doc: round(cnt / count, 3) for doc, cnt in sorted(doc_presence.items(), key=lambda x: -x[1])},
+                "avg_prior_treatments": avg(prior_treatment_counts),
+            }
+
+        approved_stats = _cohort_stats(approved_cases)
+        denied_stats = _cohort_stats(denied_cases)
+
+        # Compute differential metrics
+        differential = {}
+        for metric in ["crp", "esr", "albumin"]:
+            a = approved_stats.get(metric)
+            d = denied_stats.get(metric)
+            if a and d and a.get("avg") is not None and d.get("avg") is not None:
+                differential[f"{metric}_avg_diff"] = round(a["avg"] - d["avg"], 2)
+
+        # Documentation rate differentials
+        all_docs = set(list(approved_stats.get("documentation_rates", {}).keys()) + list(denied_stats.get("documentation_rates", {}).keys()))
+        doc_diffs = {}
+        for doc in all_docs:
+            a_rate = approved_stats.get("documentation_rates", {}).get(doc, 0)
+            d_rate = denied_stats.get("documentation_rates", {}).get(doc, 0)
+            diff = round(a_rate - d_rate, 3)
+            if abs(diff) > 0.1:
+                doc_diffs[doc] = {"approved_rate": a_rate, "denied_rate": d_rate, "diff": diff}
+        differential["documentation_diffs"] = doc_diffs
+
+        if approved_stats.get("avg_prior_treatments") and denied_stats.get("avg_prior_treatments"):
+            differential["prior_treatment_diff"] = round(
+                approved_stats["avg_prior_treatments"] - denied_stats["avg_prior_treatments"], 2
+            )
+
+        return {
+            "approved_stats": approved_stats,
+            "denied_stats": denied_stats,
+            "differential": differential,
+        }
+
+    async def _synthesize_cohort_differentiators(
+        self,
+        comparison: Dict[str, Any],
+        current_patient_profile: Dict[str, Any],
+        medication_name: str,
+        payer_name: str,
+        icd10_family: str,
+    ) -> Dict[str, Any]:
+        """Use Claude to discover non-obvious differentiators between approved and denied cohorts."""
+        total = comparison["approved_stats"]["count"] + comparison["denied_stats"]["count"]
+
+        prompt = self.prompt_loader.load(
+            "strategy/cohort_differentiator_analysis.txt",
+            {
+                "total_similar_cases": str(total),
+                "medication_name": medication_name,
+                "payer_name": payer_name,
+                "icd10_family": icd10_family,
+                "approved_count": str(comparison["approved_stats"]["count"]),
+                "denied_count": str(comparison["denied_stats"]["count"]),
+                "current_patient_profile": json.dumps(current_patient_profile, indent=2),
+                "approved_cohort_stats": json.dumps(comparison["approved_stats"], indent=2),
+                "denied_cohort_stats": json.dumps(comparison["denied_stats"], indent=2),
+                "differential_metrics": json.dumps(comparison["differential"], indent=2),
+            }
+        )
+
+        result = await self.llm_gateway.generate(
+            task_category=TaskCategory.POLICY_REASONING,
+            prompt=prompt,
+            temperature=0.2,
+            response_format="json",
+        )
+
+        # Claude client with response_format="json" returns parsed dict directly
+        # (not wrapped in a "response" key). Strip gateway metadata before returning.
+        insights = {k: v for k, v in result.items() if k not in ("provider", "task_category")}
+
+        expected_keys = {"differentiating_insights", "documentation_differentiators", "actionable_recommendations", "current_patient_position"}
+        found_keys = set(insights.keys()) & expected_keys
+        logger.info("Cohort LLM response", found_keys=list(found_keys), all_keys=list(insights.keys()))
+
+        if not found_keys:
+            logger.warning("Cohort LLM returned no expected insight keys", keys=list(insights.keys()))
+            return {
+                "_parse_failed": True,
+                "differentiating_insights": [],
+                "documentation_differentiators": [],
+                "actionable_recommendations": [],
+                "current_patient_position": {
+                    "favorable_factors": [],
+                    "at_risk_factors": [],
+                    "overall_summary": "Analysis completed but structured output could not be parsed. Raw cohort statistics are still available.",
+                    "estimated_cohort_match": 0.0,
+                },
+            }
+
+        return insights
+
+    async def _assess_patient_position(
+        self,
+        current_patient_profile: Dict[str, Any],
+        insights: List[Dict[str, Any]],
+        medication_name: str,
+        payer_name: str,
+    ) -> Dict[str, Any]:
+        """Assess current patient's position against cached cohort insights via LLM."""
+        from backend.reasoning.prompt_loader import get_prompt_loader
+        prompt = get_prompt_loader().load(
+            "strategy/patient_position_assessment.txt",
+            {
+                "medication_name": medication_name,
+                "payer_name": payer_name,
+                "current_patient_profile": json.dumps(current_patient_profile, indent=2),
+                "insights": json.dumps(insights, indent=2),
+            },
+        )
+        try:
+            result = await self.llm_gateway.generate(
+                task_category=TaskCategory.POLICY_REASONING,
+                prompt=prompt,
+                temperature=0.1,
+                response_format="json",
+            )
+            response_text = result.get("response", "{}")
+            if "```json" in response_text:
+                response_text = response_text.split("```json")[1].split("```")[0]
+            elif "```" in response_text:
+                response_text = response_text.split("```")[1].split("```")[0]
+            return json.loads(response_text)
+        except Exception as e:
+            logger.warning("Failed to assess patient position", error=str(e))
+            return {
+                "favorable_factors": [],
+                "at_risk_factors": [],
+                "overall_summary": "Unable to assess patient position against cohort data.",
+                "estimated_cohort_match": 0.0,
+            }
+
+    async def generate_cohort_analysis(
+        self,
+        case_data: Dict[str, Any],
+        patient_data: Dict[str, Any],
+        skip_cache: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Generate cohort similarity analysis comparing approved vs denied cases.
+
+        Finds clinically similar historical cases, splits by outcome, and uses
+        Claude to discover non-obvious differentiating factors.
+
+        Cache stores cohort-level data only. Patient-specific position assessment
+        is regenerated on each call using a lightweight LLM pass.
+        """
+        case_id = case_data.get("case_id", "unknown")
+        logger.info("Generating cohort analysis", case_id=case_id)
+
+        medication_name = self._extract_medication_name(case_data, patient_data)
+        icd10_code = self._extract_icd10_code(case_data, patient_data)
+        payer_name = self._extract_payer_name(case_data, patient_data)
+        disease_severity = self._extract_disease_severity(patient_data, case_data)
+        prior_treatments = self._extract_prior_treatments(patient_data)
+        current_documentation = self._extract_current_documentation(case_data, patient_data)
+        icd10_family = icd10_code[:3] if icd10_code else ""
+
+        # Build current patient profile (used for patient-specific assessment)
+        current_patient_profile = {
+            "medication": medication_name,
+            "payer": payer_name,
+            "icd10_code": icd10_code,
+            "disease_severity": disease_severity,
+            "prior_treatments": prior_treatments,
+            "documentation_present": current_documentation,
+        }
+
+        # Cache key: medication + icd10_family + payer (no severity — intentionally broad)
+        cache_key = self._generate_cohort_cache_key(medication_name, icd10_code, payer_name)
+
+        if not skip_cache:
+            cached = await self._get_cached_cohort_analysis(cache_key)
+            if cached:
+                logger.info("Cache hit — regenerating patient position", case_id=case_id)
+                # Re-assess current patient against cached cohort insights
+                patient_position = await self._assess_patient_position(
+                    current_patient_profile=current_patient_profile,
+                    insights=cached.get("differentiating_insights", []),
+                    medication_name=medication_name,
+                    payer_name=payer_name,
+                )
+                cached["current_patient_position"] = patient_position
+                cached["_from_cache"] = True
+                return cached
+
+        # Find similar cases with lower threshold to get broader cohort
+        similar_cases = self.find_similar_cases(
+            medication_name=medication_name,
+            icd10_code=icd10_code,
+            payer_name=payer_name,
+            disease_severity=disease_severity,
+            prior_treatments=prior_treatments,
+            min_similarity=0.4,
+            max_results=50,
+        )
+
+        # Split into approved / denied cohorts (exclude info_request from counts)
+        approved = [c for c in similar_cases if c.case_data.get("outcome") == "approved"]
+        denied = [c for c in similar_cases if c.case_data.get("outcome") == "denied"]
+        info_request_count = len([c for c in similar_cases if c.case_data.get("outcome") == "info_request"])
+
+        if len(approved) < 2 or len(denied) < 2:
+            return {
+                "status": "insufficient_data",
+                "message": f"Need at least 2 approved and 2 denied cases. Found {len(approved)} approved, {len(denied)} denied.",
+                "total_similar_cases": len(approved) + len(denied),
+                "approved_count": len(approved),
+                "denied_count": len(denied),
+                "info_request_count": info_request_count,
+            }
+
+        # Aggregate denial reasons and info-request reasons from the cohort
+        denial_reason_counts: Dict[str, int] = {}
+        appeal_stats = {"total_appeals": 0, "successful_appeals": 0}
+        info_request_reasons: Dict[str, int] = {}
+        for case in denied:
+            reason = case.case_data.get("denial_reason")
+            if reason:
+                denial_reason_counts[reason] = denial_reason_counts.get(reason, 0) + 1
+            if case.case_data.get("appeal_filed"):
+                appeal_stats["total_appeals"] += 1
+                if case.case_data.get("appeal_outcome") == "approved":
+                    appeal_stats["successful_appeals"] += 1
+        for case in similar_cases:
+            if case.case_data.get("outcome") == "info_request":
+                for detail in (case.case_data.get("info_request_details") or []):
+                    info_request_reasons[detail] = info_request_reasons.get(detail, 0) + 1
+
+        # Build top reasons sorted by frequency
+        top_denial_reasons = [
+            {"reason": reason, "count": count, "pct": round(count / len(denied) * 100) if denied else 0}
+            for reason, count in sorted(denial_reason_counts.items(), key=lambda x: -x[1])
+        ]
+        top_info_request_reasons = [
+            {"reason": reason, "count": count}
+            for reason, count in sorted(info_request_reasons.items(), key=lambda x: -x[1])
+        ]
+
+        # Analyze compensating factors for the cohort
+        current_docs_lower = {d.lower() for d in current_documentation}
+        compensating_factors = self._analyze_compensating_factors(
+            similar_cases, current_docs_lower, disease_severity,
+            medication_name=medication_name, payer_name=payer_name
+        )
+
+        # Build statistical comparison
+        comparison = self._build_cohort_comparison(approved, denied)
+
+        # Synthesize insights via Claude
+        llm_insights = await self._synthesize_cohort_differentiators(
+            comparison=comparison,
+            current_patient_profile=current_patient_profile,
+            medication_name=medication_name,
+            payer_name=payer_name,
+            icd10_family=icd10_family,
+        )
+
+        # Separate patient-specific data from cacheable cohort data
+        patient_position = llm_insights.pop("current_patient_position", None)
+        parse_failed = llm_insights.pop("_parse_failed", False)
+
+        # total_similar_cases = resolved cases only (approved + denied)
+        resolved_total = len(approved) + len(denied)
+
+        result = {
+            "status": "partial" if parse_failed else "complete",
+            "total_similar_cases": resolved_total,
+            "approved_count": len(approved),
+            "denied_count": len(denied),
+            "info_request_count": info_request_count,
+            "total_historical_cases": len(self.historical_cases),
+            "compensating_factors": compensating_factors,
+            "top_denial_reasons": top_denial_reasons,
+            "top_info_request_reasons": top_info_request_reasons,
+            "appeal_stats": appeal_stats,
+            "cohort_comparison": {
+                "approved_stats": comparison["approved_stats"],
+                "denied_stats": comparison["denied_stats"],
+            },
+            **llm_insights,
+        }
+
+        # Cache cohort-level data only (no patient-specific position)
+        await self._set_cached_cohort_analysis(
+            cache_key_hash=cache_key,
+            medication_name=medication_name,
+            icd10_family=icd10_family,
+            payer_name=payer_name,
+            analysis_data=result,
+            approved_count=len(approved),
+            denied_count=len(denied),
+            total_count=resolved_total,
+        )
+
+        # Add patient-specific position back for the response
+        if patient_position:
+            result["current_patient_position"] = patient_position
+
+        logger.info(
+            "Cohort analysis complete",
+            case_id=case_id,
+            approved=len(approved),
+            denied=len(denied),
+            insights=len(llm_insights.get("differentiating_insights", [])),
+        )
+
+        return result
 
     async def _synthesize_insights_with_llm(
         self,
@@ -1613,6 +2350,609 @@ class StrategicIntelligenceAgent:
             agentic_insights=llm_insights.get("agentic_insights", []),
             evidence_summary=pattern_analysis.get("evidence_summary", {})
         )
+
+    # ── Gap-Driven Cohort Analysis ──────────────────────────────────────
+
+    async def generate_gap_driven_cohort_analysis(
+        self,
+        case_data: Dict[str, Any],
+        patient_data: Dict[str, Any],
+        documentation_gaps: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """
+        Generate gap-centric cohort analysis.
+
+        For each documentation gap from policy analysis, analyzes how that gap
+        historically impacts denial rates — broken down by current payer vs
+        other payers — with severity and time-trend slicing.
+        """
+        case_id = case_data.get("case_id", "unknown")
+        logger.info("Generating gap-driven cohort analysis", case_id=case_id, gap_count=len(documentation_gaps))
+
+        medication_name = self._extract_medication_name(case_data, patient_data)
+        icd10_code = self._extract_icd10_code(case_data, patient_data)
+        payer_name = self._extract_payer_name(case_data, patient_data)
+        disease_severity = self._extract_disease_severity(patient_data, case_data)
+        prior_treatments = self._extract_prior_treatments(patient_data)
+        current_documentation = self._extract_current_documentation(case_data, patient_data)
+        current_docs_lower = {d.lower() for d in current_documentation}
+        icd10_family = icd10_code[:3] if icd10_code else ""
+
+        # Build current patient profile for differentiator analysis
+        current_patient_profile = {
+            "medication": medication_name,
+            "payer": payer_name,
+            "icd10_code": icd10_code,
+            "disease_severity": disease_severity,
+            "prior_treatments": prior_treatments,
+            "documentation_present": current_documentation,
+        }
+
+        # Cache key: medication + payer + icd10_family + sorted gap IDs
+        gap_ids = sorted(
+            (g.get("gap_id") or g.get("id") or g.get("description", "")[:30])
+            for g in documentation_gaps
+        )
+        gap_cache_key_parts = [
+            medication_name.lower().strip(),
+            icd10_family,
+            payer_name.lower().strip(),
+            "gaps:" + ",".join(gap_ids),
+        ]
+        gap_cache_key = hashlib.sha256("::".join(gap_cache_key_parts).encode()).hexdigest()
+
+        cached = await self._get_cached_cohort_analysis(gap_cache_key)
+        if cached:
+            logger.info("Gap-driven cohort analysis cache hit", case_id=case_id)
+            return cached
+
+        # Find similar cases with broader threshold for gap analysis
+        similar_cases = self.find_similar_cases(
+            medication_name=medication_name,
+            icd10_code=icd10_code,
+            payer_name=payer_name,
+            disease_severity=disease_severity,
+            prior_treatments=prior_treatments,
+            min_similarity=0.4,
+            max_results=50,
+        )
+
+        if len(similar_cases) < 3:
+            return {
+                "status": "insufficient_data",
+                "message": f"Need at least 3 similar cases for gap analysis. Found {len(similar_cases)}.",
+                "total_cohort_size": len(similar_cases),
+                "gap_analyses": [],
+                "llm_synthesis": {},
+                "filter_metadata": {},
+            }
+
+        # Map gap descriptions to historical doc keys via LLM
+        gap_mappings = await self._map_gaps_to_historical_keys(documentation_gaps, similar_cases)
+
+        # Analyze each gap's impact + PRPA differentiator analysis
+        gap_analyses = []
+        for gap in documentation_gaps:
+            gap_id = gap.get("gap_id") or gap.get("id") or gap.get("description", "unknown")[:30]
+            doc_key = gap_mappings.get(gap_id, "other")
+
+            gap_stats = self._analyze_gap_impact(
+                similar_cases=similar_cases,
+                doc_key=doc_key,
+                payer_name=payer_name,
+            )
+
+            # Get compensating factors for this specific gap
+            compensating = self._analyze_compensating_factors(
+                similar_cases, current_docs_lower, disease_severity,
+                medication_name=medication_name, payer_name=payer_name
+            )
+            # Filter to factors relevant to this gap's doc key
+            gap_compensating = [
+                f for f in compensating
+                if f.get("missing_documentation", "").lower() == doc_key.lower()
+            ]
+
+            # PRPA Phase: For gaps with sufficient data, discover differentiators
+            if gap_stats["data_status"] == "sufficient" and gap_stats["overall"]["sample_size_missing"] >= 4:
+                doc_key_lower = doc_key.lower()
+                cases_with_gap_missing = [
+                    c for c in similar_cases
+                    if doc_key_lower in [d.lower() for d in c.case_data.get("documentation_missing", [])]
+                ]
+                gap_differentiators = await self._analyze_gap_differentiators(
+                    cases_missing=cases_with_gap_missing,
+                    doc_key=doc_key,
+                    current_patient_profile=current_patient_profile,
+                    medication_name=medication_name,
+                    payer_name=payer_name,
+                    icd10_family=icd10_family,
+                )
+            else:
+                gap_differentiators = {"status": "insufficient_data"}
+
+            gap_analyses.append({
+                "gap_id": gap_id,
+                "gap_description": gap.get("description", ""),
+                "priority": gap.get("priority") or gap.get("severity", "medium"),
+                "historical_doc_key": doc_key,
+                **gap_stats,
+                "compensating_factors": gap_compensating,
+                "gap_differentiators": gap_differentiators,
+            })
+
+        # Collect filter metadata from cohort
+        available_payers = sorted(set(
+            c.case_data.get("payer", {}).get("name", "Unknown")
+            for c in similar_cases
+        ))
+        available_severity_buckets = sorted(set(
+            c.case_data.get("disease_severity", {}).get("severity_classification", "unknown")
+            for c in similar_cases
+            if c.case_data.get("disease_severity", {}).get("severity_classification")
+        ))
+        submission_dates = [
+            c.case_data.get("submission_date", "")
+            for c in similar_cases if c.case_data.get("submission_date")
+        ]
+        date_range = {
+            "earliest": min(submission_dates) if submission_dates else "",
+            "latest": max(submission_dates) if submission_dates else "",
+        }
+
+        # Synthesize all gap stats + differentiator insights via LLM
+        llm_synthesis = await self._synthesize_gap_cohort(
+            gap_analyses=gap_analyses,
+            medication_name=medication_name,
+            payer_name=payer_name,
+            icd10_family=icd10_family,
+            total_cohort_size=len(similar_cases),
+            current_patient_profile=current_patient_profile,
+        )
+
+        result = {
+            "status": "complete",
+            "payer_name": payer_name,
+            "total_cohort_size": len(similar_cases),
+            "gap_analyses": gap_analyses,
+            "llm_synthesis": llm_synthesis,
+            "filter_metadata": {
+                "available_payers": available_payers,
+                "available_severity_buckets": available_severity_buckets,
+                "date_range": date_range,
+            },
+        }
+
+        # Cache the result
+        approved = [c for c in similar_cases if c.case_data.get("outcome") == "approved"]
+        denied = [c for c in similar_cases if c.case_data.get("outcome") == "denied"]
+        await self._set_cached_cohort_analysis(
+            cache_key_hash=gap_cache_key,
+            medication_name=medication_name,
+            icd10_family=icd10_family,
+            payer_name=payer_name,
+            analysis_data=result,
+            approved_count=len(approved),
+            denied_count=len(denied),
+            total_count=len(similar_cases),
+        )
+
+        logger.info(
+            "Gap-driven cohort analysis complete",
+            case_id=case_id,
+            gaps_analyzed=len(gap_analyses),
+            cohort_size=len(similar_cases),
+        )
+
+        return result
+
+    async def _map_gaps_to_historical_keys(
+        self,
+        documentation_gaps: List[Dict[str, Any]],
+        similar_cases: List["SimilarCase"],
+    ) -> Dict[str, str]:
+        """Map natural-language gap descriptions to historical case doc keys via LLM."""
+        # Build vocabulary of available doc keys from the cohort, split by data availability
+        keys_present_only = set()
+        keys_with_missing = set()
+        for case in similar_cases:
+            for doc in case.case_data.get("documentation_present", []):
+                keys_present_only.add(doc.lower())
+            for doc in case.case_data.get("documentation_missing", []):
+                keys_with_missing.add(doc.lower())
+        # Keys that appear ONLY in documentation_present (no missing-case data)
+        keys_present_only = keys_present_only - keys_with_missing
+        all_doc_keys = keys_with_missing | keys_present_only
+
+        gap_descriptions = []
+        for gap in documentation_gaps:
+            gap_id = gap.get("gap_id") or gap.get("id") or gap.get("description", "unknown")[:30]
+            gap_descriptions.append({
+                "gap_id": gap_id,
+                "description": gap.get("description", ""),
+            })
+
+        prompt = self.prompt_loader.load(
+            "policy_analysis/gap_to_doc_key_mapping.txt",
+            {
+                "available_doc_keys": json.dumps(sorted(all_doc_keys), indent=2),
+                "keys_with_missing_cases": json.dumps(sorted(keys_with_missing), indent=2),
+                "keys_present_only": json.dumps(sorted(keys_present_only), indent=2),
+                "gap_descriptions": json.dumps(gap_descriptions, indent=2),
+            }
+        )
+
+        result = await self.llm_gateway.generate(
+            task_category=TaskCategory.POLICY_REASONING,
+            prompt=prompt,
+            temperature=0.0,
+            response_format="json",
+        )
+
+        # Parse response
+        mappings = {}
+        try:
+            response_data = result if isinstance(result, dict) else {}
+            # Handle both direct dict and wrapped response
+            if "response" in response_data:
+                response_text = response_data["response"]
+                if "```json" in response_text:
+                    response_text = response_text.split("```json")[1].split("```")[0]
+                elif "```" in response_text:
+                    response_text = response_text.split("```")[1].split("```")[0]
+                response_data = json.loads(response_text)
+
+            # Strip gateway metadata
+            response_data = {k: v for k, v in response_data.items() if k not in ("provider", "task_category")}
+
+            for mapping in response_data.get("mappings", []):
+                mappings[mapping["gap_id"]] = mapping.get("historical_doc_key", "other")
+        except (json.JSONDecodeError, KeyError, TypeError) as e:
+            logger.warning("Failed to parse gap-to-key mapping", error=str(e))
+            # Fallback: simple keyword matching
+            for gap in documentation_gaps:
+                gap_id = gap.get("gap_id") or gap.get("id") or gap.get("description", "unknown")[:30]
+                desc_lower = gap.get("description", "").lower()
+                matched = False
+                for key in all_doc_keys:
+                    # Simple substring match
+                    key_words = key.replace("_", " ")
+                    if key_words in desc_lower or key in desc_lower:
+                        mappings[gap_id] = key
+                        matched = True
+                        break
+                if not matched:
+                    mappings[gap_id] = "other"
+
+        logger.info("Gap-to-key mappings", mappings=mappings)
+        return mappings
+
+    def _analyze_gap_impact(
+        self,
+        similar_cases: List["SimilarCase"],
+        doc_key: str,
+        payer_name: str,
+    ) -> Dict[str, Any]:
+        """
+        Analyze the impact of a specific documentation gap on denial rates.
+
+        Splits the cohort by doc presence/absence and computes denial rates
+        overall, by this payer, by other payers, per-payer breakdown,
+        severity breakdown, and time trends.
+        """
+        doc_key_lower = doc_key.lower()
+
+        # Split cohort by doc presence
+        cases_missing = []
+        cases_present = []
+        for case in similar_cases:
+            docs_present = [d.lower() for d in case.case_data.get("documentation_present", [])]
+            docs_missing = [d.lower() for d in case.case_data.get("documentation_missing", [])]
+
+            if doc_key_lower in docs_missing:
+                cases_missing.append(case)
+            elif doc_key_lower in docs_present:
+                cases_present.append(case)
+            # Cases where this doc isn't mentioned at all are excluded
+
+        def _denial_rate(cases: List["SimilarCase"]) -> float:
+            if not cases:
+                return 0.0
+            denied = sum(1 for c in cases if c.case_data.get("outcome") == "denied")
+            resolved = sum(1 for c in cases if c.case_data.get("outcome") in ("approved", "denied"))
+            return denied / resolved if resolved > 0 else 0.0
+
+        def _sample_size(cases: List["SimilarCase"]) -> int:
+            return sum(1 for c in cases if c.case_data.get("outcome") in ("approved", "denied"))
+
+        # Overall rates
+        overall = {
+            "denial_rate_when_missing": round(_denial_rate(cases_missing), 3),
+            "denial_rate_when_present": round(_denial_rate(cases_present), 3),
+            "impact_delta": round(_denial_rate(cases_missing) - _denial_rate(cases_present), 3),
+            "sample_size_missing": _sample_size(cases_missing),
+            "sample_size_present": _sample_size(cases_present),
+        }
+
+        # This payer vs other payers
+        payer_lower = payer_name.lower()
+        this_payer_missing = [c for c in cases_missing if payer_lower in c.case_data.get("payer", {}).get("name", "").lower()]
+        this_payer_present = [c for c in cases_present if payer_lower in c.case_data.get("payer", {}).get("name", "").lower()]
+        other_payer_missing = [c for c in cases_missing if payer_lower not in c.case_data.get("payer", {}).get("name", "").lower()]
+        other_payer_present = [c for c in cases_present if payer_lower not in c.case_data.get("payer", {}).get("name", "").lower()]
+
+        this_payer = {
+            "payer_name": payer_name,
+            "denial_rate_when_missing": round(_denial_rate(this_payer_missing), 3),
+            "denial_rate_when_present": round(_denial_rate(this_payer_present), 3),
+            "impact_delta": round(_denial_rate(this_payer_missing) - _denial_rate(this_payer_present), 3),
+            "sample_size_missing": _sample_size(this_payer_missing),
+            "sample_size_present": _sample_size(this_payer_present),
+        }
+
+        other_payers = {
+            "denial_rate_when_missing": round(_denial_rate(other_payer_missing), 3),
+            "denial_rate_when_present": round(_denial_rate(other_payer_present), 3),
+            "impact_delta": round(_denial_rate(other_payer_missing) - _denial_rate(other_payer_present), 3),
+            "sample_size_missing": _sample_size(other_payer_missing),
+            "sample_size_present": _sample_size(other_payer_present),
+        }
+
+        # Per-payer breakdown
+        payer_breakdown = {}
+        for case in cases_missing:
+            p = case.case_data.get("payer", {}).get("name", "Unknown")
+            if p not in payer_breakdown:
+                payer_breakdown[p] = {"missing_cases": [], "payer_name": p}
+            payer_breakdown[p]["missing_cases"].append(case)
+
+        by_payer = []
+        for p_name, p_data in payer_breakdown.items():
+            by_payer.append({
+                "payer_name": p_name,
+                "denial_rate_missing": round(_denial_rate(p_data["missing_cases"]), 3),
+                "sample_size": _sample_size(p_data["missing_cases"]),
+            })
+        by_payer.sort(key=lambda x: x["denial_rate_missing"], reverse=True)
+
+        # Top denial reasons from denied cases with this doc missing
+        denial_reason_counts: Dict[str, int] = {}
+        for case in cases_missing:
+            if case.case_data.get("outcome") == "denied":
+                reason = case.case_data.get("denial_reason")
+                if reason:
+                    denial_reason_counts[reason] = denial_reason_counts.get(reason, 0) + 1
+
+        total_denied_missing = sum(denial_reason_counts.values()) or 1
+        top_denial_reasons = [
+            {"reason": reason, "count": count, "pct": round(count / total_denied_missing * 100, 1)}
+            for reason, count in sorted(denial_reason_counts.items(), key=lambda x: -x[1])[:5]
+        ]
+
+        # Severity breakdown: within missing-doc cases, group by severity → denial rate
+        severity_groups: Dict[str, List["SimilarCase"]] = {}
+        for case in cases_missing:
+            sev = case.case_data.get("disease_severity", {}).get("severity_classification", "unknown")
+            if sev not in severity_groups:
+                severity_groups[sev] = []
+            severity_groups[sev].append(case)
+
+        severity_breakdown = {}
+        for sev, cases in severity_groups.items():
+            severity_breakdown[sev] = {
+                "denial_rate": round(_denial_rate(cases), 3),
+                "sample_size": _sample_size(cases),
+            }
+
+        # Time trend: within missing-doc cases, group by quarter → denial rate
+        quarter_groups: Dict[str, List["SimilarCase"]] = {}
+        for case in cases_missing:
+            sub_date = case.case_data.get("submission_date", "")
+            if sub_date:
+                try:
+                    dt = datetime.strptime(sub_date, "%Y-%m-%d")
+                    quarter = f"{dt.year}-Q{(dt.month - 1) // 3 + 1}"
+                    if quarter not in quarter_groups:
+                        quarter_groups[quarter] = []
+                    quarter_groups[quarter].append(case)
+                except ValueError:
+                    pass
+
+        time_trend = [
+            {
+                "period": period,
+                "denial_rate": round(_denial_rate(cases), 3),
+                "sample_size": _sample_size(cases),
+            }
+            for period, cases in sorted(quarter_groups.items())
+        ]
+
+        # Data availability signal for frontend three-state rendering
+        has_missing_data = len(cases_missing) >= 2
+        if not cases_missing:
+            data_status = "no_missing_cases"
+        elif not has_missing_data:
+            data_status = "low_sample"
+        else:
+            data_status = "sufficient"
+
+        if not cases_missing:
+            interpretation = f"No historical cases found with {doc_key.replace('_', ' ')} missing. This gap has no precedent in the cohort."
+        elif _denial_rate(cases_missing) == 0.0 and len(cases_missing) >= 3:
+            interpretation = f"This gap has not led to denials in {_sample_size(cases_missing)} similar cases — compensating factors may explain this."
+        elif _denial_rate(cases_missing) > 0:
+            interpretation = f"Missing {doc_key.replace('_', ' ')} is associated with {round(_denial_rate(cases_missing) * 100)}% denial rate ({_sample_size(cases_missing)} cases)."
+        else:
+            interpretation = f"Limited data: only {_sample_size(cases_missing)} resolved case(s) with this gap."
+
+        return {
+            "overall": overall,
+            "this_payer": this_payer,
+            "other_payers": other_payers,
+            "by_payer": by_payer,
+            "top_denial_reasons": top_denial_reasons,
+            "severity_breakdown": severity_breakdown,
+            "time_trend": time_trend,
+            "data_status": data_status,
+            "interpretation": interpretation,
+        }
+
+    async def _analyze_gap_differentiators(
+        self,
+        cases_missing: List["SimilarCase"],
+        doc_key: str,
+        current_patient_profile: Dict[str, Any],
+        medication_name: str,
+        payer_name: str,
+        icd10_family: str,
+    ) -> Dict[str, Any]:
+        """
+        Per-gap PRPA: split missing-doc cases into approved vs denied,
+        build statistical comparison, then call Claude to discover
+        what clinical factors differentiate approval despite the gap.
+        """
+        approved = [c for c in cases_missing if c.case_data.get("outcome") == "approved"]
+        denied = [c for c in cases_missing if c.case_data.get("outcome") == "denied"]
+
+        if len(approved) < 2 or len(denied) < 2:
+            return {"status": "insufficient_data"}
+
+        comparison = self._build_cohort_comparison(approved, denied)
+
+        prompt = self.prompt_loader.load(
+            "policy_analysis/gap_differentiator_analysis.txt",
+            {
+                "doc_key": doc_key.replace("_", " "),
+                "total_missing_cases": str(len(approved) + len(denied)),
+                "approved_count": str(len(approved)),
+                "denied_count": str(len(denied)),
+                "medication_name": medication_name,
+                "payer_name": payer_name,
+                "icd10_family": icd10_family,
+                "current_patient_profile": json.dumps(current_patient_profile, indent=2),
+                "approved_cohort_stats": json.dumps(comparison["approved_stats"], indent=2),
+                "denied_cohort_stats": json.dumps(comparison["denied_stats"], indent=2),
+                "differential_metrics": json.dumps(comparison["differential"], indent=2),
+            }
+        )
+
+        result = await self.llm_gateway.generate(
+            task_category=TaskCategory.POLICY_REASONING,
+            prompt=prompt,
+            temperature=0.2,
+            response_format="json",
+        )
+
+        insights = {k: v for k, v in result.items() if k not in ("provider", "task_category")}
+
+        # Handle wrapped response
+        if "response" in insights:
+            response_text = insights["response"]
+            if "```json" in response_text:
+                response_text = response_text.split("```json")[1].split("```")[0]
+            elif "```" in response_text:
+                response_text = response_text.split("```")[1].split("```")[0]
+            insights = json.loads(response_text)
+
+        expected_keys = {"differentiating_insights", "actionable_recommendations", "current_patient_position", "hidden_patterns"}
+        found = set(insights.keys()) & expected_keys
+        if not found:
+            logger.warning("Gap differentiator LLM returned no expected keys", doc_key=doc_key, keys=list(insights.keys()))
+            return {"status": "parse_failed"}
+
+        insights["status"] = "complete"
+        logger.info("Gap differentiator analysis complete", doc_key=doc_key, insight_count=len(insights.get("differentiating_insights", [])))
+        return insights
+
+    async def _synthesize_gap_cohort(
+        self,
+        gap_analyses: List[Dict[str, Any]],
+        medication_name: str,
+        payer_name: str,
+        icd10_family: str,
+        total_cohort_size: int,
+        current_patient_profile: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Use Claude to synthesize multi-gap risk with per-gap differentiator insights."""
+        # Build per-gap insights summary including differentiator results
+        per_gap_insights = []
+        for ga in gap_analyses:
+            summary = {
+                "gap_id": ga["gap_id"],
+                "gap_description": ga["gap_description"],
+                "data_status": ga.get("data_status"),
+                "overall": ga.get("overall"),
+                "interpretation": ga.get("interpretation"),
+            }
+            # Include differentiator insights if available
+            diff = ga.get("gap_differentiators", {})
+            if diff.get("status") == "complete":
+                summary["differentiator_insights"] = diff.get("differentiating_insights", [])
+                summary["patient_position"] = diff.get("current_patient_position", {})
+                summary["hidden_patterns"] = diff.get("hidden_patterns", [])
+            else:
+                summary["differentiator_insights"] = None
+                summary["differentiator_status"] = diff.get("status", "not_analyzed")
+            per_gap_insights.append(summary)
+
+        prompt = self.prompt_loader.load(
+            "policy_analysis/gap_cohort_synthesis.txt",
+            {
+                "medication_name": medication_name,
+                "payer_name": payer_name,
+                "icd10_family": icd10_family,
+                "total_cohort_size": str(total_cohort_size),
+                "current_patient_profile": json.dumps(current_patient_profile, indent=2),
+                "per_gap_insights": json.dumps(per_gap_insights, indent=2),
+            }
+        )
+
+        result = await self.llm_gateway.generate(
+            task_category=TaskCategory.POLICY_REASONING,
+            prompt=prompt,
+            temperature=0.2,
+            response_format="json",
+        )
+
+        # Parse response
+        try:
+            synthesis = {k: v for k, v in result.items() if k not in ("provider", "task_category")}
+
+            # Handle wrapped response
+            if "response" in synthesis:
+                response_text = synthesis["response"]
+                if "```json" in response_text:
+                    response_text = response_text.split("```json")[1].split("```")[0]
+                elif "```" in response_text:
+                    response_text = response_text.split("```")[1].split("```")[0]
+                synthesis = json.loads(response_text)
+
+            expected_keys = {"analysis_strategy", "overall_risk_assessment", "gap_priority_ranking", "recommended_actions", "hidden_insights", "patient_position_summary"}
+            found = set(synthesis.keys()) & expected_keys
+            if not found:
+                logger.warning("Gap synthesis LLM returned no expected keys", keys=list(synthesis.keys()))
+                return self._default_gap_synthesis(gap_analyses)
+
+            return synthesis
+
+        except (json.JSONDecodeError, TypeError) as e:
+            logger.warning("Failed to parse gap synthesis response", error=str(e))
+            return self._default_gap_synthesis(gap_analyses)
+
+    def _default_gap_synthesis(self, gap_analyses: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Provide a structured default when LLM synthesis fails."""
+        # Sort by impact delta descending
+        ranked = sorted(gap_analyses, key=lambda g: g.get("overall", {}).get("impact_delta", 0), reverse=True)
+        return {
+            "analysis_strategy": f"Analyzed {len(gap_analyses)} documentation gaps against historical cohort data.",
+            "overall_risk_assessment": f"{len(gap_analyses)} documentation gaps identified. Review individual gap cards for payer-specific denial risk data.",
+            "gap_priority_ranking": [
+                {"gap_id": g["gap_id"], "rank": i + 1, "rationale": f"Impact delta: {g.get('overall', {}).get('impact_delta', 0):.0%}"}
+                for i, g in enumerate(ranked)
+            ],
+            "compensable_gaps": [],
+            "recommended_actions": [],
+        }
 
 
 # Global instance

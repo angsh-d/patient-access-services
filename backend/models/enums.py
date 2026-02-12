@@ -6,7 +6,9 @@ class CaseStage(str, Enum):
     """Stages in the case processing workflow."""
     INTAKE = "intake"
     POLICY_ANALYSIS = "policy_analysis"
-    AWAITING_HUMAN_DECISION = "awaiting_human_decision"  # Human gate after policy analysis
+    COHORT_ANALYSIS = "cohort_analysis"          # After policy_analysis
+    AI_RECOMMENDATION = "ai_recommendation"      # After cohort_analysis
+    AWAITING_HUMAN_DECISION = "awaiting_human_decision"  # Human gate after AI recommendation
     STRATEGY_GENERATION = "strategy_generation"
     STRATEGY_SELECTION = "strategy_selection"
     ACTION_COORDINATION = "action_coordination"
@@ -22,6 +24,9 @@ class HumanDecisionAction(str, Enum):
     REJECT = "reject"  # Reject AI recommendation
     OVERRIDE = "override"  # Override with different decision
     ESCALATE = "escalate"  # Escalate to senior reviewer
+    SUBMIT_TO_PAYER = "submit_to_payer"          # Proceed with PA submission
+    RETURN_TO_PROVIDER = "return_to_provider"    # Go back for more docs/tests
+    FOLLOW_RECOMMENDATION = "follow_recommendation"  # Accept AI's recommendation
 
 
 class PayerStatus(str, Enum):
@@ -46,6 +51,8 @@ class TaskCategory(str, Enum):
     DATA_EXTRACTION = "data_extraction"
     NOTIFICATION = "notification"
     POLICY_QA = "policy_qa"
+    DENIAL_CLASSIFICATION = "denial_classification"
+    RECOVERY_STRATEGY = "recovery_strategy"
 
 
 class LLMProvider(str, Enum):

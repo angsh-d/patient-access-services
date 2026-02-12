@@ -1,4 +1,6 @@
 """Mock UHC payer gateway implementation."""
+import asyncio
+import random
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Any, Optional
 from uuid import uuid4
@@ -12,6 +14,14 @@ from backend.mock_services.payer.payer_interface import (
 from backend.config.logging_config import get_logger
 
 logger = get_logger(__name__)
+
+# Realistic denial reasons referencing actual UHC policy criteria
+UHC_DENIAL_REASONS = [
+    "Per UHC policy, biosimilar infliximab products (Inflectra, Renflexis, Avsola) are preferred. Remicade requires clinical justification for biosimilar exception per UHC Commercial Policy 2024T0234U.",
+    "Coverage denied: Requested biologic not on UHC preferred specialty tier. Step therapy requires documented trial and failure of preferred TNF inhibitor (Humira biosimilar) before Remicade authorization. Reference: UHC Pharmacy P&T Committee decision 2024-Q3.",
+    "Medical necessity not established. UHC requires documented failure of or contraindication to conventional therapy (methotrexate >= 15mg/week for 12+ weeks) before biologic authorization per Clinical Coverage Guideline CCG-0451.",
+    "Prior authorization denied per UHC biosimilar-first policy. Prescriber must document clinical rationale for reference product over available biosimilar alternatives. Contact UHC Clinical Review at 1-800-711-4555 for exception request.",
+]
 
 
 class UHCGateway(PayerGateway):
@@ -68,7 +78,12 @@ class UHCGateway(PayerGateway):
         )
 
     async def check_status(self, reference_number: str) -> PAResponse:
-        """Check PA status (mock)."""
+        """Check PA status (mock) with realistic processing delay."""
+        # Simulate realistic payer portal response time (1-4 seconds)
+        delay = random.uniform(1.0, 4.0)
+        logger.debug("Simulating UHC response delay", delay_seconds=round(delay, 2))
+        await asyncio.sleep(delay)
+
         if reference_number not in self._pa_store:
             return PAResponse(
                 reference_number=reference_number,
@@ -81,6 +96,17 @@ class UHCGateway(PayerGateway):
 
         # Simulate scenario-based responses
         if self._scenario == "happy_path":
+            # 5% random failure chance for realism even on happy path
+            if random.random() < 0.05:
+                logger.info("UHC happy_path: random transient info request triggered for realism")
+                return PAResponse(
+                    reference_number=reference_number,
+                    status=PAStatus.PENDING_INFO,
+                    payer_name=self.payer_name,
+                    message="Clinical review requires additional documentation before determination.",
+                    required_documents=["TB screening results (QuantiFERON-TB Gold or T-SPOT) within 90 days"],
+                    next_review_date=datetime.now(timezone.utc) + timedelta(days=10)
+                )
             return self._happy_path_response(reference_number, pa_data)
         elif self._scenario == "missing_docs":
             return self._tb_screening_request(reference_number, pa_data)
@@ -127,14 +153,16 @@ class UHCGateway(PayerGateway):
         )
 
     def _biosimilar_redirect(self, reference_number: str, pa_data: Dict) -> PAResponse:
-        """Generate biosimilar requirement response."""
+        """Generate biosimilar requirement response with realistic policy-referenced reason."""
+        denial_reason = random.choice(UHC_DENIAL_REASONS)
+        denial_codes = ["BIO-001", "BIO-002", "FORM-001", "CCG-001"]
         return PAResponse(
             reference_number=reference_number,
             status=PAStatus.DENIED,
             payer_name=self.payer_name,
             message="Reference product denied. Biosimilar required.",
-            denial_reason="Per UHC policy, biosimilar infliximab products (Inflectra, Renflexis, Avsola) are preferred. Remicade requires clinical justification for biosimilar exception.",
-            denial_code="BIO-001",
+            denial_reason=denial_reason,
+            denial_code=random.choice(denial_codes),
             approval_details={
                 "alternative_approved": True,
                 "approved_alternatives": ["Inflectra", "Renflexis", "Avsola"],

@@ -1,4 +1,6 @@
 """Mock Cigna payer gateway implementation."""
+import asyncio
+import random
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Any, Optional
 from uuid import uuid4
@@ -12,6 +14,14 @@ from backend.mock_services.payer.payer_interface import (
 from backend.config.logging_config import get_logger
 
 logger = get_logger(__name__)
+
+# Realistic denial reasons referencing actual Cigna policy criteria
+CIGNA_DENIAL_REASONS = [
+    "Step therapy requirements not met. Documentation does not demonstrate adequate trial of methotrexate at optimal dose (15-25mg weekly) for minimum 12 weeks prior to biologic initiation per Cigna Clinical Policy Bulletin 0814.",
+    "Step therapy requirement: Patient must demonstrate inadequate response or intolerance to at least one conventional DMARD (methotrexate, sulfasalazine, or leflunomide) at therapeutic doses for >= 3 months per Cigna coverage policy CP-0627.",
+    "Prior authorization denied per Cigna formulary guidelines. Requested agent requires documented failure of preferred biologic (adalimumab or etanercept) before infliximab can be authorized. Reference: Cigna Pharmacy Clinical Policy 1028.",
+    "Clinical documentation insufficient to support medical necessity. Missing quantitative disease activity assessment (DAS28-ESR or CDAI) within 60 days of request. Required per Cigna PA criteria section 4.2.",
+]
 
 
 class CignaGateway(PayerGateway):
@@ -68,7 +78,12 @@ class CignaGateway(PayerGateway):
         )
 
     async def check_status(self, reference_number: str) -> PAResponse:
-        """Check PA status (mock)."""
+        """Check PA status (mock) with realistic processing delay."""
+        # Simulate realistic payer portal response time (1-4 seconds)
+        delay = random.uniform(1.0, 4.0)
+        logger.debug("Simulating Cigna response delay", delay_seconds=round(delay, 2))
+        await asyncio.sleep(delay)
+
         if reference_number not in self._pa_store:
             return PAResponse(
                 reference_number=reference_number,
@@ -78,10 +93,20 @@ class CignaGateway(PayerGateway):
             )
 
         pa_data = self._pa_store[reference_number]
-        submission = pa_data["submission"]
 
         # Simulate scenario-based responses
         if self._scenario == "happy_path":
+            # 5% random failure chance for realism even on happy path
+            if random.random() < 0.05:
+                logger.info("Cigna happy_path: random transient denial triggered for realism")
+                return PAResponse(
+                    reference_number=reference_number,
+                    status=PAStatus.PENDING_INFO,
+                    payer_name=self.payer_name,
+                    message="Additional clinical documentation requested to complete utilization review.",
+                    required_documents=["Updated disease activity score (DAS28 or CDAI)"],
+                    next_review_date=datetime.now(timezone.utc) + timedelta(days=7)
+                )
             return self._happy_path_response(reference_number, pa_data)
         elif self._scenario == "missing_docs":
             return self._missing_docs_response(reference_number, pa_data)
@@ -125,14 +150,16 @@ class CignaGateway(PayerGateway):
         )
 
     def _denial_response(self, reference_number: str, pa_data: Dict) -> PAResponse:
-        """Generate denial response."""
+        """Generate denial response with realistic policy-referenced reason."""
+        denial_reason = random.choice(CIGNA_DENIAL_REASONS)
+        denial_codes = ["STH-001", "STH-002", "FORM-001", "CLIN-001"]
         return PAResponse(
             reference_number=reference_number,
             status=PAStatus.DENIED,
             payer_name=self.payer_name,
             message="Prior authorization denied. See denial reason for details.",
-            denial_reason="Step therapy requirements not met. Documentation does not demonstrate adequate trial of methotrexate at optimal dose (15-25mg weekly) for minimum 12 weeks.",
-            denial_code="STH-001",
+            denial_reason=denial_reason,
+            denial_code=random.choice(denial_codes),
             appeal_deadline=datetime.now(timezone.utc) + timedelta(days=180)
         )
 

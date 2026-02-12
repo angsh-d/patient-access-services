@@ -117,6 +117,112 @@ export interface CoverageAssessment {
   llm_raw_response?: Record<string, unknown>
 }
 
+// ── Gap-Driven Cohort Analysis Types ──────────────────────────────────
+
+/** Denial rate statistics for a documentation gap cohort split */
+export interface GapCohortStats {
+  denial_rate_when_missing: number
+  denial_rate_when_present: number
+  impact_delta: number
+  sample_size_missing: number
+  sample_size_present: number
+  payer_name?: string
+}
+
+/** Data availability status for a gap's historical cohort data */
+export type GapDataStatus = 'sufficient' | 'no_missing_cases' | 'low_sample'
+
+/** Per-gap analysis result from gap-driven cohort analysis */
+export interface GapAnalysis {
+  gap_id: string
+  gap_description: string
+  priority: string
+  historical_doc_key: string
+  data_status: GapDataStatus
+  interpretation: string
+  overall: GapCohortStats
+  this_payer: GapCohortStats & { payer_name: string }
+  other_payers: GapCohortStats
+  by_payer: Array<{ payer_name: string; denial_rate_missing: number; sample_size: number }>
+  top_denial_reasons: Array<{ reason: string; count: number; pct: number }>
+  compensating_factors: Array<{
+    pattern_type: string
+    missing_documentation?: string
+    description: string
+    approval_uplift: number
+    priority: string
+    is_missing_in_current_case?: boolean
+    current_case_has_compensation?: boolean
+    current_compensating_factors?: string[]
+    recommendation?: string
+  }>
+  severity_breakdown: Record<string, { denial_rate: number; sample_size: number }>
+  time_trend: Array<{ period: string; denial_rate: number; sample_size: number }>
+  /** Per-gap clinical differentiator analysis (PRPA) */
+  gap_differentiators?: {
+    status: string
+    differentiating_insights?: Array<{
+      insight_id: string
+      category: string
+      headline: string
+      finding: string
+      current_patient_status: 'at_risk' | 'favorable' | 'neutral'
+      current_patient_detail: string
+      evidence_strength: 'strong' | 'moderate' | 'weak'
+      cases_supporting: number
+      non_obvious_factor?: boolean
+    }>
+    actionable_recommendations?: Array<{
+      priority: number
+      action: string
+      rationale: string
+      expected_impact: string
+    }>
+    current_patient_position?: {
+      favorable_factors: string[]
+      at_risk_factors: string[]
+      overall_summary: string
+      estimated_cohort_match: number
+    }
+    hidden_patterns?: Array<{
+      headline: string
+      finding: string
+      variables_involved: string[]
+    }>
+  }
+}
+
+/** LLM synthesis of multi-gap risk */
+export interface GapCohortSynthesis {
+  analysis_strategy?: string
+  overall_risk_assessment: string
+  hidden_insights?: Array<{
+    headline: string
+    finding: string
+    gaps_involved: string[]
+  }>
+  patient_position_summary?: string
+  gap_priority_ranking: Array<{ gap_id: string; rank: number; rationale: string }>
+  recommended_actions: Array<{ action: string; rationale: string; expected_impact: string }>
+}
+
+/** Full gap-driven cohort analysis response */
+export interface GapCohortAnalysisData {
+  case_id: string
+  status: string
+  message?: string
+  payer_name: string
+  total_cohort_size: number
+  gap_analyses: GapAnalysis[]
+  llm_synthesis: GapCohortSynthesis
+  filter_metadata: {
+    available_payers: string[]
+    available_severity_buckets: string[]
+    date_range: { earliest: string; latest: string }
+  }
+  analysis_timestamp?: string
+}
+
 /**
  * Policy analysis request
  */

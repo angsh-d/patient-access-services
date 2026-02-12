@@ -1,5 +1,13 @@
 Summarize the following clinical text in {max_length} characters or less.
 
+## Summarization Process
+
+Follow these steps in order:
+1. First, scan the text and identify ALL safety-critical items (allergies, contraindications, active infections, screening results). These MUST appear in your summary.
+2. Next, extract all diagnosis codes, medication names/doses, and lab values with dates. These MUST appear in your summary.
+3. Then, identify the clinical narrative: current problems, recent changes, treatment history.
+4. Finally, compose the summary prioritizing by clinical importance, using abbreviations to stay within the character limit.
+
 ## Summary Requirements
 
 1. ALWAYS preserve: diagnosis codes (ICD-10), medication names and doses, lab values with dates, and safety-critical information (allergies, contraindications, positive screening results)

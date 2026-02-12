@@ -12,15 +12,38 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.config.settings import get_settings
 from backend.config.logging_config import setup_logging, get_logger
+from backend.config.request_context import correlation_id_var
 from backend.storage.database import init_db
 from backend.api.routes import cases, strategies, patients, activity, validation, websocket, policies
 from backend.mock_services.scenarios import get_scenario_manager
 
 setup_logging(log_level="INFO")
 logger = get_logger(__name__)
+
+
+class CorrelationIDMiddleware(BaseHTTPMiddleware):
+    """Attach a correlation ID to every request for distributed tracing.
+
+    Reads ``X-Request-ID`` from the incoming headers; generates a UUID4 if
+    absent.  The ID is stored in a ``ContextVar`` so it is accessible
+    throughout the async request lifecycle and added to the response headers.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+        token = correlation_id_var.set(request_id)
+        logger.info("Request started", correlation_id=request_id, method=request.method, path=request.url.path)
+        try:
+            response = await call_next(request)
+            response.headers["X-Request-ID"] = request_id
+            logger.info("Request completed", correlation_id=request_id, status_code=response.status_code)
+            return response
+        finally:
+            correlation_id_var.reset(token)
 
 
 @asynccontextmanager
@@ -72,8 +95,9 @@ app.add_middleware(
     allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "Accept", "X-Requested-With"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "X-Requested-With", "X-Request-ID"],
 )
+app.add_middleware(CorrelationIDMiddleware)
 
 
 @app.exception_handler(Exception)
@@ -85,6 +109,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # Routes
 app.include_router(cases.router, prefix="/api/v1")
+app.include_router(cases.analytics_router, prefix="/api/v1")
 app.include_router(strategies.router, prefix="/api/v1")
 app.include_router(patients.router, prefix="/api/v1")
 app.include_router(activity.router, prefix="/api/v1")

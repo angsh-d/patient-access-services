@@ -97,6 +97,7 @@ export function useSelectStrategy(caseId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.case(caseId) })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.strategies(caseId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.trace(caseId) })
     },
   })
 }
@@ -137,6 +138,9 @@ export function useRunStage(caseId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.case(caseId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.strategies(caseId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.strategicIntelligence(caseId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.trace(caseId) })
     },
   })
 }
@@ -151,8 +155,20 @@ export function useApproveStage(caseId: string) {
     mutationFn: async (stage: string) => {
       return api.cases.approveStage(caseId, stage)
     },
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.case(caseId) })
+      const previousCase = queryClient.getQueryData(QUERY_KEYS.case(caseId))
+      return { previousCase }
+    },
+    onError: (_err, _stage, context) => {
+      if (context?.previousCase) {
+        queryClient.setQueryData(QUERY_KEYS.case(caseId), context.previousCase)
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.case(caseId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.strategies(caseId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.trace(caseId) })
     },
   })
 }
@@ -168,9 +184,21 @@ export function useConfirmDecision(caseId: string) {
     mutationFn: async (data: ConfirmDecisionRequest) => {
       return api.cases.confirmDecision(caseId, data)
     },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.case(caseId) })
+      const previousCase = queryClient.getQueryData(QUERY_KEYS.case(caseId))
+      return { previousCase }
+    },
     onSuccess: (caseState) => {
-      // Update case cache with new state
       queryClient.setQueryData(QUERY_KEYS.case(caseId), { case: caseState })
+    },
+    onError: (_err, _data, context) => {
+      if (context?.previousCase) {
+        queryClient.setQueryData(QUERY_KEYS.case(caseId), context.previousCase)
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.case(caseId) })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cases })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.trace(caseId) })
     },

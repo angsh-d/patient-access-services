@@ -1,0 +1,652 @@
+[
+  {
+    "case_id": "eval_001",
+    "description": "Severe fistulizing Crohn's with extensive documentation — clear approval",
+    "patient_info": {
+      "demographics": {"age": 36, "gender": "female"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "K50.913", "description": "Crohn's disease with fistula"}],
+        "disease_activity": {"cdai_score": 425, "ses_cd_score": 22, "disease_severity": "severe", "disease_phenotype": "fistulizing"},
+        "prior_treatments": [
+          {"medication_name": "Mesalamine", "outcome": "inadequate_response", "duration_weeks": 24, "adequate_trial": true},
+          {"medication_name": "Prednisone", "outcome": "steroid_dependent", "duration_weeks": 67, "adequate_trial": true},
+          {"medication_name": "Azathioprine", "outcome": "intolerance", "duration_weeks": 6, "adequate_trial": false}
+        ],
+        "laboratory_results": {"crp": 42, "esr": 55, "fecal_calprotectin": 1450, "albumin": 2.6, "hemoglobin": 9.4},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "cigna", "plan_type": "PPO"}
+    },
+    "medication_info": {
+      "medication_name": "Inflectra",
+      "generic_name": "infliximab-dyyb",
+      "dose": "5mg/kg",
+      "frequency": "Every 8 weeks maintenance",
+      "diagnosis_codes": ["K50.913"]
+    },
+    "payer_name": "cigna",
+    "expected_coverage_status": "covered",
+    "expected_approval_likelihood_min": 0.80,
+    "expected_approval_likelihood_max": 0.98,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "step_therapy", "disease_severity", "pre_biologic_screening"],
+    "expected_criteria_unmet_keys": [],
+    "notes": "Severe fistulizing Crohn's, CDAI 425, SES-CD 22, extensive step therapy failure, all screening complete. Clear approval case."
+  },
+  {
+    "case_id": "eval_002",
+    "description": "Moderate RA with methotrexate failure — Humira standard approval",
+    "patient_info": {
+      "demographics": {"age": 52, "gender": "female"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "M05.79", "description": "Rheumatoid arthritis with rheumatoid factor, multiple sites"}],
+        "disease_activity": {"das28_score": 5.8, "disease_severity": "moderate_to_severe"},
+        "prior_treatments": [
+          {"medication_name": "Methotrexate", "outcome": "inadequate_response", "duration_weeks": 16, "adequate_trial": true},
+          {"medication_name": "Leflunomide", "outcome": "inadequate_response", "duration_weeks": 12, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 18, "esr": 38, "rf_positive": true, "anti_ccp_positive": true},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "uhc", "plan_type": "HMO"}
+    },
+    "medication_info": {
+      "medication_name": "Humira",
+      "generic_name": "adalimumab",
+      "dose": "40mg",
+      "frequency": "Every 2 weeks",
+      "diagnosis_codes": ["M05.79"]
+    },
+    "payer_name": "uhc",
+    "expected_coverage_status": "covered",
+    "expected_approval_likelihood_min": 0.75,
+    "expected_approval_likelihood_max": 0.95,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "step_therapy", "disease_severity"],
+    "expected_criteria_unmet_keys": [],
+    "notes": "Standard RA case with failed conventional DMARDs, seropositive, elevated inflammatory markers. Clean approval."
+  },
+  {
+    "case_id": "eval_003",
+    "description": "Severe UC unresponsive to steroids — Entyvio with strong documentation",
+    "patient_info": {
+      "demographics": {"age": 28, "gender": "male"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "K51.00", "description": "Ulcerative pancolitis without complications"}],
+        "disease_activity": {"mayo_score": 10, "disease_severity": "severe", "disease_extent": "pancolitis"},
+        "prior_treatments": [
+          {"medication_name": "Mesalamine", "outcome": "inadequate_response", "duration_weeks": 12, "adequate_trial": true},
+          {"medication_name": "Prednisone", "outcome": "steroid_dependent", "duration_weeks": 20, "adequate_trial": true},
+          {"medication_name": "Azathioprine", "outcome": "inadequate_response", "duration_weeks": 16, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 35, "esr": 48, "fecal_calprotectin": 1200, "albumin": 3.0, "hemoglobin": 10.2},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "aetna", "plan_type": "PPO"}
+    },
+    "medication_info": {
+      "medication_name": "Entyvio",
+      "generic_name": "vedolizumab",
+      "dose": "300mg IV",
+      "frequency": "Weeks 0, 2, 6, then every 8 weeks",
+      "diagnosis_codes": ["K51.00"]
+    },
+    "payer_name": "aetna",
+    "expected_coverage_status": "covered",
+    "expected_approval_likelihood_min": 0.75,
+    "expected_approval_likelihood_max": 0.95,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "step_therapy", "disease_severity", "pre_biologic_screening"],
+    "expected_criteria_unmet_keys": [],
+    "notes": "Severe UC pancolitis, Mayo 10, complete step therapy failure through immunomodulator. Strong case for gut-selective biologic."
+  },
+  {
+    "case_id": "eval_004",
+    "description": "Active psoriatic arthritis with DMARD failure — Stelara clear approval",
+    "patient_info": {
+      "demographics": {"age": 44, "gender": "male"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "L40.50", "description": "Arthropathic psoriasis, unspecified"}],
+        "disease_activity": {"dactylitis_present": true, "enthesitis_present": true, "swollen_joint_count": 8, "tender_joint_count": 14, "bsa_psoriasis": 12, "disease_severity": "moderate_to_severe"},
+        "prior_treatments": [
+          {"medication_name": "Methotrexate", "outcome": "inadequate_response", "duration_weeks": 16, "adequate_trial": true},
+          {"medication_name": "Sulfasalazine", "outcome": "intolerance", "duration_weeks": 4, "adequate_trial": false}
+        ],
+        "laboratory_results": {"crp": 14, "esr": 28},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "cigna", "plan_type": "HMO"}
+    },
+    "medication_info": {
+      "medication_name": "Stelara",
+      "generic_name": "ustekinumab",
+      "dose": "45mg SC",
+      "frequency": "Weeks 0, 4, then every 12 weeks",
+      "diagnosis_codes": ["L40.50"]
+    },
+    "payer_name": "cigna",
+    "expected_coverage_status": "covered",
+    "expected_approval_likelihood_min": 0.70,
+    "expected_approval_likelihood_max": 0.92,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "step_therapy", "disease_severity"],
+    "expected_criteria_unmet_keys": [],
+    "notes": "Active PsA with dactylitis/enthesitis, BSA 12%, failed methotrexate adequately. Stelara approved for PsA."
+  },
+  {
+    "case_id": "eval_005",
+    "description": "Moderate Crohn's with documented step therapy — Humira standard pathway",
+    "patient_info": {
+      "demographics": {"age": 31, "gender": "female"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "K50.10", "description": "Crohn's disease of large intestine without complications"}],
+        "disease_activity": {"cdai_score": 310, "ses_cd_score": 14, "disease_severity": "moderate"},
+        "prior_treatments": [
+          {"medication_name": "Budesonide", "outcome": "partial_response", "duration_weeks": 12, "adequate_trial": true},
+          {"medication_name": "Prednisone", "outcome": "steroid_dependent", "duration_weeks": 16, "adequate_trial": true},
+          {"medication_name": "Azathioprine", "outcome": "inadequate_response", "duration_weeks": 24, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 22, "esr": 32, "fecal_calprotectin": 680, "albumin": 3.4, "hemoglobin": 11.8},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "anthem", "plan_type": "PPO"}
+    },
+    "medication_info": {
+      "medication_name": "Humira",
+      "generic_name": "adalimumab",
+      "dose": "160mg induction, 80mg week 2, then 40mg every 2 weeks",
+      "frequency": "Every 2 weeks maintenance",
+      "diagnosis_codes": ["K50.10"]
+    },
+    "payer_name": "anthem",
+    "expected_coverage_status": "covered",
+    "expected_approval_likelihood_min": 0.70,
+    "expected_approval_likelihood_max": 0.92,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "step_therapy", "disease_severity", "pre_biologic_screening"],
+    "expected_criteria_unmet_keys": [],
+    "notes": "Moderate Crohn's CDAI 310, step therapy completed through immunomodulator, all screening done."
+  },
+  {
+    "case_id": "eval_006",
+    "description": "Severe RA with TNF failure switching to Rinvoq — clear approval",
+    "patient_info": {
+      "demographics": {"age": 58, "gender": "female"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "M05.79", "description": "Rheumatoid arthritis with rheumatoid factor, multiple sites"}],
+        "disease_activity": {"das28_score": 6.2, "disease_severity": "severe", "swollen_joint_count": 12, "tender_joint_count": 18},
+        "prior_treatments": [
+          {"medication_name": "Methotrexate", "outcome": "inadequate_response", "duration_weeks": 16, "adequate_trial": true},
+          {"medication_name": "Humira", "outcome": "secondary_loss_of_response", "duration_weeks": 52, "adequate_trial": true},
+          {"medication_name": "Enbrel", "outcome": "inadequate_response", "duration_weeks": 24, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 24, "esr": 45, "rf_positive": true, "anti_ccp_positive": true},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "uhc", "plan_type": "PPO"}
+    },
+    "medication_info": {
+      "medication_name": "Rinvoq",
+      "generic_name": "upadacitinib",
+      "dose": "15mg",
+      "frequency": "Once daily",
+      "diagnosis_codes": ["M05.79"]
+    },
+    "payer_name": "uhc",
+    "expected_coverage_status": "covered",
+    "expected_approval_likelihood_min": 0.72,
+    "expected_approval_likelihood_max": 0.93,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "step_therapy", "disease_severity", "tnf_failure"],
+    "expected_criteria_unmet_keys": [],
+    "notes": "Severe RA seropositive, failed MTX + two TNF inhibitors. JAK inhibitor appropriate per guidelines. Clear approval."
+  },
+  {
+    "case_id": "eval_007",
+    "description": "Moderate Crohn's with adequate step therapy — Stelara covered",
+    "patient_info": {
+      "demographics": {"age": 42, "gender": "male"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "K50.90", "description": "Crohn's disease, unspecified, without complications"}],
+        "disease_activity": {"cdai_score": 290, "ses_cd_score": 12, "disease_severity": "moderate"},
+        "prior_treatments": [
+          {"medication_name": "Prednisone", "outcome": "steroid_dependent", "duration_weeks": 20, "adequate_trial": true},
+          {"medication_name": "6-Mercaptopurine", "outcome": "inadequate_response", "duration_weeks": 24, "adequate_trial": true},
+          {"medication_name": "Humira", "outcome": "secondary_loss_of_response", "duration_weeks": 40, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 16, "esr": 28, "fecal_calprotectin": 520, "albumin": 3.5, "hemoglobin": 13.0},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "cigna", "plan_type": "PPO"}
+    },
+    "medication_info": {
+      "medication_name": "Stelara",
+      "generic_name": "ustekinumab",
+      "dose": "260mg IV induction, then 90mg SC every 8 weeks",
+      "frequency": "Every 8 weeks maintenance",
+      "diagnosis_codes": ["K50.90"]
+    },
+    "payer_name": "cigna",
+    "expected_coverage_status": "covered",
+    "expected_approval_likelihood_min": 0.72,
+    "expected_approval_likelihood_max": 0.93,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "step_therapy", "disease_severity", "tnf_failure", "pre_biologic_screening"],
+    "expected_criteria_unmet_keys": [],
+    "notes": "Moderate Crohn's, failed immunomodulator and anti-TNF. Switching to IL-12/23 inhibitor is appropriate per guidelines."
+  },
+  {
+    "case_id": "eval_008",
+    "description": "Moderate-severe UC with complete documentation — Entyvio approved",
+    "patient_info": {
+      "demographics": {"age": 35, "gender": "female"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "K51.30", "description": "Ulcerative rectosigmoiditis without complications"}],
+        "disease_activity": {"mayo_score": 8, "disease_severity": "moderate_to_severe", "disease_extent": "left_sided"},
+        "prior_treatments": [
+          {"medication_name": "Mesalamine", "outcome": "inadequate_response", "duration_weeks": 12, "adequate_trial": true},
+          {"medication_name": "Prednisone", "outcome": "steroid_dependent", "duration_weeks": 18, "adequate_trial": true},
+          {"medication_name": "Azathioprine", "outcome": "inadequate_response", "duration_weeks": 20, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 19, "esr": 30, "fecal_calprotectin": 780, "albumin": 3.3, "hemoglobin": 11.5},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "anthem", "plan_type": "HMO"}
+    },
+    "medication_info": {
+      "medication_name": "Entyvio",
+      "generic_name": "vedolizumab",
+      "dose": "300mg IV",
+      "frequency": "Weeks 0, 2, 6, then every 8 weeks",
+      "diagnosis_codes": ["K51.30"]
+    },
+    "payer_name": "anthem",
+    "expected_coverage_status": "covered",
+    "expected_approval_likelihood_min": 0.70,
+    "expected_approval_likelihood_max": 0.92,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "step_therapy", "disease_severity", "pre_biologic_screening"],
+    "expected_criteria_unmet_keys": [],
+    "notes": "Moderate-severe left-sided UC, completed step therapy, all screening done. Entyvio is gut-selective and approved for UC."
+  },
+  {
+    "case_id": "eval_009",
+    "description": "Borderline Crohn's with stale endoscopy and mildly elevated CRP — human review needed",
+    "patient_info": {
+      "demographics": {"age": 39, "gender": "male"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "K50.10", "description": "Crohn's disease of large intestine without complications"}],
+        "disease_activity": {"cdai_score": 228, "ses_cd_score": 8, "disease_severity": "moderate", "assessment_date": "2024-01-10"},
+        "prior_treatments": [
+          {"medication_name": "Budesonide", "outcome": "partial_response", "duration_weeks": 13, "adequate_trial": true},
+          {"medication_name": "Prednisone", "outcome": "steroid_dependent", "duration_weeks": 24, "adequate_trial": true},
+          {"medication_name": "Azathioprine", "outcome": "inadequate_response", "duration_weeks": 52, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 8.5, "esr": 16, "albumin": 4.0, "hemoglobin": 14.0},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"},
+        "documentation_gaps": ["Colonoscopy over 12 months old", "No fecal calprotectin", "CDAI borderline at 228"]
+      },
+      "insurance": {"primary_payer": "cigna", "plan_type": "HMO-POS"}
+    },
+    "medication_info": {
+      "medication_name": "Inflectra",
+      "generic_name": "infliximab-dyyb",
+      "dose": "5mg/kg",
+      "frequency": "Every 8 weeks maintenance",
+      "diagnosis_codes": ["K50.10"]
+    },
+    "payer_name": "cigna",
+    "expected_coverage_status": "requires_human_review",
+    "expected_approval_likelihood_min": 0.35,
+    "expected_approval_likelihood_max": 0.60,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "step_therapy"],
+    "expected_criteria_unmet_keys": ["disease_severity_documentation"],
+    "notes": "Borderline CDAI 228 (just above 220 threshold), stale endoscopy >12 months, mild CRP. Step therapy strong but disease activity evidence weak."
+  },
+  {
+    "case_id": "eval_010",
+    "description": "Mild RA seeking Xeljanz without adequate DMARD trials — human review",
+    "patient_info": {
+      "demographics": {"age": 48, "gender": "female"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "M06.09", "description": "Rheumatoid arthritis without rheumatoid factor, multiple sites"}],
+        "disease_activity": {"das28_score": 3.8, "disease_severity": "moderate", "swollen_joint_count": 4, "tender_joint_count": 6},
+        "prior_treatments": [
+          {"medication_name": "Methotrexate", "outcome": "inadequate_response", "duration_weeks": 12, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 8, "esr": 20, "rf_positive": false, "anti_ccp_positive": false},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "aetna", "plan_type": "PPO"}
+    },
+    "medication_info": {
+      "medication_name": "Xeljanz",
+      "generic_name": "tofacitinib",
+      "dose": "5mg",
+      "frequency": "Twice daily",
+      "diagnosis_codes": ["M06.09"]
+    },
+    "payer_name": "aetna",
+    "expected_coverage_status": "requires_human_review",
+    "expected_approval_likelihood_min": 0.30,
+    "expected_approval_likelihood_max": 0.55,
+    "expected_criteria_met_keys": ["diagnosis_criterion"],
+    "expected_criteria_unmet_keys": ["step_therapy", "tnf_failure_required"],
+    "notes": "Seronegative RA, moderate DAS28, only tried MTX. Most payers require TNF failure before JAK inhibitor. Borderline case."
+  },
+  {
+    "case_id": "eval_011",
+    "description": "Moderate UC with short steroid course, no immunomodulator — human review",
+    "patient_info": {
+      "demographics": {"age": 33, "gender": "male"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "K51.00", "description": "Ulcerative pancolitis without complications"}],
+        "disease_activity": {"mayo_score": 7, "disease_severity": "moderate", "disease_extent": "pancolitis"},
+        "prior_treatments": [
+          {"medication_name": "Mesalamine", "outcome": "inadequate_response", "duration_weeks": 12, "adequate_trial": true},
+          {"medication_name": "Prednisone", "outcome": "partial_response", "duration_weeks": 8, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 12, "esr": 22, "fecal_calprotectin": 450, "albumin": 3.6, "hemoglobin": 12.8},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "uhc", "plan_type": "HMO"}
+    },
+    "medication_info": {
+      "medication_name": "Humira",
+      "generic_name": "adalimumab",
+      "dose": "160mg induction, 80mg week 2, then 40mg every 2 weeks",
+      "frequency": "Every 2 weeks maintenance",
+      "diagnosis_codes": ["K51.00"]
+    },
+    "payer_name": "uhc",
+    "expected_coverage_status": "requires_human_review",
+    "expected_approval_likelihood_min": 0.30,
+    "expected_approval_likelihood_max": 0.55,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "disease_severity"],
+    "expected_criteria_unmet_keys": ["step_therapy"],
+    "notes": "Moderate UC but no immunomodulator trial. Most payers require immunomodulator failure or intolerance before biologic. Borderline."
+  },
+  {
+    "case_id": "eval_012",
+    "description": "RA patient requesting Otezla — off-label use requires review",
+    "patient_info": {
+      "demographics": {"age": 55, "gender": "male"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "M05.79", "description": "Rheumatoid arthritis with rheumatoid factor, multiple sites"}],
+        "disease_activity": {"das28_score": 4.5, "disease_severity": "moderate", "swollen_joint_count": 6, "tender_joint_count": 10},
+        "prior_treatments": [
+          {"medication_name": "Methotrexate", "outcome": "inadequate_response", "duration_weeks": 16, "adequate_trial": true},
+          {"medication_name": "Leflunomide", "outcome": "intolerance", "duration_weeks": 8, "adequate_trial": false}
+        ],
+        "laboratory_results": {"crp": 15, "esr": 32, "rf_positive": true, "anti_ccp_positive": true},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "cigna", "plan_type": "PPO"}
+    },
+    "medication_info": {
+      "medication_name": "Otezla",
+      "generic_name": "apremilast",
+      "dose": "30mg",
+      "frequency": "Twice daily",
+      "diagnosis_codes": ["M05.79"]
+    },
+    "payer_name": "cigna",
+    "expected_coverage_status": "requires_human_review",
+    "expected_approval_likelihood_min": 0.15,
+    "expected_approval_likelihood_max": 0.40,
+    "expected_criteria_met_keys": ["diagnosis_criterion"],
+    "expected_criteria_unmet_keys": ["fda_approved_indication"],
+    "notes": "Otezla is FDA-approved for PsA and psoriasis, NOT RA. Off-label use for RA will likely require human review and justification."
+  },
+  {
+    "case_id": "eval_013",
+    "description": "PsA patient with no prior DMARD — Humira without step therapy",
+    "patient_info": {
+      "demographics": {"age": 40, "gender": "female"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "L40.50", "description": "Arthropathic psoriasis, unspecified"}],
+        "disease_activity": {"swollen_joint_count": 5, "tender_joint_count": 8, "bsa_psoriasis": 8, "disease_severity": "moderate"},
+        "prior_treatments": [
+          {"medication_name": "NSAIDs", "outcome": "inadequate_response", "duration_weeks": 12, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 10, "esr": 22},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "anthem", "plan_type": "PPO"}
+    },
+    "medication_info": {
+      "medication_name": "Humira",
+      "generic_name": "adalimumab",
+      "dose": "40mg",
+      "frequency": "Every 2 weeks",
+      "diagnosis_codes": ["L40.50"]
+    },
+    "payer_name": "anthem",
+    "expected_coverage_status": "requires_human_review",
+    "expected_approval_likelihood_min": 0.30,
+    "expected_approval_likelihood_max": 0.55,
+    "expected_criteria_met_keys": ["diagnosis_criterion"],
+    "expected_criteria_unmet_keys": ["step_therapy"],
+    "notes": "PsA but only NSAIDs tried. Most payers require at least one conventional DMARD trial (MTX) before biologic for PsA."
+  },
+  {
+    "case_id": "eval_014",
+    "description": "Crohn's patient missing TB screening — documentation gap blocks approval",
+    "patient_info": {
+      "demographics": {"age": 45, "gender": "female"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "K50.10", "description": "Crohn's disease of large intestine without complications"}],
+        "disease_activity": {"cdai_score": 320, "ses_cd_score": 16, "disease_severity": "moderate_to_severe"},
+        "prior_treatments": [
+          {"medication_name": "Prednisone", "outcome": "steroid_dependent", "duration_weeks": 20, "adequate_trial": true},
+          {"medication_name": "Methotrexate", "outcome": "inadequate_response", "duration_weeks": 16, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 28, "esr": 40, "fecal_calprotectin": 900, "albumin": 3.2, "hemoglobin": 11.0},
+        "pre_biologic_screening": {"tb_status": "not_done", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "cigna", "plan_type": "PPO"}
+    },
+    "medication_info": {
+      "medication_name": "Humira",
+      "generic_name": "adalimumab",
+      "dose": "40mg",
+      "frequency": "Every 2 weeks",
+      "diagnosis_codes": ["K50.10"]
+    },
+    "payer_name": "cigna",
+    "expected_coverage_status": "pend",
+    "expected_approval_likelihood_min": 0.40,
+    "expected_approval_likelihood_max": 0.65,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "step_therapy", "disease_severity"],
+    "expected_criteria_unmet_keys": ["pre_biologic_screening"],
+    "notes": "Strong clinical case but TB screening not completed. Required by all payers before TNF inhibitor initiation. Pend for missing documentation."
+  },
+  {
+    "case_id": "eval_015",
+    "description": "UC patient missing colonoscopy documentation — documentation gap",
+    "patient_info": {
+      "demographics": {"age": 50, "gender": "male"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "K51.90", "description": "Ulcerative colitis, unspecified, without complications"}],
+        "disease_activity": {"disease_severity": "moderate", "clinical_symptoms": "5-6 bloody stools daily"},
+        "prior_treatments": [
+          {"medication_name": "Mesalamine", "outcome": "inadequate_response", "duration_weeks": 16, "adequate_trial": true},
+          {"medication_name": "Prednisone", "outcome": "steroid_dependent", "duration_weeks": 24, "adequate_trial": true},
+          {"medication_name": "Azathioprine", "outcome": "inadequate_response", "duration_weeks": 20, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 18, "esr": 30, "albumin": 3.4, "hemoglobin": 12.0},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"},
+        "documentation_gaps": ["No recent colonoscopy to confirm disease extent and severity", "No fecal calprotectin", "No Mayo score documented"]
+      },
+      "insurance": {"primary_payer": "uhc", "plan_type": "PPO"}
+    },
+    "medication_info": {
+      "medication_name": "Entyvio",
+      "generic_name": "vedolizumab",
+      "dose": "300mg IV",
+      "frequency": "Weeks 0, 2, 6, then every 8 weeks",
+      "diagnosis_codes": ["K51.90"]
+    },
+    "payer_name": "uhc",
+    "expected_coverage_status": "pend",
+    "expected_approval_likelihood_min": 0.35,
+    "expected_approval_likelihood_max": 0.60,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "step_therapy"],
+    "expected_criteria_unmet_keys": ["endoscopic_documentation", "disease_severity_documentation"],
+    "notes": "Step therapy completed but no endoscopic confirmation of disease severity. No Mayo score. Pend for colonoscopy documentation."
+  },
+  {
+    "case_id": "eval_016",
+    "description": "RA patient missing hepatitis B screening — documentation gap for biologic",
+    "patient_info": {
+      "demographics": {"age": 62, "gender": "female"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "M05.79", "description": "Rheumatoid arthritis with rheumatoid factor, multiple sites"}],
+        "disease_activity": {"das28_score": 5.4, "disease_severity": "moderate_to_severe", "swollen_joint_count": 8, "tender_joint_count": 12},
+        "prior_treatments": [
+          {"medication_name": "Methotrexate", "outcome": "inadequate_response", "duration_weeks": 16, "adequate_trial": true},
+          {"medication_name": "Hydroxychloroquine", "outcome": "inadequate_response", "duration_weeks": 16, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 20, "esr": 38, "rf_positive": true, "anti_ccp_positive": true},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "not_done", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "aetna", "plan_type": "HMO"}
+    },
+    "medication_info": {
+      "medication_name": "Humira",
+      "generic_name": "adalimumab",
+      "dose": "40mg",
+      "frequency": "Every 2 weeks",
+      "diagnosis_codes": ["M05.79"]
+    },
+    "payer_name": "aetna",
+    "expected_coverage_status": "pend",
+    "expected_approval_likelihood_min": 0.45,
+    "expected_approval_likelihood_max": 0.68,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "step_therapy", "disease_severity"],
+    "expected_criteria_unmet_keys": ["pre_biologic_screening"],
+    "notes": "Good clinical case but hepatitis B screening not done. Required before TNF inhibitor. Pend for screening completion."
+  },
+  {
+    "case_id": "eval_017",
+    "description": "Crohn's patient missing lab results documentation — incomplete submission",
+    "patient_info": {
+      "demographics": {"age": 29, "gender": "male"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "K50.90", "description": "Crohn's disease, unspecified, without complications"}],
+        "disease_activity": {"cdai_score": 280, "disease_severity": "moderate"},
+        "prior_treatments": [
+          {"medication_name": "Budesonide", "outcome": "partial_response", "duration_weeks": 10, "adequate_trial": true},
+          {"medication_name": "Prednisone", "outcome": "steroid_dependent", "duration_weeks": 16, "adequate_trial": true},
+          {"medication_name": "Azathioprine", "outcome": "inadequate_response", "duration_weeks": 24, "adequate_trial": true}
+        ],
+        "laboratory_results": {},
+        "pre_biologic_screening": {"tb_status": "not_done", "hep_b_status": "not_done", "hep_c_status": "not_done"},
+        "documentation_gaps": ["No laboratory results provided", "No inflammatory markers", "No pre-biologic screening", "No endoscopic documentation"]
+      },
+      "insurance": {"primary_payer": "anthem", "plan_type": "HMO"}
+    },
+    "medication_info": {
+      "medication_name": "Stelara",
+      "generic_name": "ustekinumab",
+      "dose": "260mg IV induction",
+      "frequency": "Every 8 weeks maintenance",
+      "diagnosis_codes": ["K50.90"]
+    },
+    "payer_name": "anthem",
+    "expected_coverage_status": "pend",
+    "expected_approval_likelihood_min": 0.20,
+    "expected_approval_likelihood_max": 0.45,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "step_therapy"],
+    "expected_criteria_unmet_keys": ["pre_biologic_screening", "laboratory_documentation", "endoscopic_documentation"],
+    "notes": "Step therapy documented but no labs, no screening, no endoscopy. Multiple critical documentation gaps. Pend for comprehensive documentation."
+  },
+  {
+    "case_id": "eval_018",
+    "description": "Crohn's patient skipping step therapy — no immunomodulator tried",
+    "patient_info": {
+      "demographics": {"age": 25, "gender": "female"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "K50.10", "description": "Crohn's disease of large intestine without complications"}],
+        "disease_activity": {"cdai_score": 260, "ses_cd_score": 10, "disease_severity": "moderate"},
+        "prior_treatments": [
+          {"medication_name": "Mesalamine", "outcome": "inadequate_response", "duration_weeks": 8, "adequate_trial": true},
+          {"medication_name": "Prednisone", "outcome": "partial_response", "duration_weeks": 12, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 15, "esr": 25, "fecal_calprotectin": 380, "albumin": 3.6, "hemoglobin": 12.4},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "cigna", "plan_type": "HMO"}
+    },
+    "medication_info": {
+      "medication_name": "Humira",
+      "generic_name": "adalimumab",
+      "dose": "40mg",
+      "frequency": "Every 2 weeks",
+      "diagnosis_codes": ["K50.10"]
+    },
+    "payer_name": "cigna",
+    "expected_coverage_status": "requires_human_review",
+    "expected_approval_likelihood_min": 0.20,
+    "expected_approval_likelihood_max": 0.45,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "pre_biologic_screening"],
+    "expected_criteria_unmet_keys": ["step_therapy"],
+    "notes": "Moderate Crohn's but no immunomodulator trial (azathioprine, 6-MP, or methotrexate). Most payers require immunomodulator step before biologic."
+  },
+  {
+    "case_id": "eval_019",
+    "description": "RA patient requesting biologic without trying conventional DMARDs",
+    "patient_info": {
+      "demographics": {"age": 38, "gender": "male"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "M05.79", "description": "Rheumatoid arthritis with rheumatoid factor, multiple sites"}],
+        "disease_activity": {"das28_score": 4.2, "disease_severity": "moderate", "swollen_joint_count": 5, "tender_joint_count": 8},
+        "prior_treatments": [
+          {"medication_name": "NSAIDs", "outcome": "inadequate_response", "duration_weeks": 8, "adequate_trial": true},
+          {"medication_name": "Prednisone", "outcome": "partial_response", "duration_weeks": 6, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 12, "esr": 28, "rf_positive": true, "anti_ccp_positive": true},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "uhc", "plan_type": "PPO"}
+    },
+    "medication_info": {
+      "medication_name": "Rinvoq",
+      "generic_name": "upadacitinib",
+      "dose": "15mg",
+      "frequency": "Once daily",
+      "diagnosis_codes": ["M05.79"]
+    },
+    "payer_name": "uhc",
+    "expected_coverage_status": "requires_human_review",
+    "expected_approval_likelihood_min": 0.10,
+    "expected_approval_likelihood_max": 0.35,
+    "expected_criteria_met_keys": ["diagnosis_criterion"],
+    "expected_criteria_unmet_keys": ["step_therapy", "dmard_failure_required", "tnf_failure_required"],
+    "notes": "Seropositive RA but no DMARD trial. JAK inhibitor requires failure of MTX and usually TNF inhibitor. Major step therapy gap."
+  },
+  {
+    "case_id": "eval_020",
+    "description": "UC patient requesting Xeljanz without prior biologic trial",
+    "patient_info": {
+      "demographics": {"age": 46, "gender": "female"},
+      "clinical_profile": {
+        "diagnoses": [{"icd10_code": "K51.00", "description": "Ulcerative pancolitis without complications"}],
+        "disease_activity": {"mayo_score": 8, "disease_severity": "moderate_to_severe", "disease_extent": "pancolitis"},
+        "prior_treatments": [
+          {"medication_name": "Mesalamine", "outcome": "inadequate_response", "duration_weeks": 16, "adequate_trial": true},
+          {"medication_name": "Prednisone", "outcome": "steroid_dependent", "duration_weeks": 20, "adequate_trial": true}
+        ],
+        "laboratory_results": {"crp": 20, "esr": 35, "fecal_calprotectin": 650, "albumin": 3.3, "hemoglobin": 11.4},
+        "pre_biologic_screening": {"tb_status": "negative", "hep_b_status": "immune", "hep_c_status": "negative"}
+      },
+      "insurance": {"primary_payer": "cigna", "plan_type": "PPO"}
+    },
+    "medication_info": {
+      "medication_name": "Xeljanz",
+      "generic_name": "tofacitinib",
+      "dose": "10mg",
+      "frequency": "Twice daily for 8 weeks induction, then 5mg twice daily",
+      "diagnosis_codes": ["K51.00"]
+    },
+    "payer_name": "cigna",
+    "expected_coverage_status": "requires_human_review",
+    "expected_approval_likelihood_min": 0.15,
+    "expected_approval_likelihood_max": 0.40,
+    "expected_criteria_met_keys": ["diagnosis_criterion", "disease_severity"],
+    "expected_criteria_unmet_keys": ["step_therapy", "immunomodulator_failure", "biologic_failure_required"],
+    "notes": "Moderate-severe UC but no immunomodulator or biologic trial. Most payers require failure of immunomodulator + TNF inhibitor before JAK inhibitor for UC."
+  }
+]

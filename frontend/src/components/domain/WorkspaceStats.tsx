@@ -100,8 +100,8 @@ export function AIInsightCard({ insight, source, className }: AIInsightCardProps
   return (
     <div className={cn('surface-card overflow-hidden', className)}>
       <div className="px-4 py-3 border-b border-grey-100/80 flex items-center gap-2">
-        <div className="w-5 h-5 rounded-md bg-gradient-to-br from-violet-500/10 to-blue-500/10 flex items-center justify-center">
-          <Sparkles className="w-3 h-3 text-violet-500" />
+        <div className="w-5 h-5 rounded-md bg-gradient-to-br from-grey-400/10 to-grey-500/10 flex items-center justify-center">
+          <Sparkles className="w-3 h-3 text-grey-400" />
         </div>
         <h3 className="text-[13px] font-semibold text-grey-800">AI Insight</h3>
       </div>

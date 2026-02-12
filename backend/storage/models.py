@@ -22,6 +22,7 @@ class CaseModel(Base):
     version = Column(Integer, nullable=False, default=1)
     created_at = Column(DateTime(timezone=True), nullable=False, default=_utcnow)
     updated_at = Column(DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow)
+    deleted_at = Column(DateTime(timezone=True), nullable=True, default=None)
 
     # Stage
     stage = Column(String(50), nullable=False, default="intake")
@@ -278,6 +279,34 @@ class StrategicIntelligenceCacheModel(Base):
         return datetime.now(timezone.utc) > self.expires_at
 
 
+class PolicyAnalysisCacheModel(Base):
+    """Cache for LLM policy analysis results keyed by patient+medication+payer hash."""
+    __tablename__ = "policy_analysis_cache"
+
+    id = Column(String(36), primary_key=True)
+    cache_key_hash = Column(String(64), nullable=False, unique=True, index=True)
+
+    # Key components (for debugging / transparency)
+    payer_name = Column(String(100), nullable=False)
+    medication_name = Column(String(200), nullable=False)
+
+    # Cache metadata
+    cached_at = Column(DateTime(timezone=True), nullable=False, default=_utcnow)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    hit_count = Column(Integer, nullable=False, default=0)
+
+    # Cached assessment (full CoverageAssessment.model_dump())
+    assessment_data = Column(JSON, nullable=False)
+
+    __table_args__ = (
+        Index('ix_policy_analysis_cache_payer_med', 'payer_name', 'medication_name'),
+        Index('ix_policy_analysis_cache_expires', 'expires_at'),
+    )
+
+    def is_expired(self) -> bool:
+        return datetime.now(timezone.utc) > self.expires_at
+
+
 class PolicyDiffCacheModel(Base):
     """Persistent cache for policy diff results + LLM summaries."""
     __tablename__ = "policy_diff_cache"
@@ -318,3 +347,135 @@ class PolicyQACacheModel(Base):
         Index('ix_qa_cache_filters', 'payer_filter', 'medication_filter'),
         Index('ix_qa_cache_policy_hash', 'policy_content_hash'),
     )
+
+
+class CohortAnalysisCacheModel(Base):
+    """Cache for cohort similarity analysis results (approved vs denied differentiators)."""
+    __tablename__ = "cohort_analysis_cache"
+
+    id = Column(String(36), primary_key=True)
+    cache_key_hash = Column(String(64), nullable=False, unique=True, index=True)
+
+    # Key components (for debugging / transparency)
+    medication_name = Column(String(200), nullable=False)
+    icd10_family = Column(String(10), nullable=True)
+    payer_name = Column(String(100), nullable=False)
+
+    # Cache metadata
+    cached_at = Column(DateTime(timezone=True), nullable=False, default=_utcnow)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+
+    # Cached cohort analysis (JSON blob)
+    analysis_data = Column(JSON, nullable=False)
+
+    # Statistics
+    approved_cohort_size = Column(Integer, nullable=False)
+    denied_cohort_size = Column(Integer, nullable=False)
+    total_similar_cases = Column(Integer, nullable=False)
+
+    __table_args__ = (
+        Index('ix_cohort_cache_payer_med', 'payer_name', 'medication_name'),
+        Index('ix_cohort_cache_expires', 'expires_at'),
+    )
+
+    def is_expired(self) -> bool:
+        return datetime.now(timezone.utc) > self.expires_at
+
+
+class PredictionOutcomeModel(Base):
+    """Tracks prediction accuracy — actual payer outcomes vs AI predictions."""
+    __tablename__ = "prediction_outcomes"
+
+    id = Column(String(36), primary_key=True)
+    case_id = Column(String(36), ForeignKey("cases.id"), nullable=False, index=True)
+
+    # AI prediction at time of assessment
+    predicted_likelihood = Column(Float, nullable=False)
+    predicted_status = Column(String(50), nullable=False)
+    payer_name = Column(String(100), nullable=False)
+    medication_name = Column(String(200), nullable=False)
+
+    # Actual outcome (filled in when payer decides)
+    actual_outcome = Column(String(50), nullable=True)  # approved, denied, info_requested, withdrawn
+    actual_decision_date = Column(DateTime(timezone=True), nullable=True)
+
+    # Strategy effectiveness
+    strategy_used = Column(String(100), nullable=True)
+    was_strategy_effective = Column(Boolean, nullable=True)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_utcnow)
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow)
+
+    __table_args__ = (
+        Index('ix_prediction_outcomes_payer', 'payer_name'),
+        Index('ix_prediction_outcomes_medication', 'medication_name'),
+        Index('ix_prediction_outcomes_actual', 'actual_outcome'),
+        Index('ix_prediction_outcomes_case_payer', 'case_id', 'payer_name'),
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "case_id": self.case_id,
+            "predicted_likelihood": self.predicted_likelihood,
+            "predicted_status": self.predicted_status,
+            "payer_name": self.payer_name,
+            "medication_name": self.medication_name,
+            "actual_outcome": self.actual_outcome,
+            "actual_decision_date": self.actual_decision_date.isoformat() if self.actual_decision_date else None,
+            "strategy_used": self.strategy_used,
+            "was_strategy_effective": self.was_strategy_effective,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class LLMUsageModel(Base):
+    """Tracks LLM token usage and costs per API call."""
+    __tablename__ = "llm_usage"
+
+    id = Column(String(36), primary_key=True)
+    case_id = Column(String(36), nullable=True, index=True)
+
+    # Distributed tracing
+    correlation_id = Column(String(36), nullable=True, index=True)
+
+    # Provider info
+    provider = Column(String(50), nullable=False)  # claude, gemini, azure_openai
+    model = Column(String(100), nullable=False)
+    task_category = Column(String(50), nullable=False)
+
+    # Token counts
+    input_tokens = Column(Integer, nullable=False, default=0)
+    output_tokens = Column(Integer, nullable=False, default=0)
+
+    # Cost (USD)
+    cost_usd = Column(Float, nullable=False, default=0.0)
+
+    # Performance
+    latency_ms = Column(Float, nullable=False, default=0.0)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_utcnow)
+
+    __table_args__ = (
+        Index('ix_llm_usage_provider', 'provider'),
+        Index('ix_llm_usage_task', 'task_category'),
+        Index('ix_llm_usage_created', 'created_at'),
+        Index('ix_llm_usage_case', 'case_id'),
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "case_id": self.case_id,
+            "correlation_id": self.correlation_id,
+            "provider": self.provider,
+            "model": self.model,
+            "task_category": self.task_category,
+            "input_tokens": self.input_tokens,
+            "output_tokens": self.output_tokens,
+            "cost_usd": self.cost_usd,
+            "latency_ms": self.latency_ms,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }

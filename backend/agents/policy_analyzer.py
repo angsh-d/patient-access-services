@@ -1,9 +1,10 @@
-"""Policy analyzer agent for coverage assessment."""
+"""Policy analyzer agent with iterative refinement for coverage assessment."""
 import json
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 
-from backend.models.coverage import CoverageAssessment
+from backend.models.coverage import CoverageAssessment, CriterionAssessment
 from backend.models.case_state import CaseState
 from backend.reasoning.policy_reasoner import get_policy_reasoner
 from backend.storage.waypoint_writer import get_waypoint_writer
@@ -14,13 +15,23 @@ logger = get_logger(__name__)
 
 PATIENTS_DIR = Path(get_settings().patients_dir)
 
+# Confidence threshold below which criteria trigger targeted re-evaluation
+LOW_CONFIDENCE_THRESHOLD = 0.7
+
+# Maximum refinement iterations to prevent unbounded loops
+MAX_REFINEMENT_ITERATIONS = 2
+
 
 class PolicyAnalyzerAgent:
     """
     Agent responsible for analyzing payer policies and assessing coverage.
     Uses Claude for policy reasoning - no fallback allowed.
 
-    Generates waypoint outputs following Anthropic skill pattern.
+    Implements an iterative reasoning loop:
+      1. Evidence gap detection - scans patient data for documentation gaps before analysis
+      2. Initial assessment via PolicyReasoner
+      3. Targeted re-evaluation of low-confidence criteria with enriched context
+      4. Reasoning chain logging for audit trail
     """
 
     def __init__(self, write_waypoints: bool = True):
@@ -48,6 +59,10 @@ class PolicyAnalyzerAgent:
         Returns:
             Dictionary mapping payer names to coverage assessments
         """
+        reasoning_chain: List[str] = []
+        reasoning_chain.append(
+            f"[PolicyAnalyzer] Starting analysis for case {case_state.case_id}"
+        )
         logger.info("Analyzing all payers", case_id=case_state.case_id)
 
         assessments = {}
@@ -95,23 +110,70 @@ class PolicyAnalyzerAgent:
             "clinical_rationale": medication.clinical_rationale
         }
 
-        # Analyze each payer
+        # --- Step 1: Evidence gap detection (LLM-first) ---
+        evidence_warnings = await self._detect_evidence_gaps(patient_info, raw_patient)
+        if evidence_warnings:
+            gap_summary = "; ".join(evidence_warnings)
+            reasoning_chain.append(
+                f"[PolicyAnalyzer] Evidence gap scan found {len(evidence_warnings)} warning(s): {gap_summary}"
+            )
+            logger.warning(
+                "Evidence gaps detected before policy analysis",
+                case_id=case_state.case_id,
+                gap_count=len(evidence_warnings),
+                gaps=evidence_warnings,
+            )
+        else:
+            reasoning_chain.append(
+                "[PolicyAnalyzer] Evidence gap scan: no documentation issues detected"
+            )
+
+        # --- Step 2: Initial assessment per payer ---
         payers_to_analyze = list(case_state.payer_states.keys())
 
         for payer_name in payers_to_analyze:
             try:
+                reasoning_chain.append(
+                    f"[PolicyAnalyzer] Running initial coverage assessment for {payer_name}"
+                )
+
                 assessment = await self.reasoner.assess_coverage(
                     patient_info=patient_info,
                     medication_info=medication_info,
                     payer_name=payer_name
                 )
+
+                logger.info(
+                    "Initial payer analysis complete",
+                    payer=payer_name,
+                    status=assessment.coverage_status.value,
+                    likelihood=assessment.approval_likelihood,
+                )
+
+                reasoning_chain.append(
+                    f"[PolicyAnalyzer] {payer_name} initial result: "
+                    f"status={assessment.coverage_status.value}, "
+                    f"likelihood={assessment.approval_likelihood:.0%}, "
+                    f"criteria={assessment.criteria_met_count}/{assessment.criteria_total_count}"
+                )
+
+                # --- Step 3: Iterative refinement for low-confidence criteria ---
+                assessment = await self._iterative_refinement(
+                    assessment=assessment,
+                    patient_info=patient_info,
+                    medication_info=medication_info,
+                    payer_name=payer_name,
+                    evidence_warnings=evidence_warnings,
+                    reasoning_chain=reasoning_chain,
+                )
+
                 assessments[payer_name] = assessment
 
                 logger.info(
-                    "Payer analysis complete",
+                    "Payer analysis complete (post-refinement)",
                     payer=payer_name,
                     status=assessment.coverage_status.value,
-                    likelihood=assessment.approval_likelihood
+                    likelihood=assessment.approval_likelihood,
                 )
 
             except Exception as e:
@@ -122,6 +184,27 @@ class PolicyAnalyzerAgent:
                 )
                 # Don't swallow error - policy analysis is critical
                 raise
+
+        # --- Step 4: Log final reasoning chain ---
+        reasoning_chain.append(
+            f"[PolicyAnalyzer] Analysis complete for {len(assessments)} payer(s)"
+        )
+
+        # Attach reasoning chain to case_state messages if available
+        if hasattr(case_state, 'messages') and isinstance(getattr(case_state, 'messages', None), list):
+            case_state.messages.extend(reasoning_chain)
+
+        # Store reasoning chain on the assessments for downstream consumers
+        for payer_name, assessment in assessments.items():
+            if assessment.llm_raw_response is None:
+                assessment.llm_raw_response = {}
+            assessment.llm_raw_response["reasoning_chain"] = reasoning_chain
+
+        logger.info(
+            "Full reasoning chain recorded",
+            case_id=case_state.case_id,
+            chain_length=len(reasoning_chain),
+        )
 
         # Write assessment waypoint if enabled
         if self.write_waypoints and self.waypoint_writer and assessments:
@@ -136,6 +219,281 @@ class PolicyAnalyzerAgent:
                 logger.warning("Failed to write assessment waypoint", error=str(e))
 
         return assessments
+
+    # ------------------------------------------------------------------
+    # Evidence gap detection
+    # ------------------------------------------------------------------
+
+    async def _detect_evidence_gaps(
+        self,
+        patient_info: Dict[str, Any],
+        raw_patient: Optional[Dict[str, Any]],
+    ) -> List[str]:
+        """
+        Scan patient data for documentation gaps using LLM analysis.
+
+        Uses the evidence_gap_detection prompt to identify missing labs,
+        pending screenings, outdated records, and known documentation gaps.
+
+        Returns:
+            List of human-readable warning strings for the reasoning chain.
+        """
+        from backend.models.enums import TaskCategory
+        from backend.reasoning.llm_gateway import get_llm_gateway
+        from backend.reasoning.prompt_loader import get_prompt_loader
+
+        prompt_loader = get_prompt_loader()
+        llm_gateway = get_llm_gateway()
+
+        prompt = prompt_loader.load(
+            "policy_analysis/evidence_gap_detection.txt",
+            {
+                "patient_info": json.dumps(patient_info, indent=2, default=str),
+                "raw_patient": json.dumps(raw_patient, indent=2, default=str) if raw_patient else "No raw patient record available",
+            },
+        )
+
+        result = await llm_gateway.generate(
+            task_category=TaskCategory.DATA_EXTRACTION,
+            prompt=prompt,
+            temperature=0.0,
+            response_format="json",
+        )
+
+        warnings = result.get("evidence_warnings", [])
+
+        logger.info(
+            "Evidence gap detection complete (LLM)",
+            warning_count=len(warnings),
+            readiness=result.get("overall_readiness", "unknown"),
+        )
+
+        return warnings
+
+    # ------------------------------------------------------------------
+    # Iterative refinement loop
+    # ------------------------------------------------------------------
+
+    async def _iterative_refinement(
+        self,
+        assessment: CoverageAssessment,
+        patient_info: Dict[str, Any],
+        medication_info: Dict[str, Any],
+        payer_name: str,
+        evidence_warnings: List[str],
+        reasoning_chain: List[str],
+    ) -> CoverageAssessment:
+        """
+        Check for low-confidence criteria and attempt targeted re-evaluation.
+
+        If any criterion in the initial assessment has confidence < LOW_CONFIDENCE_THRESHOLD,
+        triggers a re-assessment with additional context highlighting those specific criteria,
+        up to MAX_REFINEMENT_ITERATIONS times.
+
+        Args:
+            assessment: The initial coverage assessment
+            patient_info: Patient demographic and clinical data
+            medication_info: Medication request details
+            payer_name: Name of the payer
+            evidence_warnings: Evidence gap warnings from pre-scan
+            reasoning_chain: Mutable list accumulating reasoning steps
+
+        Returns:
+            Refined CoverageAssessment (or the original if no refinement needed)
+        """
+        current_assessment = assessment
+
+        for iteration in range(1, MAX_REFINEMENT_ITERATIONS + 1):
+            low_confidence_criteria = self._find_low_confidence_criteria(current_assessment)
+
+            if not low_confidence_criteria:
+                reasoning_chain.append(
+                    f"[PolicyAnalyzer] {payer_name} refinement iteration {iteration}: "
+                    "all criteria above confidence threshold - no refinement needed"
+                )
+                break
+
+            criteria_names = [c.criterion_name for c in low_confidence_criteria]
+            criteria_details = [
+                f"{c.criterion_name} (confidence={c.confidence:.2f}, met={c.is_met})"
+                for c in low_confidence_criteria
+            ]
+
+            reasoning_chain.append(
+                f"[PolicyAnalyzer] {payer_name} refinement iteration {iteration}: "
+                f"{len(low_confidence_criteria)} low-confidence criteria detected: "
+                f"{', '.join(criteria_details)}"
+            )
+
+            logger.info(
+                "Low-confidence criteria detected, triggering re-evaluation",
+                payer=payer_name,
+                iteration=iteration,
+                low_confidence_count=len(low_confidence_criteria),
+                criteria=criteria_names,
+            )
+
+            # Build targeted additional context for the re-evaluation
+            refinement_context = self._build_refinement_context(
+                low_confidence_criteria=low_confidence_criteria,
+                evidence_warnings=evidence_warnings,
+                current_assessment=current_assessment,
+                iteration=iteration,
+            )
+
+            try:
+                refined_assessment = await self.reasoner.assess_coverage(
+                    patient_info=patient_info,
+                    medication_info=medication_info,
+                    payer_name=payer_name,
+                    skip_cache=True,
+                    historical_context=refinement_context,
+                )
+
+                # Merge: only accept refined criteria if their confidence improved
+                current_assessment = self._merge_refined_assessment(
+                    original=current_assessment,
+                    refined=refined_assessment,
+                    targeted_criteria_names=criteria_names,
+                    reasoning_chain=reasoning_chain,
+                    payer_name=payer_name,
+                    iteration=iteration,
+                )
+
+            except Exception as e:
+                reasoning_chain.append(
+                    f"[PolicyAnalyzer] {payer_name} refinement iteration {iteration} failed: {str(e)} - "
+                    "keeping original assessment"
+                )
+                logger.warning(
+                    "Refinement re-evaluation failed, keeping original assessment",
+                    payer=payer_name,
+                    iteration=iteration,
+                    error=str(e),
+                )
+                break
+
+        return current_assessment
+
+    def _find_low_confidence_criteria(
+        self, assessment: CoverageAssessment
+    ) -> List[CriterionAssessment]:
+        """Return criteria with confidence below the threshold."""
+        return [
+            c for c in assessment.criteria_assessments
+            if c.confidence < LOW_CONFIDENCE_THRESHOLD
+        ]
+
+    def _build_refinement_context(
+        self,
+        low_confidence_criteria: List[CriterionAssessment],
+        evidence_warnings: List[str],
+        current_assessment: CoverageAssessment,
+        iteration: int,
+    ) -> str:
+        """
+        Build additional context string for targeted re-evaluation.
+
+        This is passed as `historical_context` to the PolicyReasoner, which inserts
+        it into the prompt as a context-only section.
+        """
+        parts = []
+
+        parts.append(
+            f"## Targeted Re-evaluation (Iteration {iteration})\n"
+            "The following criteria had low confidence in the initial assessment and require "
+            "closer examination. Focus your analysis on these specific criteria, paying careful "
+            "attention to any available evidence that may have been overlooked.\n"
+        )
+
+        for criterion in low_confidence_criteria:
+            evidence_str = "; ".join(criterion.supporting_evidence) if criterion.supporting_evidence else "none found"
+            gaps_str = "; ".join(criterion.gaps) if criterion.gaps else "none identified"
+            parts.append(
+                f"- **{criterion.criterion_name}** (ID: {criterion.criterion_id}): "
+                f"confidence={criterion.confidence:.2f}, met={criterion.is_met}\n"
+                f"  Initial reasoning: {criterion.reasoning}\n"
+                f"  Evidence found: {evidence_str}\n"
+                f"  Gaps: {gaps_str}"
+            )
+
+        if evidence_warnings:
+            parts.append(
+                "\n## Known Documentation Gaps (Pre-Analysis Scan)\n"
+                "The following evidence gaps were detected in the patient record before analysis:\n"
+                + "\n".join(f"- {w}" for w in evidence_warnings)
+            )
+
+        return "\n\n".join(parts)
+
+    def _merge_refined_assessment(
+        self,
+        original: CoverageAssessment,
+        refined: CoverageAssessment,
+        targeted_criteria_names: List[str],
+        reasoning_chain: List[str],
+        payer_name: str,
+        iteration: int,
+    ) -> CoverageAssessment:
+        """
+        Merge refined assessment results back into the original.
+
+        Only accepts refined criterion results when confidence improved for the
+        targeted criteria. Overall assessment fields (likelihood, status, gaps,
+        recommendations) are taken from the refined assessment since the LLM
+        re-evaluated holistically.
+        """
+        # Build lookup of refined criteria by name
+        refined_by_name: Dict[str, CriterionAssessment] = {
+            c.criterion_name: c for c in refined.criteria_assessments
+        }
+
+        merged_criteria: List[CriterionAssessment] = []
+        improvements = 0
+        kept_original = 0
+
+        for orig_criterion in original.criteria_assessments:
+            if orig_criterion.criterion_name in targeted_criteria_names:
+                refined_criterion = refined_by_name.get(orig_criterion.criterion_name)
+                if refined_criterion and refined_criterion.confidence > orig_criterion.confidence:
+                    merged_criteria.append(refined_criterion)
+                    improvements += 1
+                    logger.info(
+                        "Criterion confidence improved via refinement",
+                        payer=payer_name,
+                        criterion=orig_criterion.criterion_name,
+                        old_confidence=orig_criterion.confidence,
+                        new_confidence=refined_criterion.confidence,
+                    )
+                else:
+                    merged_criteria.append(orig_criterion)
+                    kept_original += 1
+            else:
+                # Non-targeted criteria: keep original
+                merged_criteria.append(orig_criterion)
+
+        reasoning_chain.append(
+            f"[PolicyAnalyzer] {payer_name} refinement iteration {iteration} merge: "
+            f"{improvements} criteria improved, {kept_original} kept from original"
+        )
+
+        # Use refined overall assessment if any criteria improved
+        if improvements > 0:
+            result = refined.model_copy()
+            result.criteria_assessments = merged_criteria
+            result.criteria_met_count = sum(1 for c in merged_criteria if c.is_met)
+            result.criteria_total_count = len(merged_criteria)
+            return result
+        else:
+            reasoning_chain.append(
+                f"[PolicyAnalyzer] {payer_name} refinement iteration {iteration}: "
+                "no confidence improvements - keeping original assessment"
+            )
+            return original
+
+    # ------------------------------------------------------------------
+    # Existing methods (unchanged interfaces)
+    # ------------------------------------------------------------------
 
     def _write_assessment_waypoint(
         self,
@@ -288,11 +646,44 @@ class PolicyAnalyzerAgent:
             "clinical_rationale": medication.clinical_rationale
         }
 
-        return await self.reasoner.assess_coverage(
+        # Evidence gap detection (LLM-first)
+        evidence_warnings = await self._detect_evidence_gaps(patient_info, raw_patient)
+        if evidence_warnings:
+            logger.warning(
+                "Evidence gaps detected for single-payer analysis",
+                case_id=case_state.case_id,
+                payer=payer_name,
+                gap_count=len(evidence_warnings),
+                gaps=evidence_warnings,
+            )
+
+        # Initial assessment
+        assessment = await self.reasoner.assess_coverage(
             patient_info=patient_info,
             medication_info=medication_info,
             payer_name=payer_name
         )
+
+        # Iterative refinement
+        reasoning_chain: List[str] = []
+        assessment = await self._iterative_refinement(
+            assessment=assessment,
+            patient_info=patient_info,
+            medication_info=medication_info,
+            payer_name=payer_name,
+            evidence_warnings=evidence_warnings,
+            reasoning_chain=reasoning_chain,
+        )
+
+        if reasoning_chain:
+            logger.info(
+                "Single-payer reasoning chain",
+                case_id=case_state.case_id,
+                payer=payer_name,
+                chain=reasoning_chain,
+            )
+
+        return assessment
 
     def compare_assessments(
         self,

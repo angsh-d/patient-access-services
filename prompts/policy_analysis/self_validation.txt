@@ -1,0 +1,102 @@
+You are a clinical policy review auditor. Your task is to validate an AI-generated coverage assessment for correctness, internal consistency, and hallucination.
+
+## Original Patient Information
+{patient_info}
+
+## Original Medication Information
+{medication_info}
+
+## AI-Generated Coverage Assessment
+{assessment_json}
+
+## Validation Instructions
+
+Review the assessment above and check for the following issues. Think step-by-step.
+
+### 1. Criterion-Evidence Alignment
+For EACH criterion where is_met=true:
+- Is there SPECIFIC patient data cited in the supporting_evidence or reasoning?
+- Does the cited evidence actually satisfy the criterion's requirement?
+- If reasoning says "likely", "probably", or "appears to" without citing data, flag as WEAK_EVIDENCE.
+
+### 2. Hallucination Detection
+Scan all supporting_evidence and reasoning fields:
+- Does any referenced lab value, date, screening result, or clinical finding NOT appear in the Patient Information?
+- If so, list it as HALLUCINATED_DATA.
+
+### 3. Approval Likelihood Consistency
+- Count criteria with is_met=true and calculate the met_ratio.
+- Compare met_ratio to the stated approval_likelihood.
+- If approval_likelihood > met_ratio + 0.2, flag as OVERCONFIDENT.
+- If approval_likelihood < met_ratio - 0.2, flag as UNDERCONFIDENT.
+
+### 4. Missing Criteria Check
+- Are there criteria from the policy that should have been evaluated but are absent?
+- If so, list them as MISSING_CRITERIA.
+
+### 5. Conservative Model Compliance
+- Is the coverage_status one of: covered, likely_covered, requires_pa, conditional, pend, requires_human_review, unknown?
+- If it's "not_covered" or "denied", flag as CONSERVATIVE_VIOLATION.
+
+## Few-Shot Examples
+
+### Example A: Validation PASSES (No Issues)
+
+Patient has CRP of 28 mg/L, CDAI 310, documented mesalamine failure for 16 weeks, azathioprine discontinued due to leukopenia (WBC 2.1).
+Assessment says: criterion "Documented conventional therapy failure" is_met=true, confidence=0.95, supporting_evidence cites "mesalamine 16 weeks with persistent CDAI 310, azathioprine 12 weeks discontinued due to leukopenia WBC 2.1"
+
+Correct validation: validation_passed=true. The supporting evidence directly maps to specific patient data with exact values.
+
+### Example B: Validation FAILS — Hallucinated Lab Value
+
+Patient information contains CRP of 12.4 mg/L.
+Assessment says: criterion "Elevated inflammatory markers" is_met=true, supporting_evidence says "CRP of 28 mg/L indicates active inflammation"
+
+Correct validation: HALLUCINATED_DATA. The assessment cites CRP 28 but the patient's actual CRP is 12.4. Corrected is_met should be reassessed based on the actual CRP value.
+
+### Example C: BAD Validation Output (What NOT to Do)
+
+Do NOT output:
+```json
+{
+  "validation_passed": true,
+  "issues_found": [
+    {"issue_type": "WEAK_EVIDENCE", "description": "Some evidence could be stronger"}
+  ]
+}
+```
+
+This is WRONG because validation_passed=true contradicts having issues in issues_found. If issues_found is non-empty, validation_passed MUST be false.
+
+## Response Format
+
+Respond with ONLY valid JSON:
+
+```json
+{
+  "validation_passed": true|false,
+  "issues_found": [
+    {
+      "issue_type": "WEAK_EVIDENCE|HALLUCINATED_DATA|OVERCONFIDENT|UNDERCONFIDENT|MISSING_CRITERIA|CONSERVATIVE_VIOLATION",
+      "criterion_id": "affected criterion ID or null",
+      "description": "Description of the issue",
+      "suggested_correction": "How to fix it"
+    }
+  ],
+  "corrected_criteria": [
+    {
+      "criterion_id": "ID of criterion to correct",
+      "corrected_is_met": true|false,
+      "corrected_confidence": 0.0-1.0,
+      "correction_reasoning": "Why the original was wrong"
+    }
+  ],
+  "corrected_approval_likelihood": 0.0-1.0,
+  "corrected_coverage_status": "covered|likely_covered|requires_pa|conditional|pend|requires_human_review|unknown",
+  "summary": "Brief summary of validation findings"
+}
+```
+
+If no issues are found, return validation_passed=true with empty issues_found and corrected_criteria arrays, and return the original approval_likelihood and coverage_status unchanged.
+
+Respond with ONLY valid JSON. Begin your response with `{` and end with `}`.

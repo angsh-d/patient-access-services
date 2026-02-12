@@ -1,5 +1,6 @@
 """Azure OpenAI client - fallback for general tasks."""
 import json
+import time
 from typing import Dict, Any, Optional
 
 from openai import AsyncAzureOpenAI, APIConnectionError, RateLimitError
@@ -7,8 +8,15 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 
 from backend.config.settings import get_settings
 from backend.config.logging_config import get_logger
+from backend.config.request_context import get_correlation_id
 
 logger = get_logger(__name__)
+
+# Azure OpenAI pricing per 1M tokens (gpt-4o)
+_AZURE_PRICING = {
+    "input": 2.50 / 1_000_000,   # $2.50/1M input tokens
+    "output": 10.00 / 1_000_000,  # $10/1M output tokens
+}
 
 
 class AzureOpenAIError(Exception):
@@ -83,7 +91,9 @@ class AzureOpenAIClient:
             if "mini" not in self.deployment.lower():
                 request_params["temperature"] = temperature
 
+            start_time = time.monotonic()
             response = await self.client.chat.completions.create(**request_params)
+            latency_ms = (time.monotonic() - start_time) * 1000
 
             if not response.choices:
                 raise AzureOpenAIError("No choices in Azure OpenAI response")
@@ -94,12 +104,22 @@ class AzureOpenAIClient:
 
             # Log diagnostics for debugging
             usage = response.usage
+            input_tokens = usage.prompt_tokens if usage else 0
+            output_tokens = usage.completion_tokens if usage else 0
             logger.info(
                 "Azure OpenAI response received",
                 finish_reason=finish_reason,
                 content_length=len(response_text) if response_text else 0,
-                prompt_tokens=usage.prompt_tokens if usage else 0,
-                completion_tokens=usage.completion_tokens if usage else 0,
+                prompt_tokens=input_tokens,
+                completion_tokens=output_tokens,
+            )
+
+            # Record token usage
+            await self._record_usage(
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                latency_ms=latency_ms,
+                task_category="general",
             )
 
             if finish_reason == "content_filter":
@@ -135,6 +155,41 @@ class AzureOpenAIClient:
         except Exception as e:
             logger.error("Azure OpenAI generation failed", error=str(e))
             raise AzureOpenAIError(f"Azure OpenAI generation failed: {e}") from e
+
+    async def _record_usage(
+        self,
+        input_tokens: int,
+        output_tokens: int,
+        latency_ms: float,
+        task_category: str = "general",
+        case_id: Optional[str] = None,
+        correlation_id: Optional[str] = None,
+    ) -> None:
+        """Record LLM token usage and cost to the database (non-fatal)."""
+        try:
+            from uuid import uuid4
+            from backend.storage.database import get_db
+            from backend.storage.models import LLMUsageModel
+
+            cost = (input_tokens * _AZURE_PRICING["input"] +
+                    output_tokens * _AZURE_PRICING["output"])
+
+            record = LLMUsageModel(
+                id=str(uuid4()),
+                case_id=case_id,
+                correlation_id=correlation_id or get_correlation_id(),
+                provider="azure_openai",
+                model=self.deployment,
+                task_category=task_category,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                cost_usd=round(cost, 6),
+                latency_ms=round(latency_ms, 2),
+            )
+            async with get_db() as session:
+                session.add(record)
+        except Exception as e:
+            logger.debug("Failed to record LLM usage (non-fatal)", error=str(e))
 
     async def summarize(self, text: str, max_length: int = 500) -> str:
         """

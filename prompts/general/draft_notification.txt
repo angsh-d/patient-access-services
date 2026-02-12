@@ -25,4 +25,45 @@ If notification_type is:
 - "status_update": Informational, include current status and expected next steps
 - "appeal_acknowledgment": Confirm receipt, include timeline expectations
 
+## Few-Shot Examples
+
+### Example A: Information Request Notification (Correct)
+
+Good notification:
+"Dear Dr. Chen,
+
+RE: Information Request -- Prior Authorization AUTH-2025-04421
+Patient: Maria Rodriguez | Member ID: CIG-2847291
+
+Cigna has requested additional documentation:
+1. Fecal calprotectin lab result (most recent)
+2. TB screening result (QuantiFERON or PPD, within 6 months)
+
+Submission deadline: February 28, 2025
+
+This request does not constitute a denial."
+
+### Example B: Denial Notification (Patient-Facing -- PHI Minimization)
+
+Good notification:
+"Dear Ms. Rodriguez,
+
+RE: Prior Authorization Update
+Member ID: CIG-2847291
+
+The prior authorization request for your prescribed treatment has not been approved at this time.
+
+Your rights:
+- You may file an internal appeal within [DAYS] days
+- You may request a copy of the review criteria used
+- You may request an expedited appeal if medically urgent"
+
+Why correct: References "your prescribed treatment" instead of medication name or diagnosis (PHI minimization for patient-facing).
+
+### Example C: BAD Notification (What NOT to Do)
+
+"Dear Maria, Your prior auth for Humira (adalimumab 40mg SC q2w) for your Crohn's disease (ICD-10 K50.10) was denied. Your CRP was 28 and CDAI was 310. Good luck!"
+
+WRONG because: Includes medication details, diagnosis code, and clinical data in patient-facing notification (violates PHI minimum necessary). No appeal rights. Unprofessional tone.
+
 Notification:
