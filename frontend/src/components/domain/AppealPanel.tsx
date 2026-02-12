@@ -12,7 +12,7 @@
 
 import { useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   FileText,
   AlertCircle,
@@ -29,8 +29,9 @@ import {
   Pencil,
   RotateCcw,
 } from 'lucide-react'
+import Markdown from 'react-markdown'
 import { cn } from '@/lib/utils'
-import { ENDPOINTS } from '@/lib/constants'
+import { ENDPOINTS, QUERY_KEYS } from '@/lib/constants'
 import { AppealPrediction } from '@/components/domain/AppealPrediction'
 
 // ── Types ──
@@ -80,11 +81,12 @@ async function generateAppealStrategy(caseId: string): Promise<StrategyGeneratio
   )
 }
 
-async function draftAppealLetter(caseId: string): Promise<string> {
+async function draftAppealLetter(caseId: string, strategyData?: AppealStrategyData): Promise<string> {
   const { request } = await import('@/services/api')
+  const body = strategyData ? { appeal_strategy: strategyData } : {}
   const response = await request<{ letter: string; case_id: string }>(
     ENDPOINTS.draftAppealLetter(caseId),
-    { method: 'POST' },
+    { method: 'POST', body: JSON.stringify(body) },
     120000 // 2 minute timeout for LLM drafting
   )
   return response.letter || 'Unable to generate appeal letter.'
@@ -104,12 +106,18 @@ const P2P_CHECKLIST_ITEMS = [
 // ── Main Component ──
 
 export function AppealPanel({ caseId, caseData: _caseData, denialContext, className }: AppealPanelProps) {
+  const queryClient = useQueryClient()
   const [appealStrategy, setAppealStrategy] = useState<AppealStrategyData | null>(null)
   const [appealLetter, setAppealLetter] = useState<string>('')
   const [isEditing, setIsEditing] = useState(false)
-  const [expandedSection, setExpandedSection] = useState<string | null>('strategy')
+  const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [p2pChecked, setP2pChecked] = useState<Record<number, boolean>>({})
+  const [isRevealingStrategy, setIsRevealingStrategy] = useState(false)
+  const [isRevealingLetter, setIsRevealingLetter] = useState(false)
+
+  const strategyCacheKey = `appeal-strategy-${caseId}`
+  const letterCacheKey = `appeal-letter-${caseId}`
 
   // Generate appeal strategy mutation
   const strategyMutation = useMutation({
@@ -117,17 +125,68 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
     onSuccess: (data) => {
       if (data.appeal_strategy) {
         setAppealStrategy(data.appeal_strategy)
+        queryClient.setQueryData(QUERY_KEYS.appealStrategy(caseId), data.appeal_strategy)
+        try { localStorage.setItem(strategyCacheKey, JSON.stringify(data.appeal_strategy)) } catch { /* quota */ }
+        setExpandedSection('strategy')
       }
     },
   })
 
-  // Draft appeal letter mutation
+  // Draft appeal letter mutation — passes strategy data for richer prompt
   const letterMutation = useMutation({
-    mutationFn: () => draftAppealLetter(caseId),
+    mutationFn: () => draftAppealLetter(caseId, appealStrategy ?? undefined),
     onSuccess: (letter) => {
       setAppealLetter(letter)
+      queryClient.setQueryData(QUERY_KEYS.appealLetter(caseId), letter)
+      try { localStorage.setItem(letterCacheKey, letter) } catch { /* quota */ }
+      setExpandedSection('letter')
     },
   })
+
+  const isStrategyLoading = isRevealingStrategy || strategyMutation.isPending
+  const isLetterLoading = isRevealingLetter || letterMutation.isPending
+
+  const handleGenerateStrategy = () => {
+    let cached = queryClient.getQueryData<AppealStrategyData>(QUERY_KEYS.appealStrategy(caseId))
+    if (!cached) {
+      try {
+        const stored = localStorage.getItem(strategyCacheKey)
+        if (stored) cached = JSON.parse(stored) as AppealStrategyData
+      } catch { /* ignore */ }
+    }
+    if (cached) {
+      const data = cached
+      setIsRevealingStrategy(true)
+      setTimeout(() => {
+        setAppealStrategy(data)
+        setIsRevealingStrategy(false)
+        setExpandedSection('strategy')
+      }, 5500)
+    } else {
+      strategyMutation.mutate()
+    }
+  }
+
+  const handleDraftLetter = () => {
+    let cached = queryClient.getQueryData<string>(QUERY_KEYS.appealLetter(caseId))
+    if (!cached) {
+      try {
+        const stored = localStorage.getItem(letterCacheKey)
+        if (stored) cached = stored
+      } catch { /* ignore */ }
+    }
+    if (cached) {
+      const data = cached
+      setIsRevealingLetter(true)
+      setTimeout(() => {
+        setAppealLetter(data)
+        setIsRevealingLetter(false)
+        setExpandedSection('letter')
+      }, 5500)
+    } else {
+      letterMutation.mutate()
+    }
+  }
 
   const handleCopy = async () => {
     try {
@@ -145,10 +204,6 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
 
   const wordCount = appealLetter.trim().split(/\s+/).filter(Boolean).length
   const charCount = appealLetter.length
-
-  const successProbPct = appealStrategy
-    ? Math.round(appealStrategy.success_probability * 100)
-    : 0
 
   const appealTypeLabel = (type: string) => {
     switch (type) {
@@ -192,7 +247,7 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
         expanded={expandedSection === 'strategy'}
         onToggle={() => setExpandedSection(expandedSection === 'strategy' ? null : 'strategy')}
       >
-        {!appealStrategy && !strategyMutation.isPending && !strategyMutation.isError ? (
+        {!appealStrategy && !isStrategyLoading && !strategyMutation.isError ? (
           <div className="text-center py-6">
             <Scale className="w-8 h-8 text-grey-200 mx-auto mb-3" />
             <p className="text-sm text-grey-500 mb-1">Generate an AI-powered appeal strategy</p>
@@ -201,14 +256,14 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
             </p>
             <button
               type="button"
-              onClick={() => strategyMutation.mutate()}
+              onClick={handleGenerateStrategy}
               className="inline-flex items-center gap-2 px-4 py-2 bg-grey-900 text-white text-sm font-medium rounded-lg hover:bg-grey-800 transition-colors"
             >
               <Zap className="w-4 h-4" />
               Generate Appeal Strategy
             </button>
           </div>
-        ) : strategyMutation.isPending ? (
+        ) : isStrategyLoading ? (
           <div className="flex items-center gap-3 px-4 py-6 justify-center">
             <svg className="w-5 h-5 text-grey-400 animate-spin shrink-0" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-20" />
@@ -230,7 +285,7 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
             </p>
             <button
               type="button"
-              onClick={() => strategyMutation.mutate()}
+              onClick={handleGenerateStrategy}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-grey-900 hover:bg-grey-800 rounded-lg transition-colors"
             >
               <RotateCcw className="w-3 h-3" />
@@ -239,17 +294,9 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
           </div>
         ) : appealStrategy ? (
           <div className="space-y-4">
-            {/* Success probability + appeal type badges */}
+            {/* Appeal type + denial classification badges */}
             <div className="flex items-center gap-3 flex-wrap">
-              <span className={cn(
-                'text-xs font-medium px-2.5 py-1 rounded-lg',
-                successProbPct >= 70 ? 'bg-grey-900 text-white' :
-                successProbPct >= 40 ? 'bg-grey-200 text-grey-700' :
-                'bg-grey-100 text-grey-500'
-              )}>
-                {successProbPct}% success probability
-              </span>
-              <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-grey-100 text-grey-600">
+              <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-grey-900 text-white">
                 {appealTypeLabel(appealStrategy.recommended_appeal_type)}
               </span>
               <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-grey-100 text-grey-500">
@@ -408,7 +455,7 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
         expanded={expandedSection === 'letter'}
         onToggle={() => setExpandedSection(expandedSection === 'letter' ? null : 'letter')}
       >
-        {!appealLetter && !letterMutation.isPending && !letterMutation.isError ? (
+        {!appealLetter && !isLetterLoading && !letterMutation.isError ? (
           <div className="text-center py-6">
             <FileText className="w-8 h-8 text-grey-200 mx-auto mb-3" />
             <p className="text-sm text-grey-500 mb-1">Generate a draft appeal letter</p>
@@ -419,8 +466,8 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
             </p>
             <button
               type="button"
-              onClick={() => letterMutation.mutate()}
-              disabled={letterMutation.isPending}
+              onClick={handleDraftLetter}
+              disabled={isLetterLoading}
               className={cn(
                 'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors',
                 'bg-grey-900 text-white hover:bg-grey-800'
@@ -430,7 +477,7 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
               Draft Appeal Letter
             </button>
           </div>
-        ) : letterMutation.isPending ? (
+        ) : isLetterLoading ? (
           <div className="flex items-center gap-3 px-4 py-6 justify-center">
             <svg className="w-5 h-5 text-grey-400 animate-spin shrink-0" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-20" />
@@ -450,7 +497,7 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
             </p>
             <button
               type="button"
-              onClick={() => letterMutation.mutate()}
+              onClick={handleDraftLetter}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-grey-900 hover:bg-grey-800 rounded-lg transition-colors"
             >
               <RotateCcw className="w-3 h-3" />
@@ -458,7 +505,12 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <motion.div
+            initial={{ opacity: 0, clipPath: 'inset(0 0 100% 0)' }}
+            animate={{ opacity: 1, clipPath: 'inset(0 0 0% 0)' }}
+            transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-3"
+          >
             {/* Toolbar */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -500,10 +552,8 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
                 className="w-full min-h-[320px] p-4 text-xs leading-relaxed font-mono bg-grey-50 border border-grey-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-grey-900/20 resize-y text-grey-800"
               />
             ) : (
-              <div className="p-4 bg-grey-50 border border-grey-100 rounded-xl max-h-[400px] overflow-y-auto">
-                <pre className="text-xs leading-relaxed font-mono text-grey-800 whitespace-pre-wrap">
-                  {appealLetter}
-                </pre>
+              <div className="p-4 bg-grey-50 border border-grey-100 rounded-xl max-h-[400px] overflow-y-auto prose prose-sm prose-grey max-w-none prose-headings:text-grey-900 prose-headings:font-semibold prose-p:text-grey-700 prose-p:leading-relaxed prose-li:text-grey-700 prose-strong:text-grey-900 prose-a:text-grey-900 prose-hr:border-grey-200 text-xs">
+                <Markdown>{appealLetter}</Markdown>
               </div>
             )}
 
@@ -512,14 +562,14 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
               <button
                 type="button"
                 onClick={() => letterMutation.mutate()}
-                disabled={letterMutation.isPending}
+                disabled={isLetterLoading}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border border-grey-200 bg-white text-grey-500 hover:bg-grey-50 transition-colors disabled:opacity-50"
               >
                 <RotateCcw className="w-3 h-3" />
                 Regenerate
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
       </CollapsibleSection>
 

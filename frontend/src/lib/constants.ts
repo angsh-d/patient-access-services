@@ -147,6 +147,9 @@ export const QUERY_KEYS = {
   analyticsLLMCosts: ['analytics', 'llm-costs'] as const,
   analyticsPredictionAccuracy: ['analytics', 'prediction-accuracy'] as const,
   patientValidation: (patientId: string) => ['patient-validation', patientId] as const,
+  appealPrediction: (caseId: string) => ['appeal-prediction', caseId] as const,
+  appealStrategy: (caseId: string) => ['appeal-strategy', caseId] as const,
+  appealLetter: (caseId: string) => ['appeal-letter', caseId] as const,
 } as const
 
 // Re-export cache times from centralized query cache config

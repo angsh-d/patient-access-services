@@ -39,12 +39,17 @@ export function TopNavbar() {
         />
 
         <span
+          onClick={() => navigate('/')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter') navigate('/') }}
           style={{
             fontSize: '14px',
             fontWeight: 500,
             color: '#1d1d1f',
             letterSpacing: '-0.01em',
             whiteSpace: 'nowrap',
+            cursor: 'pointer',
           }}
         >
           Prior Auth Agent

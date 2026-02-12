@@ -320,29 +320,93 @@ class RecoveryAgent:
             policy_text=policy_text
         )
 
-        # Parse into AppealStrategy
+        # Parse nested LLM response into AppealStrategy
+        # LLM returns: {denial_analysis, appeal_strategy, documentation_needed,
+        #               timeline_considerations, success_probability, alternative_pathways}
+        denial_analysis = result.get("denial_analysis", {})
+        strategy = result.get("appeal_strategy", {})
+        success_prob = result.get("success_probability", {})
+        key_arguments = strategy.get("key_arguments", [])
+        timeline = result.get("timeline_considerations", {})
+
+        # Extract primary argument from first key_argument, rest are supporting
+        primary_argument = key_arguments[0].get("argument", "") if key_arguments else ""
+        supporting_args = [a.get("argument", "") for a in key_arguments[1:]] if len(key_arguments) > 1 else []
+
+        # Collect all evidence and policy references across arguments
+        evidence = []
+        policy_refs = []
+        for arg in key_arguments:
+            for ev in arg.get("supporting_evidence", []):
+                if isinstance(ev, str):
+                    evidence.append({"description": ev})
+                elif isinstance(ev, dict):
+                    evidence.append(ev)
+            ref = arg.get("policy_reference", "")
+            if ref:
+                policy_refs.append(ref)
+
+        # Map primary_approach to appeal type
+        approach_map = {
+            "peer_to_peer": "peer_to_peer",
+            "clinical_rationale": "standard",
+            "medical_necessity": "standard",
+            "policy_interpretation": "standard",
+            "formulary_exception": "standard",
+        }
+        approach = strategy.get("primary_approach", "standard")
+        appeal_type = approach_map.get(approach, "standard")
+
+        # Map denial analysis to classification
+        issues = denial_analysis.get("underlying_issues", [])
+        addressable = denial_analysis.get("addressable_gaps", [])
+        classification = "other"
+        stated = denial_analysis.get("stated_reason", "").lower()
+        if "step therapy" in stated or "step therapy" in " ".join(issues).lower():
+            classification = "step_therapy"
+        elif "documentation" in stated or "documentation" in " ".join(issues).lower():
+            classification = "documentation_incomplete"
+        elif "medical necessity" in stated:
+            classification = "medical_necessity"
+        elif "formulary" in stated or "not covered" in stated:
+            classification = "not_covered"
+
+        # Build P2P talking points if P2P recommended
+        p2p_points = None
+        if strategy.get("peer_to_peer_recommended"):
+            p2p_points = [a.get("argument", "") for a in key_arguments if a.get("argument")]
+
+        # Alternative pathways as fallback strategies
+        alt_pathways = result.get("alternative_pathways", [])
+        fallbacks = [p.get("pathway", "") for p in alt_pathways if isinstance(p, dict)]
+
         return AppealStrategy(
             case_id=case_state.get("case_id", ""),
             payer_name=payer_name,
             denial_reason_code=denial_response.get("denial_reason_code") or denial_response.get("denial_code", ""),
             denial_reason_text=denial_response.get("denial_reason", ""),
-            denial_classification=result.get("denial_classification", "other"),
-            primary_clinical_argument=result.get("primary_argument", ""),
-            supporting_arguments=result.get("supporting_arguments", []),
-            evidence_to_cite=result.get("evidence_to_cite", []),
-            policy_sections_to_reference=result.get("policy_sections", []),
-            medical_literature_citations=result.get("citations", []),
-            recommended_appeal_type=result.get("appeal_type", "standard"),
-            urgency_justification=result.get("urgency_justification"),
-            peer_to_peer_talking_points=result.get("p2p_points"),
+            denial_classification=classification,
+            primary_clinical_argument=primary_argument,
+            supporting_arguments=supporting_args,
+            evidence_to_cite=evidence,
+            policy_sections_to_reference=policy_refs,
+            medical_literature_citations=[],
+            recommended_appeal_type=appeal_type,
+            urgency_justification=timeline.get("urgency_level"),
+            peer_to_peer_talking_points=p2p_points,
             success_probability=(
-                result.get("success_probability", {}).get("estimated_success_rate", 0.5)
-                if isinstance(result.get("success_probability"), dict)
-                else result.get("success_probability", 0.5)
+                success_prob.get("estimated_success_rate", 0.5)
+                if isinstance(success_prob, dict)
+                else success_prob if isinstance(success_prob, (int, float)) else 0.5
             ),
-            success_probability_reasoning=result.get("success_reasoning", ""),
-            key_risks=result.get("risks", []),
-            fallback_strategies=result.get("fallbacks", [])
+            success_probability_reasoning=" ".join(
+                success_prob.get("factors_favoring_success", [])
+            ) if isinstance(success_prob, dict) else "",
+            key_risks=(
+                success_prob.get("factors_against_success", [])
+                if isinstance(success_prob, dict) else []
+            ),
+            fallback_strategies=fallbacks,
         )
 
 

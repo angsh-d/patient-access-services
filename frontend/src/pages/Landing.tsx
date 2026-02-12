@@ -52,6 +52,9 @@ function NavBar() {
           <a href="#intelligence" className="text-xs text-grey-500 hover:text-grey-900 transition-colors duration-300" style={{ letterSpacing: '-0.003em' }}>
             Intelligence
           </a>
+          <a href="#agents" className="text-xs text-grey-500 hover:text-grey-900 transition-colors duration-300" style={{ letterSpacing: '-0.003em' }}>
+            Agents
+          </a>
         </div>
 
         <button
@@ -562,6 +565,209 @@ function IntelligenceSection() {
   )
 }
 
+function AgentsSection() {
+  const agents = [
+    { number: '01', name: 'Intake Agent', role: 'Validates patient data, verifies eligibility via NPI/ICD-10/CMS APIs' },
+    { number: '02', name: 'Policy Analyzer', role: 'Reads payer policies, assesses coverage criteria with iterative refinement' },
+    { number: '03', name: 'Strategy Generator', role: 'Generates and scores access strategies with deterministic scoring' },
+    { number: '04', name: 'Action Coordinator', role: 'Executes submissions, manages payer gateways, monitors responses' },
+    { number: '05', name: 'Recovery Agent', role: 'Classifies denials, generates appeal strategies, coordinates recovery' },
+    { number: '06', name: 'Strategic Intelligence', role: 'Analyzes historical patterns, cohort matching, predictive insights' },
+  ]
+
+  const flowSteps = [
+    { label: 'INTAKE', conditional: false },
+    { label: 'POLICY ANALYSIS', conditional: false },
+    { label: 'HUMAN DECISION', conditional: true },
+    { label: 'STRATEGY', conditional: false },
+    { label: 'ACTION', conditional: false },
+    { label: 'MONITORING', conditional: false },
+    { label: 'RECOVERY', conditional: true },
+    { label: 'COMPLETED', conditional: false },
+  ]
+
+  const llmRouting = [
+    { model: 'Claude', tasks: 'Policy reasoning, appeal strategy, clinical Q&A', color: '#d4a574' },
+    { model: 'Gemini', tasks: 'Drafting, extraction, summaries, embeddings', color: '#7eb8da' },
+    { model: 'Azure OpenAI', tasks: 'Fallback for non-policy tasks', color: '#a8c5a0' },
+  ]
+
+  return (
+    <section id="agents" className="py-28 px-6" style={{ background: '#fbfbfd' }}>
+      <div className="max-w-[980px] mx-auto">
+        {/* Header */}
+        <FadeInSection className="text-center mb-20">
+          <p className="text-sm font-medium text-accent mb-3" style={{ letterSpacing: '-0.003em' }}>
+            Multi-Agent Architecture
+          </p>
+          <h2
+            className="text-grey-900 font-bold mb-5"
+            style={{
+              fontSize: 'clamp(2rem, 4vw, 3rem)',
+              lineHeight: '1.1',
+              letterSpacing: '-0.035em',
+            }}
+          >
+            Six agents.{' '}
+            <br className="hidden sm:block" />
+            One orchestrator.
+          </h2>
+          <p className="max-w-[520px] mx-auto" style={{ color: '#86868b', fontSize: '1.0625rem', lineHeight: '1.55', letterSpacing: '-0.012em' }}>
+            Specialized agents coordinate through a LangGraph state machine — each responsible for a distinct phase of the access journey.
+          </p>
+        </FadeInSection>
+
+        {/* Agent Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-20">
+          {agents.map((agent, i) => (
+            <FadeInSection key={agent.number} delay={i * 0.08}>
+              <div
+                className="group p-7 rounded-2xl transition-all duration-500 h-full"
+                style={{
+                  background: '#ffffff',
+                  border: '0.5px solid rgba(0, 0, 0, 0.06)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06)'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                <span
+                  className="text-grey-300 font-bold transition-colors duration-500 group-hover:text-grey-900 block mb-3"
+                  style={{ fontSize: '0.8125rem', letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums' }}
+                >
+                  {agent.number}
+                </span>
+                <h3
+                  className="text-grey-900 font-semibold mb-1.5"
+                  style={{ fontSize: '1.0625rem', letterSpacing: '-0.018em' }}
+                >
+                  {agent.name}
+                </h3>
+                <p className="text-grey-500 leading-relaxed" style={{ fontSize: '0.875rem', letterSpacing: '-0.006em' }}>
+                  {agent.role}
+                </p>
+              </div>
+            </FadeInSection>
+          ))}
+        </div>
+
+        {/* Orchestrator Flow */}
+        <FadeInSection className="mb-20">
+          <div className="text-center mb-8">
+            <h3
+              className="text-grey-900 font-semibold mb-2"
+              style={{ fontSize: '1.1875rem', letterSpacing: '-0.02em' }}
+            >
+              Orchestrator Flow
+            </h3>
+            <p style={{ color: '#86868b', fontSize: '0.875rem', letterSpacing: '-0.006em' }}>
+              LangGraph state machine with human-in-the-loop checkpoints
+            </p>
+          </div>
+          <div className="overflow-x-auto pb-4">
+            <div className="flex items-center justify-center gap-0 min-w-[720px] px-4">
+              {flowSteps.map((step, i) => (
+                <div key={step.label} className="flex items-center">
+                  <div
+                    className="flex items-center justify-center px-3 py-2 rounded-lg whitespace-nowrap"
+                    style={{
+                      background: step.conditional ? 'transparent' : '#ffffff',
+                      border: step.conditional ? '1.5px dashed rgba(0, 0, 0, 0.15)' : '0.5px solid rgba(0, 0, 0, 0.08)',
+                      boxShadow: step.conditional ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.04)',
+                    }}
+                  >
+                    <span
+                      className="font-medium"
+                      style={{
+                        fontSize: '0.6875rem',
+                        letterSpacing: '0.01em',
+                        color: step.conditional ? '#86868b' : '#1c1c1e',
+                      }}
+                    >
+                      {step.label}
+                    </span>
+                  </div>
+                  {i < flowSteps.length - 1 && (
+                    <div className="flex items-center mx-1">
+                      <div style={{ width: '16px', height: '1px', background: 'rgba(0, 0, 0, 0.15)' }} />
+                      <div
+                        style={{
+                          width: 0,
+                          height: 0,
+                          borderTop: '3px solid transparent',
+                          borderBottom: '3px solid transparent',
+                          borderLeft: '4px solid rgba(0, 0, 0, 0.15)',
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </FadeInSection>
+
+        {/* LLM Routing */}
+        <FadeInSection>
+          <div className="text-center mb-8">
+            <h3
+              className="text-grey-900 font-semibold mb-2"
+              style={{ fontSize: '1.1875rem', letterSpacing: '-0.02em' }}
+            >
+              LLM Routing
+            </h3>
+            <p style={{ color: '#86868b', fontSize: '0.875rem', letterSpacing: '-0.006em' }}>
+              Task-based routing to the right model for each job
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {llmRouting.map((item, i) => (
+              <FadeInSection key={item.model} delay={i * 0.1}>
+                <div
+                  className="p-5 rounded-2xl text-center transition-all duration-500"
+                  style={{
+                    background: '#ffffff',
+                    border: '0.5px solid rgba(0, 0, 0, 0.06)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06)'
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = 'none'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                  }}
+                >
+                  <div
+                    className="w-8 h-8 rounded-lg mx-auto mb-3 flex items-center justify-center"
+                    style={{ background: `${item.color}15`, border: `0.5px solid ${item.color}25` }}
+                  >
+                    <div className="w-2 h-2 rounded-full" style={{ background: item.color }} />
+                  </div>
+                  <h4
+                    className="text-grey-900 font-semibold mb-1"
+                    style={{ fontSize: '0.9375rem', letterSpacing: '-0.012em' }}
+                  >
+                    {item.model}
+                  </h4>
+                  <p style={{ color: '#86868b', fontSize: '0.8125rem', letterSpacing: '-0.006em', lineHeight: '1.5' }}>
+                    {item.tasks}
+                  </p>
+                </div>
+              </FadeInSection>
+            ))}
+          </div>
+        </FadeInSection>
+      </div>
+    </section>
+  )
+}
+
 function DesignedForSection() {
   const principles = [
     {
@@ -683,6 +889,7 @@ export default function Landing() {
       <PlatformSection />
       <WorkflowSection />
       <IntelligenceSection />
+      <AgentsSection />
       <DesignedForSection />
       <CTASection />
       <Footer />

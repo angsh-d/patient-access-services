@@ -25,6 +25,7 @@ import {
   AlertCircle,
   RotateCcw,
 } from 'lucide-react'
+import Markdown from 'react-markdown'
 import { cn } from '@/lib/utils'
 import { casesApi } from '@/services/api'
 
@@ -164,7 +165,7 @@ export function PolicyAssistantPanel({
     <div
       className={cn(
         'flex flex-col bg-white rounded-2xl border border-grey-200 overflow-hidden',
-        'h-[calc(100vh-220px)] sticky top-[88px]',
+        !className && 'h-[calc(100vh-220px)] sticky top-[88px]',
         className
       )}
       role="complementary"
@@ -270,7 +271,13 @@ export function PolicyAssistantPanel({
                     )}
 
                     {/* Message content */}
-                    <p className="text-xs leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                    {msg.role === 'assistant' && !msg.error ? (
+                      <div className="prose prose-sm prose-grey max-w-none prose-headings:text-grey-800 prose-headings:font-semibold prose-p:text-grey-700 prose-p:leading-relaxed prose-p:my-1 prose-li:text-grey-700 prose-li:my-0 prose-ul:my-1 prose-ol:my-1 prose-strong:text-grey-900 prose-hr:border-grey-200 text-xs [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                        <Markdown>{msg.content}</Markdown>
+                      </div>
+                    ) : (
+                      <p className="text-xs leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                    )}
                   </div>
                 </motion.div>
               ))}

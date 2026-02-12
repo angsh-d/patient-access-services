@@ -173,7 +173,15 @@ class ScenarioManager:
             gateway: Gateway instance
         """
         self._payer_gateways[payer_name] = gateway
-        logger.debug("Gateway registered", payer=payer_name)
+        # Apply current scenario to newly registered gateway
+        payer_key = payer_name.lower()
+        if payer_key == "cigna":
+            gateway.set_scenario(self._get_cigna_scenario_key(self._current_scenario))
+        elif payer_key == "uhc":
+            gateway.set_scenario(self._get_uhc_scenario_key(self._current_scenario))
+        elif hasattr(gateway, 'set_scenario'):
+            gateway.set_scenario(self._current_scenario.value)
+        logger.debug("Gateway registered", payer=payer_name, scenario=self._current_scenario.value)
 
     def list_scenarios(self) -> List[Dict[str, Any]]:
         """

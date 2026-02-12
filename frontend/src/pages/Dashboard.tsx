@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Sparkles,
   Activity,
+  ShieldAlert,
 } from 'lucide-react'
 import {
   CaseQueueCard,
@@ -38,7 +39,7 @@ function toCaseQueueItem(caseState: CaseState): CaseQueueItem {
     strategy_selection: 'Strategy ready',
     action_coordination: 'Executing strategy',
     monitoring: 'Monitoring payers',
-    recovery: 'Recovery in progress',
+    recovery: 'Appeal needed — Denied',
     completed: 'Completed',
     failed: 'Failed - needs attention',
   }
@@ -73,12 +74,15 @@ function categorizeCases(cases: CaseState[]) {
   const needsAttention: CaseQueueItem[] = []
   const inProgress: CaseQueueItem[] = []
   const completed: CaseQueueItem[] = []
+  const appeals: CaseQueueItem[] = []
 
   cases.forEach((caseState) => {
     const item = toCaseQueueItem(caseState)
     const priority = getCasePriority(caseState.stage, item.payerStatus)
     if (caseState.stage === 'completed') {
       completed.push(item)
+    } else if (caseState.stage === 'recovery' || item.payerStatus === 'denied') {
+      appeals.push({ ...item, priority: 'high' })
     } else if (priority === 'high') {
       needsAttention.push({ ...item, priority: 'high' })
     } else {
@@ -86,7 +90,7 @@ function categorizeCases(cases: CaseState[]) {
     }
   })
 
-  return { needsAttention, inProgress, completed }
+  return { needsAttention, inProgress, completed, appeals }
 }
 
 interface APIActivityItem {
@@ -160,7 +164,7 @@ export function Dashboard() {
   })
 
   const rawCases = data?.cases ?? []
-  const { needsAttention, inProgress, completed } = useMemo(
+  const { needsAttention, inProgress, completed, appeals } = useMemo(
     () => categorizeCases(rawCases),
     [rawCases]
   )
@@ -514,6 +518,48 @@ export function Dashboard() {
                 <span style={{ fontSize: '0.9375rem', color: '#86868b', letterSpacing: '-0.008em' }}>
                   No cases need your attention right now.
                 </span>
+              </motion.div>
+            )}
+
+            {/* ── Appeals ── */}
+            {appeals.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.37, ease }}
+                style={{ marginBottom: '48px' }}
+              >
+                <div className="flex items-center gap-2.5 mb-3">
+                  <ShieldAlert className="w-4 h-4" style={{ color: '#1d1d1f' }} strokeWidth={2} />
+                  <span style={{ fontSize: '1.3125rem', fontWeight: 700, color: '#1d1d1f', letterSpacing: '-0.025em' }}>
+                    Appeals
+                  </span>
+                  <span style={{
+                    fontSize: '0.6875rem',
+                    fontWeight: 600,
+                    color: '#86868b',
+                    marginLeft: '2px',
+                    background: 'rgba(0, 0, 0, 0.04)',
+                    padding: '2px 8px',
+                    borderRadius: '980px',
+                  }}>
+                    {appeals.length}
+                  </span>
+                </div>
+                <div className="space-y-1.5" style={{ marginTop: '4px' }}>
+                  {appeals.slice(0, 5).map((item) => (
+                    <CaseQueueCard
+                      key={item.caseId}
+                      item={item}
+                      onProcess={(id) => navigate(`/cases/${id}`)}
+                      onDelete={handleDelete}
+                      variant="compact"
+                    />
+                  ))}
+                </div>
+                {appeals.length > 5 && (
+                  <LinkButton onClick={() => navigate('/cases')} label={`View all ${appeals.length} appeals`} />
+                )}
               </motion.div>
             )}
 

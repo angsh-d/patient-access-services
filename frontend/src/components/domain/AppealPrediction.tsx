@@ -12,7 +12,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   TrendingUp,
   TrendingDown,
@@ -26,7 +26,7 @@ import {
   Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ENDPOINTS } from '@/lib/constants'
+import { ENDPOINTS, QUERY_KEYS } from '@/lib/constants'
 
 // ── Types ──
 
@@ -101,13 +101,6 @@ function SuccessGauge({ rate, confidence }: { rate: number; confidence: number }
     return 'text-grey-300'
   }
 
-  const getGaugeLabel = (r: number) => {
-    if (r >= 0.70) return 'Favorable'
-    if (r >= 0.50) return 'Moderate'
-    if (r >= 0.30) return 'Challenging'
-    return 'Difficult'
-  }
-
   return (
     <div className="flex flex-col items-center">
       <div className="relative w-[200px] h-[120px]">
@@ -157,7 +150,7 @@ function SuccessGauge({ rate, confidence }: { rate: number; confidence: number }
           'text-sm font-semibold',
           percentage >= 65 ? 'text-grey-900' : percentage >= 40 ? 'text-grey-600' : 'text-grey-400'
         )}>
-          {getGaugeLabel(rate)}
+          Appeal Success
         </span>
         <div className="flex items-center justify-center gap-1.5 mt-0.5">
           <div className="w-1.5 h-1.5 rounded-full bg-grey-300" />
@@ -171,13 +164,43 @@ function SuccessGauge({ rate, confidence }: { rate: number; confidence: number }
 // ── Main Component ──
 
 export function AppealPrediction({ caseId, className }: AppealPredictionProps) {
-  const [expandedSection, setExpandedSection] = useState<string | null>('factors')
+  const queryClient = useQueryClient()
+  const [expandedSection, setExpandedSection] = useState<string | null>(null)
+  const [prediction, setPrediction] = useState<AppealPredictionData | null>(null)
+  const [isRevealing, setIsRevealing] = useState(false)
+
+  const cacheKey = `appeal-prediction-${caseId}`
 
   const predictionMutation = useMutation({
     mutationFn: () => fetchAppealPrediction(caseId),
+    onSuccess: (data) => {
+      setPrediction(data)
+      queryClient.setQueryData(QUERY_KEYS.appealPrediction(caseId), data)
+      try { localStorage.setItem(cacheKey, JSON.stringify(data)) } catch { /* quota */ }
+    },
   })
 
-  const prediction = predictionMutation.data
+  const handleRunPrediction = () => {
+    // Check query cache first, then localStorage as synchronous fallback
+    let cached = queryClient.getQueryData<AppealPredictionData>(QUERY_KEYS.appealPrediction(caseId))
+    if (!cached) {
+      try {
+        const stored = localStorage.getItem(cacheKey)
+        if (stored) cached = JSON.parse(stored) as AppealPredictionData
+      } catch { /* ignore */ }
+    }
+    if (cached) {
+      setIsRevealing(true)
+      setTimeout(() => {
+        setPrediction(cached!)
+        setIsRevealing(false)
+      }, 5500)
+    } else {
+      predictionMutation.mutate()
+    }
+  }
+
+  const isLoading = isRevealing || predictionMutation.isPending
 
   const impactBadgeClass = (impact: string) => {
     switch (impact) {
@@ -214,7 +237,7 @@ export function AppealPrediction({ caseId, className }: AppealPredictionProps) {
 
       {/* Prediction trigger / results */}
       <div className="bg-white rounded-2xl border border-grey-200 overflow-hidden">
-        {!prediction && !predictionMutation.isPending && !predictionMutation.isError ? (
+        {!prediction && !isLoading && !predictionMutation.isError ? (
           <div className="text-center py-8 px-4">
             <Activity className="w-10 h-10 text-grey-200 mx-auto mb-3" />
             <p className="text-sm text-grey-500 mb-1">Predict Appeal Success</p>
@@ -223,14 +246,14 @@ export function AppealPrediction({ caseId, className }: AppealPredictionProps) {
             </p>
             <button
               type="button"
-              onClick={() => predictionMutation.mutate()}
+              onClick={handleRunPrediction}
               className="inline-flex items-center gap-2 px-4 py-2 bg-grey-900 text-white text-sm font-medium rounded-lg hover:bg-grey-800 transition-colors"
             >
               <Zap className="w-4 h-4" />
               Run Prediction
             </button>
           </div>
-        ) : predictionMutation.isPending ? (
+        ) : isLoading ? (
           <div className="flex items-center gap-3 px-6 py-10 justify-center">
             <svg className="w-5 h-5 text-grey-400 animate-spin shrink-0" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-20" />
@@ -252,7 +275,7 @@ export function AppealPrediction({ caseId, className }: AppealPredictionProps) {
             </p>
             <button
               type="button"
-              onClick={() => predictionMutation.mutate()}
+              onClick={handleRunPrediction}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-grey-900 hover:bg-grey-800 rounded-lg transition-colors"
             >
               <RotateCcw className="w-3 h-3" />
@@ -473,7 +496,7 @@ export function AppealPrediction({ caseId, className }: AppealPredictionProps) {
               <button
                 type="button"
                 onClick={() => predictionMutation.mutate()}
-                disabled={predictionMutation.isPending}
+                disabled={isLoading}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border border-grey-200 bg-white text-grey-500 hover:bg-grey-50 transition-colors disabled:opacity-50"
               >
                 <RotateCcw className="w-3 h-3" />

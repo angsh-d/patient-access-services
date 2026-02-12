@@ -191,16 +191,58 @@ async def generate_case_strategies(
     """
     Generate and score strategies for a case.
 
+    For recovery-stage cases, routes to RecoveryAgent.generate_appeal_strategy()
+    which uses Claude for clinical appeal reasoning. For all other stages, uses
+    the normal StrategyGeneratorAgent.
+
     Args:
         case_id: Case identifier
         case_service: Injected case service
 
     Returns:
-        Strategies and scores
+        Strategies and scores (or appeal_strategy for recovery cases)
     """
     try:
+        case_data = await case_service.get_case(case_id)
+        if not case_data:
+            raise HTTPException(status_code=404, detail=f"Case not found: {case_id}")
+
+        case_state = case_data.get("case", case_data)
+
+        if case_state.get("stage") == "recovery":
+            from backend.agents.recovery_agent import get_recovery_agent
+            recovery_agent = get_recovery_agent()
+
+            payer_states = case_state.get("payer_states", {})
+            denied_payer = next(
+                (p for p, s in payer_states.items() if s.get("status") == "denied"),
+                None,
+            )
+            if not denied_payer:
+                raise HTTPException(
+                    status_code=400,
+                    detail="No denied payer found for recovery-stage case",
+                )
+            denial_response = payer_states.get(denied_payer, {})
+
+            appeal_case_state = {
+                "case_id": case_id,
+                "patient_data": case_state.get("patient", {}),
+                "medication_data": {"medication_request": case_state.get("medication", {})},
+            }
+
+            appeal_strategy = await recovery_agent.generate_appeal_strategy(
+                denial_response=denial_response,
+                case_state=appeal_case_state,
+                payer_name=denied_payer,
+            )
+
+            return {"appeal_strategy": appeal_strategy.model_dump()}
+
         result = await case_service.generate_strategies(case_id)
         return result
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
@@ -1089,9 +1131,15 @@ async def predict_appeal(
         raise HTTPException(status_code=500, detail=f"Appeal prediction failed: {str(e)}")
 
 
+class DraftAppealLetterRequest(BaseModel):
+    """Optional request body for draft-appeal-letter with pre-generated strategy."""
+    appeal_strategy: Optional[dict] = Field(default=None, description="Pre-generated appeal strategy from RecoveryAgent")
+
+
 @router.post("/{case_id}/draft-appeal-letter")
 async def draft_appeal_letter(
     case_id: str,
+    body: Optional[DraftAppealLetterRequest] = None,
     case_service: CaseService = Depends(get_case_service),
 ):
     """
@@ -1104,6 +1152,7 @@ async def draft_appeal_letter(
 
     Args:
         case_id: Case identifier
+        body: Optional pre-generated appeal strategy data
 
     Returns:
         {"letter": "...", "case_id": "..."}
@@ -1121,7 +1170,6 @@ async def draft_appeal_letter(
         medication = case_state.get("medication", {})
         coverage_assessments = case_state.get("coverage_assessments", {})
         payer_states = case_state.get("payer_states", {})
-        documentation_gaps = case_state.get("documentation_gaps", [])
 
         # Build denial details from payer states
         denial_parts = []
@@ -1165,13 +1213,56 @@ async def draft_appeal_letter(
                     status_str = "Met" if is_met else "Not Met" if is_met is False else "Pending"
                     clinical_evidence_lines.append(f"[{payer_name}] {name}: {status_str} — {reasoning}")
 
-        # Build appeal strategy summary (if strategy generation has been run)
-        strategies = case_state.get("available_strategies", [])
+        # Build appeal strategy summary from frontend-provided strategy or case state
         appeal_strategy_summary = ""
-        if strategies:
-            for s in strategies:
-                if isinstance(s, dict):
-                    appeal_strategy_summary += f"- {s.get('name', '')}: {s.get('description', '')}\n"
+        strategy_data = body.appeal_strategy if body and body.appeal_strategy else None
+
+        if strategy_data:
+            # Use the pre-generated appeal strategy from RecoveryAgent
+            parts = []
+            primary = strategy_data.get("primary_clinical_argument", "")
+            if primary:
+                parts.append(f"Primary Clinical Argument:\n{primary}")
+
+            supporting = strategy_data.get("supporting_arguments", [])
+            if supporting:
+                args_text = "\n".join(f"  {i+1}. {a}" for i, a in enumerate(supporting))
+                parts.append(f"Supporting Arguments:\n{args_text}")
+
+            evidence = strategy_data.get("evidence_to_cite", [])
+            if evidence:
+                ev_lines = []
+                for ev in evidence:
+                    if isinstance(ev, dict):
+                        ev_lines.append(f"  - {ev.get('description', '') or ev.get('title', '') or str(ev)}")
+                    elif isinstance(ev, str):
+                        ev_lines.append(f"  - {ev}")
+                parts.append(f"Evidence to Cite:\n" + "\n".join(ev_lines))
+
+            policy_refs = strategy_data.get("policy_sections_to_reference", [])
+            if policy_refs:
+                parts.append(f"Policy Sections to Reference:\n" + "\n".join(f"  - {r}" for r in policy_refs))
+
+            appeal_type = strategy_data.get("recommended_appeal_type", "")
+            if appeal_type:
+                parts.append(f"Recommended Appeal Type: {appeal_type}")
+
+            classification = strategy_data.get("denial_classification", "")
+            if classification:
+                parts.append(f"Denial Classification: {classification.replace('_', ' ')}")
+
+            fallbacks = strategy_data.get("fallback_strategies", [])
+            if fallbacks:
+                parts.append(f"Fallback Strategies:\n" + "\n".join(f"  - {f}" for f in fallbacks))
+
+            appeal_strategy_summary = "\n\n".join(parts)
+        else:
+            # Fall back to case state strategies
+            strategies = case_state.get("available_strategies", [])
+            if strategies:
+                for s in strategies:
+                    if isinstance(s, dict):
+                        appeal_strategy_summary += f"- {s.get('name', '')}: {s.get('description', '')}\n"
 
         # Build appeal context dict for prompt substitution
         appeal_context = {

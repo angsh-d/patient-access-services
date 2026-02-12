@@ -21,6 +21,8 @@ import {
   Eye,
   XCircle,
   AlertTriangle,
+  Sparkles,
+  X,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import {
@@ -76,6 +78,7 @@ export function CaseDetail() {
   const [aiRecommendation, setAiRecommendation] = useState<Record<string, any> | null>(null)
   const [decisionReason, setDecisionReason] = useState('')
   const [showAuditTrail, setShowAuditTrail] = useState(false)
+  const [showAssistant, setShowAssistant] = useState(false)
   const [viewingStep, setViewingStep] = useState<number | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [postDecisionRunning, setPostDecisionRunning] = useState(false)
@@ -123,9 +126,12 @@ export function CaseDetail() {
   const isProcessing = runStage.isPending || approveStage.isPending || confirmDecision.isPending || sseStream.status === 'streaming' || sseStream.status === 'connecting' || postDecisionRunning || artificialProcessing
 
   // Backward navigation: compute which step to display
+  const isRecovery = caseState?.stage === 'recovery'
   const displayStep = isCompleted
     ? (viewingStep ?? 0)  // Default to Review tab for completed cases
-    : (viewingStep ?? currentWizardStep)
+    : isRecovery
+      ? (viewingStep ?? 6)  // Default to Appeal step for recovery cases
+      : (viewingStep ?? currentWizardStep)
   const isStepReadOnly = isCompleted || (viewingStep !== null && viewingStep < currentWizardStep)
 
   // Restore analysis from cache when navigating between steps
@@ -710,15 +716,6 @@ export function CaseDetail() {
               </AnimatePresence>
             </div>
 
-            {/* AI Assistant sidebar — visible on all wizard steps */}
-            <div className="hidden lg:block w-[340px] shrink-0">
-              <SectionErrorBoundary fallbackTitle="Case assistant unavailable">
-                <PolicyAssistantPanel
-                  caseId={caseState.case_id}
-                  {...stepAssistantProps(displayStep)}
-                />
-              </SectionErrorBoundary>
-            </div>
           </div>
         ) : (
           <div className="space-y-6" aria-live="polite">
@@ -729,6 +726,52 @@ export function CaseDetail() {
             />
           </div>
         )}
+
+        {/* Floating AI Assistant FAB + Panel */}
+        <AnimatePresence>
+          {showAssistant && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="fixed bottom-20 right-6 z-40 w-[360px] shadow-2xl rounded-2xl overflow-hidden border border-grey-200"
+              style={{ height: 'min(520px, calc(100vh - 160px))' }}
+            >
+              <div className="relative h-full flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => setShowAssistant(false)}
+                  className="absolute top-2.5 right-2.5 z-10 p-1 rounded-lg hover:bg-grey-100 transition-colors"
+                  aria-label="Close assistant"
+                >
+                  <X className="w-4 h-4 text-grey-400" />
+                </button>
+                <SectionErrorBoundary fallbackTitle="Case assistant unavailable">
+                  <PolicyAssistantPanel
+                    caseId={caseState.case_id}
+                    className="h-full"
+                    {...stepAssistantProps(displayStep)}
+                  />
+                </SectionErrorBoundary>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <motion.button
+          type="button"
+          onClick={() => setShowAssistant(!showAssistant)}
+          className="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-grey-900 text-white flex items-center justify-center shadow-lg hover:bg-grey-800 transition-colors"
+          whileTap={{ scale: 0.92 }}
+          aria-label={showAssistant ? 'Close assistant' : 'Open assistant'}
+        >
+          {showAssistant ? (
+            <X className="w-5 h-5" />
+          ) : (
+            <Sparkles className="w-5 h-5" />
+          )}
+        </motion.button>
 
         {/* Audit Trail Modal/Slide-out */}
         <AnimatePresence>

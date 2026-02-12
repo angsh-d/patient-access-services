@@ -38,16 +38,16 @@ interface CaseQueueCardProps {
 const priorityConfig = {
   high: {
     icon: AlertTriangle,
-    color: '#ff3b30',
-    bg: 'rgba(255, 59, 48, 0.03)',
-    border: 'rgba(255, 59, 48, 0.08)',
+    color: '#1d1d1f',
+    bg: 'rgba(0, 0, 0, 0.02)',
+    border: 'rgba(0, 0, 0, 0.08)',
     label: 'Urgent',
   },
   medium: {
     icon: Clock,
-    color: '#ff9500',
-    bg: 'rgba(255, 149, 0, 0.03)',
-    border: 'rgba(255, 149, 0, 0.08)',
+    color: '#6e6e73',
+    bg: 'rgba(0, 0, 0, 0.015)',
+    border: 'rgba(0, 0, 0, 0.06)',
     label: 'Pending',
   },
   low: {
@@ -122,8 +122,12 @@ export function CaseQueueCard({
           </div>
           {item.aiStatus && (
             <div className="flex items-center gap-1.5 mt-0.5">
-              <Brain className="w-3 h-3" style={{ color: '#aeaeb2' }} />
-              <span style={{ fontSize: '0.6875rem', color: '#aeaeb2', fontWeight: 500 }}>{item.aiStatus}</span>
+              {item.payerStatus === 'denied' ? (
+                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#1d1d1f' }} />
+              ) : (
+                <Brain className="w-3 h-3" style={{ color: '#aeaeb2' }} />
+              )}
+              <span style={{ fontSize: '0.6875rem', color: item.payerStatus === 'denied' ? '#6e6e73' : '#aeaeb2', fontWeight: 500 }}>{item.aiStatus}</span>
             </div>
           )}
         </div>

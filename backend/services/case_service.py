@@ -218,7 +218,7 @@ class CaseService:
                 "coverage_assessments": serialize_for_json(final_state.get("coverage_assessments", {})),
                 "documentation_gaps": serialize_for_json(final_state.get("documentation_gaps", [])),
                 "available_strategies": serialize_for_json(final_state.get("available_strategies", [])),
-                "selected_strategy_id": final_state.get("selected_strategy", {}).get("strategy_id"),
+                "selected_strategy_id": (final_state.get("selected_strategy") or {}).get("strategy_id"),
                 "strategy_rationale": final_state.get("strategy_rationale"),
                 "payer_states": serialize_for_json(final_state.get("payer_states", {})),
                 "completed_actions": serialize_for_json(final_state.get("completed_actions", [])),
@@ -231,8 +231,8 @@ class CaseService:
         await self.audit_logger.log_stage_change(
             case_id=case_id,
             from_stage=case_state.stage.value,
-            to_stage=final_state.get("stage", CaseStage.COMPLETED).value,
-            reason=final_state.get("final_outcome", "Processing complete")
+            to_stage=stage_value,
+            reason=final_state.get("final_outcome") or "Processing complete"
         )
 
         # Get updated case
@@ -407,6 +407,8 @@ class CaseService:
             return await self._run_strategy_generation_stage(case_state)
         elif stage == "action_coordination":
             return await self._run_action_coordination_stage(case_state)
+        elif stage == "monitoring":
+            return await self._run_monitoring_stage(case_state)
         else:
             raise ValueError(f"Unknown stage: {stage}")
 
@@ -1417,6 +1419,142 @@ class CaseService:
             "payer_states": payer_states,
             "actions_executed": [action_type]
         }
+
+    async def _run_monitoring_stage(self, case_state) -> Dict[str, Any]:
+        """Run monitoring: poll payer statuses, detect denials, route to recovery."""
+        import dataclasses
+        from backend.agents.action_coordinator import get_action_coordinator
+        from backend.orchestrator.transitions import check_payer_responses, needs_recovery, initiate_recovery
+        from backend.orchestrator.state import create_initial_state
+        from backend.agents.intake_agent import get_intake_agent
+
+        coordinator = get_action_coordinator()
+        payer_states = {}
+        for payer, ps in case_state.payer_states.items():
+            if isinstance(ps, dict):
+                payer_states[payer] = ps
+            elif dataclasses.is_dataclass(ps):
+                payer_states[payer] = serialize_for_json(dataclasses.asdict(ps))
+            else:
+                payer_states[payer] = serialize_for_json(ps)
+
+        # Build orchestrator state for transition helpers
+        intake_agent = get_intake_agent()
+        patient_data = await intake_agent.load_patient_data(case_state.patient.patient_id)
+        medication_data = {
+            "medication_request": {
+                "medication_name": case_state.medication.medication_name,
+                "dose": case_state.medication.dose,
+                "frequency": case_state.medication.frequency,
+                "route": case_state.medication.route,
+                "duration": case_state.medication.duration,
+                "diagnosis": case_state.medication.diagnosis,
+                "icd10_code": case_state.medication.icd10_code,
+            }
+        }
+        orch_state = create_initial_state(
+            case_id=case_state.case_id,
+            patient_id=case_state.patient.patient_id,
+            patient_data=patient_data,
+            medication_data=medication_data,
+            payers=list(case_state.payer_states.keys())
+        )
+        orch_state["payer_states"] = payer_states
+
+        # Poll each submitted/pending payer
+        updated_payer_states = dict(payer_states)
+        payer_responses = {}
+        recovery_needed = False
+        recovery_reason = None
+        for payer_name, payer_state in payer_states.items():
+            status = payer_state.get("status", "not_submitted")
+            if status in ["submitted", "pending", "under_review"]:
+                try:
+                    status_result = await coordinator.check_payer_status(orch_state, payer_name)
+                    if "payer_states" in status_result:
+                        updated_payer_states.update(status_result["payer_states"])
+                    if "payer_responses" in status_result:
+                        payer_responses.update(status_result["payer_responses"])
+                    if status_result.get("recovery_needed"):
+                        recovery_needed = True
+                        recovery_reason = status_result.get("recovery_reason")
+                except Exception as e:
+                    logger.error("Failed to check payer status", payer=payer_name, error=str(e))
+
+        orch_state["payer_states"] = updated_payer_states
+        orch_state["payer_responses"] = payer_responses
+        response_status = check_payer_responses(orch_state)
+
+        findings = []
+        for payer, ps in updated_payer_states.items():
+            status = ps.get("status", "unknown")
+            denial_reason = ps.get("denial_reason")
+            if status == "denied":
+                findings.append({"title": f"{payer}: DENIED", "detail": denial_reason or "Payer denied the authorization", "status": "negative"})
+            elif status == "approved":
+                findings.append({"title": f"{payer}: Approved", "detail": "Authorization approved", "status": "positive"})
+            else:
+                findings.append({"title": f"{payer}: {status}", "detail": f"Current status: {status}", "status": "neutral"})
+
+        # Determine next stage
+        if response_status == "denied" and (recovery_needed or needs_recovery(orch_state)):
+            recovery_data = initiate_recovery(orch_state, recovery_reason or "Payer denial - appeal available")
+            next_stage = CaseStage.RECOVERY.value if hasattr(CaseStage, 'RECOVERY') else "recovery"
+            reasoning = f"Monitoring detected a denial from payer. {recovery_reason or 'Initiating recovery workflow for appeal.'}. "
+
+            await self.repository.update(
+                case_id=case_state.case_id,
+                updates={
+                    "stage": next_stage,
+                    "payer_states": serialize_for_json(updated_payer_states),
+                },
+                change_description="Denial detected, transitioning to recovery"
+            )
+
+            return {
+                "stage": "monitoring",
+                "reasoning": reasoning,
+                "confidence": 0.9,
+                "findings": findings,
+                "recommendations": ["Appeal the denial", "Prepare peer-to-peer review documentation"],
+                "warnings": [f"Denial detected: {recovery_reason}"] if recovery_reason else ["Payer denial detected"],
+                "payer_states": updated_payer_states,
+                "recovery_needed": True,
+                "recovery_reason": recovery_reason,
+            }
+        elif response_status == "approved":
+            await self.repository.update(
+                case_id=case_state.case_id,
+                updates={
+                    "stage": CaseStage.COMPLETED.value,
+                    "payer_states": serialize_for_json(updated_payer_states),
+                },
+                change_description="All payers approved"
+            )
+            return {
+                "stage": "monitoring",
+                "reasoning": "All payers have approved the authorization.",
+                "confidence": 1.0,
+                "findings": findings,
+                "recommendations": ["Case complete - all authorizations approved"],
+                "warnings": [],
+                "payer_states": updated_payer_states,
+            }
+        else:
+            await self.repository.update(
+                case_id=case_state.case_id,
+                updates={"payer_states": serialize_for_json(updated_payer_states)},
+                change_description="Monitoring update"
+            )
+            return {
+                "stage": "monitoring",
+                "reasoning": f"Payer responses are {response_status}. Monitoring continues.",
+                "confidence": 0.6,
+                "findings": findings,
+                "recommendations": ["Continue monitoring payer responses"],
+                "warnings": [],
+                "payer_states": updated_payer_states,
+            }
 
     async def approve_stage(self, case_id: str, stage: str) -> Dict[str, Any]:
         """

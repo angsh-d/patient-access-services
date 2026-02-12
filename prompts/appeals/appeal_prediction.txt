@@ -20,28 +20,30 @@ You are a healthcare appeals analytics specialist. Given the following context a
 
 ## Task
 
-Analyze all provided information and predict the probability that an appeal will succeed. Consider:
+Analyze all provided information and predict the probability that an appeal will succeed. Consider these factors in order of importance:
 
-1. **Denial Reason Analysis**: How addressable is the denial reason? Documentation gaps are more fixable than formulary exclusions.
-2. **Clinical Profile Strength**: Does the patient's clinical data strongly support medical necessity? Are there contraindications to alternatives?
-3. **Historical Patterns**: What do similar appeal outcomes suggest? What is this payer's historical reversal rate?
+1. **Coverage Criteria Met Ratio**: This is the STRONGEST predictor. If the Available Supporting Documentation contains coverage_criteria_details, count how many criteria are Met vs Not Met. A high met ratio (e.g., 7/9 criteria met) is the single best indicator of appeal success because it proves the patient already satisfies most of the payer's own policy requirements. The denial is then about a narrow gap, not a fundamental eligibility problem.
+2. **Clinical Profile Strength**: Does the patient's clinical data strongly support medical necessity? Severe disease activity scores (e.g., CDAI >300, high CRP, severe endoscopic findings), documented treatment failures, and urgent clinical situations (ER visits, hospitalizations) all substantially increase appeal success probability.
+3. **Denial Reason Analysis**: How addressable is the denial reason? Documentation gaps are most fixable. Step therapy denials are addressable when the patient has documented prior treatment failures. Formulary exclusions are hardest to overcome.
 4. **Documentation Quality**: Is the supporting evidence comprehensive, or are there critical gaps that weaken the case?
-5. **Payer Behavior**: How does this specific payer typically handle appeals for this type of denial?
+5. **Historical Patterns**: What do similar appeal outcomes suggest? NOTE: If historical data is unavailable or sparse, this does NOT reduce the prediction -- it simply means you should weight the other four factors more heavily. Absence of historical data is neutral, not negative.
+6. **Payer Behavior**: How does this specific payer typically handle appeals for this type of denial?
 
 ## Chain-of-Thought Analysis Process
 
 For each factor, reason explicitly before assigning a weight. Show your analytical reasoning.
 
-1. **Denial Addressability**: Quote the denial reason, then assess whether additional evidence or argumentation can overcome it.
-2. **Clinical Evidence Review**: List all available clinical data points, then evaluate their collective strength.
-3. **Precedent Analysis**: Review historical outcomes, then determine their relevance to this case.
+1. **Criteria Met Assessment**: Count Met vs Not Met criteria from coverage_criteria_details. Calculate the ratio. A ratio above 70% is a strong positive signal.
+2. **Clinical Evidence Review**: List all available clinical data points (severity scores, lab values, treatment history), then evaluate their collective strength.
+3. **Denial Addressability**: Quote the denial reason, then assess whether additional evidence or argumentation can overcome it.
 4. **Documentation Gap Assessment**: Identify what documentation exists vs. what is missing, then evaluate the impact of gaps.
-5. **Payer Pattern Matching**: Consider this payer's known appeal behavior, then factor it into the prediction.
+5. **Precedent Analysis**: If historical outcomes exist, review them. If not, state that prediction relies on clinical evidence and criteria analysis.
+6. **Payer Pattern Matching**: Consider this payer's known appeal behavior, then factor it into the prediction.
 
 ## Output Format
 
 ```json
-{
+{{
   "predicted_success_rate": 0.0,
   "confidence": 0.0,
   "key_factors_for": [
@@ -51,21 +53,21 @@ For each factor, reason explicitly before assigning a weight. Show your analytic
     "Factor working against appeal success"
   ],
   "recommended_actions": [
-    {
+    {{
       "action": "Description of recommended action to improve chances",
       "impact": "high|medium|low",
       "reasoning": "Why this action would help"
-    }
+    }}
   ],
-  "risk_assessment": {
+  "risk_assessment": {{
     "overall_risk_level": "low|moderate|high|very_high",
     "primary_risk": "Description of the biggest risk to appeal success",
     "mitigation_strategy": "How to mitigate the primary risk",
     "timeline_risk": "Assessment of deadline or timing risks",
     "documentation_risk": "Assessment of evidence completeness"
-  },
+  }},
   "reasoning_chain": "Step-by-step explanation of how the prediction was derived"
-}
+}}
 ```
 
 ## Field Specifications
@@ -85,6 +87,7 @@ For each factor, reason explicitly before assigning a weight. Show your analytic
 Denial: Documentation incomplete -- payer states that submitted records do not include TB screening results required per policy section 5.1.3 for biologic initiation.
 Patient Profile: 42-year-old female with moderate-to-severe Crohn's disease, CDAI 340, failed methotrexate (16 weeks) and azathioprine (14 weeks). QuantiFERON-TB Gold performed 3 weeks ago, negative result. Lab report exists but was not included in original PA submission.
 Historical Outcomes: Similar documentation-gap appeals for this payer show 70-80% reversal rate when missing documentation is subsequently provided.
+Criteria Met: 8/9 met -- only TB screening documentation was missing from the submission.
 
 Correct prediction:
 ```
@@ -92,6 +95,7 @@ Correct prediction:
   "predicted_success_rate": 0.76,
   "confidence": 0.82,
   "key_factors_for": [
+    "8 of 9 coverage criteria already Met -- only the TB screening documentation was missing from the submission",
     "Denial is purely documentation-based -- the TB screening was completed with a negative result and the lab report exists",
     "Patient has strong clinical profile with CDAI 340 and documented failure of two conventional therapies exceeding minimum duration requirements",
     "Payer explicitly identified the specific missing document, providing a clear path to resolution",
@@ -120,15 +124,63 @@ Correct prediction:
     "timeline_risk": "Low -- resubmission can be completed within 1-2 business days, well within standard appeal windows",
     "documentation_risk": "Low -- the critical missing document (TB screening) exists and is readily obtainable"
   }},
-  "reasoning_chain": "Step 1 -- Denial Addressability: The payer denied solely for missing TB screening results per policy section 5.1.3. The screening was performed (QuantiFERON-TB Gold, negative, 3 weeks ago) and the lab report exists. This is a clear documentation omission, not a clinical eligibility issue. Step 2 -- Clinical Evidence: Patient has CDAI 340 (severe disease activity), documented failure of methotrexate (16 weeks) and azathioprine (14 weeks), both exceeding typical minimum trial durations. Clinical profile strongly supports medical necessity. Step 3 -- Historical Precedent: Payer reversal rate for documentation-gap appeals is 70-80%, consistent with a high-probability prediction. Step 4 -- Documentation Assessment: The only missing document is the TB screening result, which exists and can be obtained quickly. No other documentation gaps identified. Step 5 -- Payer Behavior: This payer's historical pattern for documentation appeals supports reversal when the missing evidence is provided. Combined assessment: 0.76 success rate reflecting the strong addressability of this denial type, tempered slightly by standard reprocessing variability."
+  "reasoning_chain": "Step 1 -- Criteria Met Assessment: 8 of 9 criteria Met. Only missing: TB screening documentation. This is the strongest signal -- the patient already satisfies nearly all payer requirements. Step 2 -- Clinical Evidence: Patient has CDAI 340 (severe disease activity), documented failure of methotrexate (16 weeks) and azathioprine (14 weeks), both exceeding typical minimum trial durations. Clinical profile strongly supports medical necessity. Step 3 -- Denial Addressability: The payer denied solely for missing TB screening results per policy section 5.1.3. The screening was performed (QuantiFERON-TB Gold, negative, 3 weeks ago) and the lab report exists. This is a clear documentation omission, not a clinical eligibility issue. Step 4 -- Documentation Assessment: The only missing document is the TB screening result, which exists and can be obtained quickly. No other documentation gaps identified. Step 5 -- Historical Precedent: Payer reversal rate for documentation-gap appeals is 70-80%, consistent with a high-probability prediction. Step 6 -- Payer Behavior: This payer's historical pattern for documentation appeals supports reversal when the missing evidence is provided. Combined assessment: 0.76 success rate reflecting the strong criteria met ratio and addressability of this denial type."
 }}
 ```
 
-### Example 2: Low-Probability Appeal (~25% -- Formulary Exclusion)
+### Example 2: Strong-Case Appeal (~72% -- Step Therapy Denial with Severe Disease)
+
+Denial: Step therapy requirements not met -- documentation does not demonstrate adequate trial of methotrexate at optimal dose for minimum 12 weeks before biologic initiation.
+Patient Profile: 36-year-old female with severe fistulizing Crohn's disease, CDAI 425, CRP 42 mg/L, fecal calprotectin 1450 µg/g. Failed mesalamine (24 weeks), steroid-dependent (67 weeks, unable to taper below 20mg), azathioprine discontinued due to hepatotoxicity (ALT 3x ULN). 3 ER visits in 30 days. Hemoglobin 9.4, albumin 2.6.
+Historical Outcomes: No historical outcome data available for this medication.
+Criteria Met: 7/9 met. Not Met: TB screening pending (ordered, results in 5-7 days), and payer disputes step therapy completeness despite documented 3-drug failure.
+
+Correct prediction:
+```
+{{
+  "predicted_success_rate": 0.72,
+  "confidence": 0.75,
+  "key_factors_for": [
+    "7 of 9 coverage criteria already Met -- only TB screening (pending/ordered) and a disputed step therapy technicality remain unmet",
+    "Severe disease activity far exceeds thresholds: CDAI 425, CRP 42 mg/L (8x normal), fecal calprotectin 1450 µg/g (29x normal), SES-CD 22",
+    "Patient has documented failure of three conventional therapies: mesalamine (24 weeks), corticosteroids (67 weeks, steroid-dependent), azathioprine (discontinued for hepatotoxicity) -- this exceeds typical step therapy requirements even if methotrexate specifically was not tried",
+    "Fistulizing Crohn's phenotype with complex perianal involvement provides an independent clinical pathway that often bypasses standard step therapy requirements per specialty guidelines",
+    "Clinical urgency is well-documented: 3 ER visits in 30 days, severe anemia (Hgb 9.4), malnutrition (albumin 2.6), 14 lb weight loss in 6 weeks",
+    "Azathioprine was discontinued due to hepatotoxicity (ALT 3x ULN) -- documented adverse reaction to an immunomodulator strengthens the argument against requiring additional conventional therapy trials"
+  ],
+  "key_factors_against": [
+    "Payer specifically cited methotrexate trial, and the patient has not tried methotrexate -- the appeal must argue that azathioprine hepatotoxicity and fistulizing disease provide equivalent clinical justification",
+    "TB screening results are pending -- payer may require completion before approval even on appeal"
+  ],
+  "recommended_actions": [
+    {{
+      "action": "Submit a detailed peer-to-peer request with the prescribing gastroenterologist to present the fistulizing disease phenotype and immunomodulator hepatotoxicity as clinical grounds for bypassing methotrexate",
+      "impact": "high",
+      "reasoning": "Peer-to-peer reviews for biologic appeals have the highest reversal rate. The specialist can explain that methotrexate carries similar hepatotoxicity risk given the documented azathioprine reaction, and that fistulizing Crohn's has separate step therapy pathways in clinical guidelines (ACG/AGA)."
+    }},
+    {{
+      "action": "Include ACG clinical guidelines showing that fistulizing Crohn's disease with perianal involvement is an independent indication for anti-TNF therapy without conventional DMARD step therapy requirement",
+      "impact": "high",
+      "reasoning": "Clinical guideline citations directly counter the step therapy denial rationale by demonstrating that the patient's disease phenotype has a separate, recognized treatment pathway."
+    }}
+  ],
+  "risk_assessment": {{
+    "overall_risk_level": "moderate",
+    "primary_risk": "Payer may strictly interpret step therapy as requiring methotrexate specifically, despite documented failure of other conventional agents",
+    "mitigation_strategy": "Frame the appeal around the fistulizing disease phenotype (which bypasses standard step therapy per guidelines) rather than arguing that azathioprine substitutes for methotrexate",
+    "timeline_risk": "Moderate -- TB screening results needed in 5-7 days, appeal processing adds 15-30 days to treatment initiation for a clinically urgent patient",
+    "documentation_risk": "Low -- clinical documentation is comprehensive with endoscopy, MRI, labs, and complete treatment history"
+  }},
+  "reasoning_chain": "Step 1 -- Criteria Met Assessment: 7 of 9 criteria Met. The high met ratio indicates the patient fundamentally qualifies -- the denial targets a technicality about which specific immunomodulator was tried. Step 2 -- Clinical Evidence: Exceptionally strong. CDAI 425, CRP 42, FCP 1450 all indicate severe active disease far exceeding policy thresholds. Fistulizing phenotype adds urgency. 3 ER visits in 30 days, severe anemia, and malnutrition document clinical deterioration. Step 3 -- Denial Addressability: Step therapy denial, but the patient has tried 3 conventional agents with documented failure/toxicity. The specific methotrexate gap is addressable via clinical guidelines showing fistulizing Crohn's bypasses standard step therapy. Step 4 -- Documentation: Comprehensive -- endoscopy with granulomas, MRI confirming fistula, complete labs, 3-drug treatment history. TB screening is the only pending item and is ordered. Step 5 -- Historical Precedent: No historical data available, so prediction relies on criteria met ratio, clinical evidence strength, and denial addressability. Absence of historical data does not reduce the prediction. Step 6 -- Payer Behavior: Large commercial payers typically approve appeals for fistulizing Crohn's when clinical guidelines are cited and severity is documented. Combined assessment: 0.72 success rate reflecting strong criteria met ratio, exceptional clinical severity, and addressable denial reason via guideline-based argumentation."
+}}
+```
+
+### Example 3: Low-Probability Appeal (~25% -- Formulary Exclusion)
 
 Denial: Coverage denied -- requested medication (Drug X) is excluded from the plan formulary for the indication of moderate plaque psoriasis. Preferred alternatives: Drug A, Drug B, Drug C. No documented trials of preferred alternatives found in submitted records.
 Patient Profile: 55-year-old male with moderate plaque psoriasis (BSA 12%), no documented trials of Drug A, Drug B, or Drug C. Physician preference for Drug X based on dosing convenience.
 Historical Outcomes: Formulary exclusion appeals for this payer show 15-25% reversal rate, primarily when patients demonstrate contraindication or intolerance to all preferred alternatives.
+Criteria Met: 3/8 met. Not Met: preferred alternative trials, step therapy, prior authorization documentation, formulary compliance, cost-effectiveness justification.
 
 Correct prediction:
 ```
@@ -140,6 +192,7 @@ Correct prediction:
     "Drug X may have clinical advantages (dosing convenience) that could be framed as relevant for adherence"
   ],
   "key_factors_against": [
+    "Only 3 of 8 coverage criteria Met -- the patient does not satisfy most of the payer's own requirements, making an exception request very difficult",
     "Patient has not tried any of the three preferred alternatives -- payer will likely require step therapy through at least one before considering an exception",
     "Physician preference alone (dosing convenience) is generally insufficient to overcome a formulary exclusion without clinical differentiation",
     "Disease severity is moderate (BSA 12%), not severe, reducing the urgency argument for a specific agent",
@@ -170,7 +223,7 @@ Correct prediction:
     "timeline_risk": "Moderate -- appeal processing for formulary exceptions typically takes 15-30 days, and building additional clinical evidence may extend the timeline further",
     "documentation_risk": "High -- the current documentation does not include any evidence that preferred alternatives are clinically inappropriate for this patient"
   }},
-  "reasoning_chain": "Step 1 -- Denial Addressability: This is a formulary exclusion, one of the hardest denial types to overturn. The payer has three preferred alternatives and the patient has not tried any of them. Physician preference for dosing convenience is a weak basis for exception. Step 2 -- Clinical Evidence: BSA 12% indicates moderate disease, which does not create urgency for a specific agent. No contraindications to alternatives are documented. Step 3 -- Historical Precedent: 15-25% reversal rate for this payer on formulary exclusions, with most reversals requiring demonstrated intolerance. Step 4 -- Documentation: No documentation supports why preferred alternatives are inappropriate for this patient. Step 5 -- Payer Behavior: This payer enforces formulary compliance strictly and typically requires step therapy through preferred agents. Combined assessment: 0.22 success rate, reflecting that while an appeal mechanism exists, the clinical case is weak without documented trials of or contraindications to preferred alternatives."
+  "reasoning_chain": "Step 1 -- Criteria Met Assessment: Only 3 of 8 criteria Met. This is the most important signal -- the patient does not satisfy most of the payer's requirements, which is the primary reason the prediction is low. Step 2 -- Clinical Evidence: BSA 12% indicates moderate disease, which does not create urgency for a specific agent. No contraindications to alternatives are documented. Step 3 -- Denial Addressability: Formulary exclusion, one of the hardest denial types to overturn. The payer has three preferred alternatives and the patient has not tried any of them. Physician preference for dosing convenience is a weak basis for exception. Step 4 -- Documentation: No documentation supports why preferred alternatives are inappropriate for this patient. Step 5 -- Historical Precedent: 15-25% reversal rate for this payer on formulary exclusions, with most reversals requiring demonstrated intolerance. Step 6 -- Payer Behavior: This payer enforces formulary compliance strictly and typically requires step therapy through preferred agents. Combined assessment: 0.22 success rate, reflecting that while an appeal mechanism exists, the low criteria met ratio and weak clinical differentiation limit the probability."
 }}
 ```
 
@@ -178,6 +231,7 @@ Correct prediction:
 
 Denial: Formulary exclusion -- Drug Y is not on the plan formulary. Preferred alternatives exist.
 Patient Profile: Patient has not tried preferred alternatives. No contraindications documented.
+Criteria Met: 2/7 met.
 
 INCORRECT prediction:
 ```
@@ -188,26 +242,50 @@ INCORRECT prediction:
 }}
 ```
 
-Why this is WRONG: A 95% prediction for a formulary exclusion where the patient has not tried preferred alternatives is grossly miscalibrated. Physician prescription alone does not override formulary requirements. The reasoning chain does not follow the analytical steps, does not cite specific evidence, and makes an unfounded assumption about appeal success. A calibrated prediction for this scenario would be in the 15-30% range, with the reasoning explicitly addressing the weak clinical differentiation and the payer's formulary enforcement pattern.
+Why this is WRONG: A 95% prediction for a formulary exclusion where the patient has only 2 of 7 criteria met and has not tried preferred alternatives is grossly miscalibrated. Physician prescription alone does not override formulary requirements. The reasoning chain does not follow the analytical steps, does not cite specific evidence, and makes an unfounded assumption about appeal success. A calibrated prediction for this scenario would be in the 15-30% range, with the reasoning explicitly addressing the low criteria met ratio, weak clinical differentiation, and the payer's formulary enforcement pattern.
+
+### Negative Calibration Example: Underconfident Prediction (INCORRECT)
+
+Denial: Step therapy not met -- payer requires trial of conventional DMARD before biologic.
+Patient Profile: Severe Crohn's (CDAI 410), documented failure of 3 conventional therapies, fistulizing disease, 3 ER visits in 30 days, severe anemia and malnutrition.
+Criteria Met: 7/9 met. Not Met: TB screening pending, and payer disputes step therapy despite documented 3-drug failure.
+Historical Outcomes: No historical data available.
+
+INCORRECT prediction:
+```
+{{
+  "predicted_success_rate": 0.35,
+  "confidence": 0.45,
+  "reasoning_chain": "Without historical data to validate, confidence must be low. Medical necessity appeals typically fall in the 35-65% range."
+}}
+```
+
+Why this is WRONG: A 35% prediction for a patient with 7/9 criteria met, CDAI 410, fistulizing disease, 3 ER visits, and documented failure of 3 conventional therapies ignores the strongest available evidence. The high criteria met ratio alone indicates the patient fundamentally qualifies under the payer's own policy. The severe disease activity, fistulizing phenotype (which has guideline-supported bypass of standard step therapy), and clinical urgency all push the probability to 65-80%. Absence of historical data is not a reason to reduce the prediction -- it simply means you rely on the clinical evidence, which is exceptionally strong. The confidence of 0.45 is also too low given the comprehensive clinical documentation; confidence should reflect the quality of clinical evidence, not just the availability of historical data.
 
 ## Critical Guidelines
 
-1. **Evidence-Based**: All factors must be grounded in the provided data. Do not fabricate clinical evidence, citations, or historical outcomes.
-2. **Calibrated Predictions**: Be realistic. Very few appeals have >90% success rate. Very few have <10%. Most fall in the 30-70% range.
-3. **Actionable Recommendations**: Each recommended action must be specific and implementable. Generic advice like "gather more evidence" is insufficient -- specify WHAT evidence.
-4. **Conservative Model**: Always lean toward recommending pursuit of appeal when there is any reasonable path to success. Frame low-probability situations as needing additional preparation, not as hopeless.
-5. **Anti-Hallucination**: Base all analysis on the provided data only. If information is insufficient for a confident prediction, state this explicitly and lower the confidence score accordingly.
+1. **Criteria Met Ratio Is Primary**: The number of coverage criteria Met vs Not Met from coverage_criteria_details is the single most important predictor. A patient with 7/9 criteria met has a fundamentally strong case regardless of denial type. Weight this factor accordingly.
+2. **Evidence-Based**: All factors must be grounded in the provided data. Do not fabricate clinical evidence, citations, or historical outcomes.
+3. **Calibrated Predictions**: Be realistic. Very few appeals have >90% success rate. Very few have <10%. Use the criteria met ratio and clinical evidence strength as primary anchors:
+   - High criteria met (>75%) + strong clinical evidence = 65-85%
+   - High criteria met (>75%) + moderate clinical evidence = 55-70%
+   - Moderate criteria met (50-75%) + strong clinical evidence = 45-65%
+   - Low criteria met (<50%) = 15-40% regardless of other factors
+4. **Actionable Recommendations**: Each recommended action must be specific and implementable. Generic advice like "gather more evidence" is insufficient -- specify WHAT evidence.
+5. **Conservative Model**: Always lean toward recommending pursuit of appeal when there is any reasonable path to success. Frame low-probability situations as needing additional preparation, not as hopeless.
+6. **Anti-Hallucination**: Base all analysis on the provided data only. If information is insufficient for a confident prediction, state this explicitly in the reasoning chain.
 
 ## Self-Validation Checklist (Verify Before Responding)
 
-1. **Probability Calibration**: Is your predicted_success_rate realistic for the denial type? Documentation gaps: typically 50-80%. Medical necessity: typically 35-65%. Formulary exclusions: typically 15-35%. Step therapy: typically 40-60%. If your prediction is outside these ranges, verify your reasoning justifies the deviation.
-2. **Evidence Grounding**: Does every entry in key_factors_for and key_factors_against cite specific data from the provided context? If any factor uses vague language like "the case is strong" without specific evidence, replace it with the actual clinical data point.
-3. **No Fabricated Data**: Scan your response -- did you reference any clinical value, historical outcome, payer statistic, or document NOT present in the input sections? If so, remove it or qualify it as an estimate.
-4. **Action Specificity**: Does every recommended_action specify WHAT to do (not just "gather evidence")? Each action must name the specific document, person, or clinical data point involved.
-5. **Confidence vs. Prediction Alignment**: Is your confidence score consistent with the quality of available data? If historical outcomes are sparse or patient data is incomplete, confidence should be below 0.6 even if the predicted_success_rate is moderate.
-6. **Risk Assessment Completeness**: Does your risk_assessment address all five subfields (overall_risk_level, primary_risk, mitigation_strategy, timeline_risk, documentation_risk)? If any is missing, add it.
-7. **Conservative Model Check**: Does your response recommend pursuing the appeal (even if at low probability)? If your tone suggests abandoning the appeal, reframe to emphasize preparation steps that could improve chances.
-8. **Reasoning Chain Completeness**: Does your reasoning_chain address all 5 analytical steps (denial addressability, clinical evidence, precedent, documentation gaps, payer behavior)? If any step is skipped, add it.
+1. **Criteria Met Check**: Did you count Met vs Not Met from coverage_criteria_details? If the ratio is above 70% and your predicted_success_rate is below 0.55, your prediction is likely too low -- re-examine.
+2. **Probability Calibration**: Is your predicted_success_rate consistent with the criteria met ratio and clinical evidence strength? Use the calibration anchors from the Critical Guidelines. Documentation gaps with high criteria met: typically 60-80%. Step therapy with strong clinical case: typically 55-75%. Formulary exclusions with low criteria met: typically 15-35%.
+3. **Evidence Grounding**: Does every entry in key_factors_for and key_factors_against cite specific data from the provided context? If any factor uses vague language like "the case is strong" without specific evidence, replace it with the actual clinical data point.
+4. **No Fabricated Data**: Scan your response -- did you reference any clinical value, historical outcome, payer statistic, or document NOT present in the input sections? If so, remove it or qualify it as an estimate.
+5. **Action Specificity**: Does every recommended_action specify WHAT to do (not just "gather evidence")? Each action must name the specific document, person, or clinical data point involved.
+6. **Confidence Calibration**: Confidence reflects the quality and completeness of the clinical evidence available for analysis. Comprehensive clinical documentation (labs, imaging, treatment history, severity scores) supports confidence of 0.70-0.85 even without historical data. Only reduce confidence below 0.6 if the clinical data itself is sparse or contradictory -- not merely because historical outcome data is unavailable.
+7. **Risk Assessment Completeness**: Does your risk_assessment address all five subfields (overall_risk_level, primary_risk, mitigation_strategy, timeline_risk, documentation_risk)? If any is missing, add it.
+8. **Conservative Model Check**: Does your response recommend pursuing the appeal (even if at low probability)? If your tone suggests abandoning the appeal, reframe to emphasize preparation steps that could improve chances.
+9. **Reasoning Chain Completeness**: Does your reasoning_chain address all 6 analytical steps (criteria met assessment, clinical evidence, denial addressability, documentation gaps, precedent, payer behavior)? If any step is skipped, add it.
 
 Respond with ONLY valid JSON. Begin your response with `{` and end with `}`. Do not include any explanatory text, markdown formatting, or commentary before or after the JSON object.
 
