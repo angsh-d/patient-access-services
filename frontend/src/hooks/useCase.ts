@@ -121,6 +121,26 @@ export interface StageAnalysis {
   strategies?: unknown[]
   recommended_id?: string
   payer_states?: Record<string, unknown>
+  // Provenance & explainability
+  provenance?: {
+    provider?: string
+    model?: string
+    is_fallback?: boolean
+    is_cached?: boolean
+    prompt_source?: string
+    timestamp?: string
+  }
+  reasoning_chains?: Record<string, string[]>
+  confidence_details?: {
+    aggregate?: { min: number; mean: number; max: number }
+    low_confidence_criteria?: Array<{
+      payer: string
+      criterion: string
+      confidence: number
+      reasoning: string
+    }>
+  }
+  recommendation?: Record<string, unknown>
 }
 
 /**
@@ -226,6 +246,29 @@ export function useDecisionStatus(caseId: string | undefined, enabled: boolean =
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+  })
+}
+
+/**
+ * Hook to reset a case to initial intake state (for demo re-runs).
+ * Clears all analysis, strategies, decisions, and related records.
+ */
+export function useResetCase(caseId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () => api.cases.reset(caseId),
+    onSuccess: (data) => {
+      queryClient.setQueryData(QUERY_KEYS.case(caseId), { case: data.case })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cases })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.trace(caseId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.strategies(caseId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.strategicIntelligence(caseId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cohortAnalysis(caseId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.decisionStatus(caseId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.appealPrediction(caseId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.appealLetter(caseId) })
+    },
   })
 }
 

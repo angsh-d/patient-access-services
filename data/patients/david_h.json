@@ -1,0 +1,210 @@
+{
+  "patient_id": "david_h",
+  "extraction_metadata": {
+    "extracted_from": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf", "03_MRI_Pelvis_Report.pdf", "04_Colonoscopy_Report.pdf"],
+    "extraction_date": "2026-02-15",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "David",
+    "last_name": "Huang",
+    "date_of_birth": "1992-08-20",
+    "age": 33,
+    "gender": "Male",
+    "ethnicity": "Chinese American",
+    "address": { "street": "285 Commonwealth Avenue, Apt 4", "city": "Boston", "state": "MA", "zip": "02115" },
+    "phone": "617-555-0198",
+    "mrn": "DAVID_H",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "Cigna",
+      "payer_id": "CIGNA",
+      "plan_name": "Cigna Connect PPO",
+      "plan_type": "PPO",
+      "member_id": "CIG123456789",
+      "group_number": "MA-PPO-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Rachel Goldstein",
+    "credentials": "MD, FACG",
+    "npi": "1345678901",
+    "specialty": "Gastroenterology",
+    "practice_name": "Massachusetts General Hospital IBD Center",
+    "address": { "street": "55 Fruit Street, GRJ-7", "city": "Boston", "state": "MA", "zip": "02114" },
+    "phone": "617-555-1200",
+    "fax": "617-555-1201",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Infliximab",
+    "brand_name": "Inflectra",
+    "generic_name": "infliximab-dyyb",
+    "j_code": "Q5103",
+    "product_type": "preferred_biosimilar",
+    "dose": "5mg/kg",
+    "route": "Intravenous infusion",
+    "frequency": { "induction": "Weeks 0, 2, 6", "maintenance": "Every 8 weeks" },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "4 infusions",
+    "site_of_care": "Outpatient infusion center",
+    "start_date_requested": "2026-02-22",
+    "diagnosis": "Crohn's disease, unspecified, with fistula",
+    "icd10_code": "K50.913",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "K50.913",
+      "description": "Crohn's disease, unspecified, with fistula",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "K60.3",
+      "description": "Anal fistula",
+      "status": "active",
+      "source_document": "03_MRI_Pelvis_Report.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-28",
+    "cdai_score": 290,
+    "cdai_interpretation": "Moderate active disease (CDAI 220-450)",
+    "ses_cd_score": 12,
+    "ses_cd_interpretation": "Moderate endoscopic activity",
+    "perianal_disease_activity_index": 8,
+    "pdai_interpretation": "Moderate perianal disease activity",
+    "disease_severity": "moderate",
+    "disease_phenotype": "fistulizing_perianal",
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_MRI_Pelvis_Report.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Complex perianal fistula with persistent drainage, moderate luminal Crohn's disease",
+    "history_of_present_illness": "33-year-old male with moderate Crohn's disease with complex perianal fistula diagnosed 2023. CDAI 290, SES-CD 12, PDAI 8. MRI shows complex intersphincteric fistula with secondary tract and small perianal abscess (drained). Persistent serous drainage from external opening causing significant distress. Seton placed 3 months ago; colorectal surgery recommends concurrent anti-TNF therapy for fistula healing. Luminal disease involves terminal ileum and cecum. Failed mesalamine, ciprofloxacin/metronidazole combination (partial response then relapse), and azathioprine (bone marrow suppression).",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Mesalamine",
+      "brand_name": "Pentasa",
+      "drug_class": "5-ASA",
+      "dose": "1g QID",
+      "start_date": "2023-06-01",
+      "end_date": "2023-12-01",
+      "duration_weeks": 26,
+      "outcome": "inadequate_response",
+      "outcome_description": "No improvement in luminal or perianal disease after 6 months",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Ciprofloxacin + Metronidazole",
+      "drug_class": "Antibiotics",
+      "dose": "Cipro 500mg BID + Metro 500mg TID",
+      "start_date": "2024-02-01",
+      "end_date": "2024-06-01",
+      "duration_weeks": 17,
+      "outcome": "partial_response_then_relapse",
+      "outcome_description": "Initial reduction in fistula drainage but relapse within 4 weeks of antibiotic discontinuation. Not suitable for long-term use.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Azathioprine",
+      "brand_name": "Imuran",
+      "drug_class": "Thiopurine immunomodulator",
+      "dose": "100mg daily",
+      "start_date": "2024-08-01",
+      "end_date": "2024-11-01",
+      "duration_weeks": 13,
+      "outcome": "intolerance",
+      "outcome_description": "Bone marrow suppression — WBC dropped to 2.5, neutrophils 0.8 requiring discontinuation and G-CSF support",
+      "adverse_event": { "type": "bone_marrow_suppression", "details": "WBC 2.5, ANC 0.8", "severity": "severe" },
+      "adequate_trial": false,
+      "reason_inadequate": "discontinued_due_to_adverse_event",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-25",
+    "ordering_provider": "Dr. Rachel Goldstein",
+    "facility": "MGH Clinical Lab",
+    "report_status": "FINAL",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count (CBC)",
+        "results": [
+          {"test": "WBC", "value": 7.2, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "Hemoglobin", "value": 12.8, "unit": "g/dL", "reference_range": "13.5-17.5", "flag": "L"},
+          {"test": "Platelets", "value": 320, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel",
+        "results": [
+          {"test": "Albumin", "value": 3.5, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": null},
+          {"test": "ALT", "value": 18, "unit": "U/L", "reference_range": "7-56", "flag": null}
+        ]
+      },
+      "inflammatory_markers": {
+        "panel_name": "Inflammatory Markers",
+        "results": [
+          {"test": "CRP", "value": 15, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 25, "unit": "mm/hr", "reference_range": "0-15", "flag": "H"}
+        ]
+      },
+      "gi_markers": {
+        "panel_name": "GI-Specific Markers",
+        "results": [
+          {"test": "Fecal Calprotectin", "value": 620, "unit": "ug/g", "reference_range": "<50", "flag": "H"}
+        ]
+      }
+    },
+    "interpretation": "Active luminal and perianal Crohn's. CRP 15, FCP 620. Mild anemia. Albumin at lower limit of normal. WBC recovered after azathioprine discontinuation."
+  },
+
+  "pre_biologic_screening": {
+    "status": "COMPLETE",
+    "tuberculosis_screening": { "status": "COMPLETE", "test_performed": "QuantiFERON-TB Gold Plus", "result": "Negative", "cleared_for_biologic": true },
+    "hepatitis_b_screening": { "status": "COMPLETE", "interpretation": "HBV negative with immunity from vaccination", "cleared_for_biologic": true },
+    "hepatitis_c_screening": { "status": "COMPLETE", "result": "Non-reactive", "cleared_for_biologic": true }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": { "met": true, "evidence": "Fistulizing CD confirmed by MRI and colonoscopy. Complex perianal fistula with seton in place." },
+    "disease_severity_documented": { "met": true, "evidence": "CDAI 290, SES-CD 12, PDAI 8, CRP 15, FCP 620" },
+    "conventional_therapy_failed": {
+      "met": true,
+      "therapies_tried": [
+        {"medication": "Mesalamine", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Ciprofloxacin/Metronidazole", "outcome": "partial_response_then_relapse", "duration_adequate": true},
+        {"medication": "Azathioprine", "outcome": "intolerance", "duration_adequate": false}
+      ]
+    },
+    "step_therapy_satisfied": { "met": true, "evidence": "Fistulizing phenotype qualifies for accelerated biologic access" },
+    "pre_biologic_screening_complete": { "met": true },
+    "fda_approved_indication": { "met": true, "indication": "Fistulizing Crohn's disease" }
+  },
+
+  "overall_pa_readiness": {
+    "status": "READY_FOR_SUBMISSION",
+    "all_clinical_criteria_met": true,
+    "recommendation": "All criteria met. Fistulizing CD with seton in place — anti-TNF is standard of care for fistula healing. Submit immediately."
+  }
+}

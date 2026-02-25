@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom'
+import { Search, ChevronDown } from 'lucide-react'
 
 export function TopNavbar() {
   const navigate = useNavigate()
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 flex items-center"
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between"
       style={{
         height: '48px',
         background: '#ffffff',
@@ -14,7 +15,8 @@ export function TopNavbar() {
         paddingRight: '20px',
       }}
     >
-      <div className="flex items-center gap-0">
+      {/* Left: Logo + Platform Name */}
+      <div className="flex items-center gap-0 flex-shrink-0">
         <button
           onClick={() => navigate('/dashboard')}
           className="flex items-center"
@@ -52,47 +54,48 @@ export function TopNavbar() {
             cursor: 'pointer',
           }}
         >
-          Prior Auth Agent
+          Digital Patient Services Platform
         </span>
+      </div>
 
-        <nav className="hidden md:flex items-center gap-6 ml-8">
-          <button
-            onClick={() => navigate('/dashboard')}
+      {/* Center: Search Bar */}
+      <div className="hidden md:flex items-center flex-1 max-w-lg mx-8">
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-grey-400" />
+          <input
+            type="text"
+            placeholder="Search cases, patients, or medications..."
+            className="w-full h-8 pl-9 pr-3 rounded-lg text-sm border focus:outline-none focus:border-grey-400 transition"
             style={{
-              fontSize: '12px',
-              fontWeight: 500,
-              color: '#86868b',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 0,
-              letterSpacing: '-0.008em',
-              transition: 'color 0.15s ease',
+              borderColor: 'rgba(0, 0, 0, 0.12)',
+              background: '#fafafa',
+              color: '#1d1d1f',
+              letterSpacing: '-0.006em',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#1d1d1f' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = '#86868b' }}
+          />
+        </div>
+      </div>
+
+      {/* Right: User Avatar */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <button
+          className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-grey-100 transition"
+          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
+            style={{ background: '#032D60' }}
           >
-            Cases
-          </button>
-          <button
-            onClick={() => navigate('/analytics')}
-            style={{
-              fontSize: '12px',
-              fontWeight: 500,
-              color: '#86868b',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 0,
-              letterSpacing: '-0.008em',
-              transition: 'color 0.15s ease',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#1d1d1f' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = '#86868b' }}
+            AD
+          </div>
+          <span
+            className="hidden lg:inline text-sm font-medium"
+            style={{ color: '#1d1d1f', letterSpacing: '-0.008em', whiteSpace: 'nowrap' }}
           >
-            Analytics
-          </button>
-        </nav>
+            Angshuman Deb
+          </span>
+          <ChevronDown className="w-3.5 h-3.5 text-grey-400" />
+        </button>
       </div>
     </header>
   )

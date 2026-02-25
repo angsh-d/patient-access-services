@@ -1,0 +1,202 @@
+{
+  "patient_id": "diane_w",
+  "extraction_metadata": {
+    "extracted_from": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf", "03_Colonoscopy_Report.pdf"],
+    "extraction_date": "2026-02-08",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Diane",
+    "last_name": "Washington",
+    "date_of_birth": "1965-11-22",
+    "age": 60,
+    "gender": "Female",
+    "ethnicity": "African American",
+    "address": { "street": "3780 Peachtree Road NE", "city": "Atlanta", "state": "GA", "zip": "30319" },
+    "phone": "404-555-0187",
+    "mrn": "DIANE_W",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "Cigna",
+      "payer_id": "CIGNA",
+      "plan_name": "Cigna Open Access Plus",
+      "plan_type": "PPO",
+      "member_id": "CIG567891234",
+      "group_number": "GA-OAP-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Marcus Williams",
+    "credentials": "MD, FACG",
+    "npi": "1345678912",
+    "specialty": "Gastroenterology",
+    "practice_name": "Emory Digestive Disease Center",
+    "address": { "street": "1365 Clifton Road NE", "city": "Atlanta", "state": "GA", "zip": "30322" },
+    "phone": "404-555-0300",
+    "fax": "404-555-0301",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Infliximab",
+    "brand_name": "Inflectra",
+    "generic_name": "infliximab-dyyb",
+    "j_code": "Q5103",
+    "product_type": "preferred_biosimilar",
+    "dose": "5mg/kg",
+    "route": "Intravenous infusion",
+    "frequency": { "induction": "Weeks 0, 2, 6", "maintenance": "Every 8 weeks" },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "4 infusions",
+    "site_of_care": "Outpatient infusion center",
+    "start_date_requested": "2026-02-20",
+    "diagnosis": "Ulcerative colitis, unspecified, without complications",
+    "icd10_code": "K51.90",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "K51.90",
+      "description": "Ulcerative colitis, unspecified, without complications",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-05",
+    "mayo_score": 9,
+    "mayo_interpretation": "Moderate-to-severe ulcerative colitis (Mayo 6-12)",
+    "endoscopic_subscore": 3,
+    "disease_severity": "moderate_to_severe",
+    "disease_extent": "Left-sided colitis extending to splenic flexure",
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Persistent bloody diarrhea 8-10x daily, urgency, tenesmus, and inability to maintain remission off steroids",
+    "history_of_present_illness": "60-year-old female with moderate-to-severe ulcerative colitis diagnosed in 2021. Mayo score 9, endoscopic subscore 3. Currently steroid-dependent after 4 taper attempts. Failed mesalamine (both oral and rectal), 6-mercaptopurine (leukopenia requiring discontinuation). Reports 8-10 bloody stools daily with nocturnal symptoms disrupting sleep. One hospitalization in past 6 months for acute flare requiring IV steroids.",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Mesalamine",
+      "brand_name": "Lialda",
+      "drug_class": "5-ASA",
+      "dose": "4.8g daily",
+      "start_date": "2021-06-01",
+      "end_date": "2022-02-01",
+      "duration_weeks": 35,
+      "outcome": "inadequate_response",
+      "outcome_description": "Persistent disease activity despite maximum oral dose plus mesalamine enemas",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Prednisone",
+      "drug_class": "Corticosteroid",
+      "dose": "40mg initially with taper",
+      "start_date": "2022-03-01",
+      "end_date": "2025-12-01",
+      "duration_weeks": 196,
+      "outcome": "steroid_dependent",
+      "outcome_description": "Steroid-dependent disease after 4 failed taper attempts. Unable to reduce below 15mg without disease flare.",
+      "taper_attempts": 4,
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "6-Mercaptopurine",
+      "brand_name": "Purinethol",
+      "drug_class": "Thiopurine immunomodulator",
+      "dose": "1.5mg/kg daily",
+      "start_date": "2023-01-15",
+      "end_date": "2023-04-01",
+      "duration_weeks": 11,
+      "outcome": "intolerance",
+      "outcome_description": "Discontinued due to leukopenia (WBC 2.1) requiring growth factor support",
+      "adverse_event": { "type": "leukopenia", "details": "WBC 2.1 x10^9/L", "severity": "severe" },
+      "adequate_trial": false,
+      "reason_inadequate": "discontinued_due_to_adverse_event",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-03",
+    "ordering_provider": "Dr. Marcus Williams",
+    "facility": "Emory Clinical Laboratory",
+    "report_status": "FINAL",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count (CBC)",
+        "results": [
+          {"test": "WBC", "value": 9.8, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "Hemoglobin", "value": 10.2, "unit": "g/dL", "reference_range": "12.0-16.0", "flag": "L"},
+          {"test": "Platelets", "value": 410, "unit": "x10^9/L", "reference_range": "150-400", "flag": "H"}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel (CMP)",
+        "results": [
+          {"test": "Albumin", "value": 2.9, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": "L"},
+          {"test": "ALT", "value": 22, "unit": "U/L", "reference_range": "7-56", "flag": null},
+          {"test": "Creatinine", "value": 0.7, "unit": "mg/dL", "reference_range": "0.6-1.2", "flag": null}
+        ]
+      },
+      "inflammatory_markers": {
+        "panel_name": "Inflammatory Markers",
+        "results": [
+          {"test": "CRP", "value": 28, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 48, "unit": "mm/hr", "reference_range": "0-20", "flag": "H"}
+        ]
+      },
+      "gi_markers": {
+        "panel_name": "GI-Specific Markers",
+        "results": [
+          {"test": "Fecal Calprotectin", "value": 1200, "unit": "ug/g", "reference_range": "<50", "flag": "H"}
+        ]
+      }
+    },
+    "interpretation": "Severely active UC with markedly elevated inflammatory markers (CRP 28, FCP 1200), anemia (Hgb 10.2), and hypoalbuminemia (2.9)."
+  },
+
+  "pre_biologic_screening": {
+    "status": "COMPLETE",
+    "tuberculosis_screening": { "status": "COMPLETE", "test_performed": "QuantiFERON-TB Gold Plus", "result": "Negative", "cleared_for_biologic": true },
+    "hepatitis_b_screening": { "status": "COMPLETE", "interpretation": "HBV negative with immunity from vaccination", "cleared_for_biologic": true },
+    "hepatitis_c_screening": { "status": "COMPLETE", "result": "Non-reactive", "cleared_for_biologic": true }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": { "met": true, "evidence": "Colonoscopy confirms moderate-to-severe UC with Mayo endoscopic subscore 3" },
+    "disease_severity_documented": { "met": true, "evidence": "Mayo score 9, CRP 28, FCP 1200, albumin 2.9" },
+    "conventional_therapy_failed": {
+      "met": true,
+      "therapies_tried": [
+        {"medication": "Mesalamine", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Prednisone", "outcome": "steroid_dependent", "duration_adequate": true},
+        {"medication": "6-Mercaptopurine", "outcome": "intolerance", "duration_adequate": false}
+      ]
+    },
+    "step_therapy_satisfied": { "met": true },
+    "pre_biologic_screening_complete": { "met": true },
+    "fda_approved_indication": { "met": true, "indication": "Moderate-to-severe ulcerative colitis" }
+  },
+
+  "overall_pa_readiness": {
+    "status": "READY_FOR_SUBMISSION",
+    "all_clinical_criteria_met": true,
+    "recommendation": "Strong case. All criteria met with clear objective evidence of disease severity and complete step therapy failure. Submit immediately."
+  }
+}

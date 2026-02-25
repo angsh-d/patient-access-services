@@ -10,7 +10,7 @@
  * - Re-analyze button
  */
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import {
   Brain,
   ChevronRight,
@@ -18,6 +18,7 @@ import {
   Lightbulb,
   AlertTriangle,
   RefreshCw,
+  Database,
 } from 'lucide-react'
 import { WizardStep } from '@/components/domain/WizardStep'
 import {
@@ -26,6 +27,8 @@ import {
 } from '@/components/domain/PayerComparisonCard'
 import { PolicyValidationCard } from '@/components/domain/PolicyValidationCard'
 import { StreamingOutput } from '@/components/domain/StreamingOutput'
+import { ChainOfThought } from '@/components/domain/ChainOfThought'
+import type { ThoughtStep } from '@/components/domain/ChainOfThought'
 import { ReferenceInfoContent } from '@/components/domain/wizard/ReferenceInfoContent'
 import { ProcessingAnimation, POLICY_ANALYSIS_STEPS } from '@/components/domain/wizard/ProcessingAnimation'
 import type { StageAnalysis } from '@/hooks/useCase'
@@ -113,6 +116,44 @@ export function AnalysisStep({
 
   const selectedAssessment = caseState.coverage_assessments?.[selectedPayerName || primaryPayerName]
 
+  // Low-confidence criteria from analysis
+  const lowConfCriteria = useMemo(
+    () => currentAnalysis?.confidence_details?.low_confidence_criteria || [],
+    [currentAnalysis?.confidence_details?.low_confidence_criteria]
+  )
+
+  // State for low-confidence banner collapse
+  const [lowConfExpanded, setLowConfExpanded] = useState(true)
+
+  // Build reasoning chain ThoughtSteps for the selected payer
+  const effectivePayer = selectedPayerName || primaryPayerName
+  const thoughtSteps: ThoughtStep[] = useMemo(() => {
+    const chain = currentAnalysis?.reasoning_chains?.[effectivePayer] || []
+    return chain.map((step: string, i: number) => {
+      // Parse step titles like "[PolicyAnalyzer] Evidence gap..." -> "Evidence gap..."
+      const titleMatch = step.match(/^\[.*?\]\s*(.+?)(?:\.|$)/)
+      const title = titleMatch ? titleMatch[1] : step.slice(0, 60) + (step.length > 60 ? '...' : '')
+      return {
+        id: `${effectivePayer}-step-${i}`,
+        stepNumber: i + 1,
+        title,
+        reasoning: step,
+        source: { type: 'policy' as const, name: effectivePayer },
+        status: 'complete' as const,
+      }
+    })
+  }, [currentAnalysis?.reasoning_chains, currentAnalysis?.confidence, effectivePayer])
+
+  // Format relative time from provenance timestamp (stable across re-renders)
+  const provenanceTime = useMemo(() => {
+    const ts = currentAnalysis?.provenance?.timestamp
+    if (!ts) return null
+    const diff = Date.now() - new Date(ts).getTime()
+    if (diff < 60000) return 'just now'
+    if (diff < 3600000) return `${Math.round(diff / 60000)}m ago`
+    return `${Math.round(diff / 3600000)}h ago`
+  }, [currentAnalysis?.provenance?.timestamp])
+
   return (
     <WizardStep
       title="Policy Analysis"
@@ -185,7 +226,23 @@ export function AnalysisStep({
           <div className="flex items-start gap-3">
             <Brain className="w-5 h-5 text-grey-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-grey-900 mb-1">AI Analysis Complete</h4>
+              <div className="flex items-center gap-2 mb-1">
+                <h4 className="text-sm font-semibold text-grey-900">AI Analysis Complete</h4>
+                {currentAnalysis.provenance && (
+                  <span className="text-[11px] text-grey-400 flex items-center gap-1">
+                    {currentAnalysis.provenance.is_cached ? (
+                      <><Database className="w-3 h-3" /> Cached</>
+                    ) : (
+                      <>
+                        {currentAnalysis.provenance.model && (
+                          <span>{currentAnalysis.provenance.model}</span>
+                        )}
+                        {provenanceTime && <span>· {provenanceTime}</span>}
+                      </>
+                    )}
+                  </span>
+                )}
+              </div>
               <p className="text-sm text-grey-700">{currentAnalysis.reasoning}</p>
               {currentAnalysis.recommendations && currentAnalysis.recommendations.length > 0 && (
                 <ul className="mt-2 space-y-1">
@@ -199,6 +256,43 @@ export function AnalysisStep({
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Low-confidence criteria warning */}
+      {lowConfCriteria.length > 0 && (
+        <div className="mb-6 p-4 rounded-xl bg-grey-50 border border-grey-200">
+          <button
+            type="button"
+            onClick={() => setLowConfExpanded(!lowConfExpanded)}
+            className="w-full flex items-start gap-3"
+          >
+            <AlertTriangle className="w-5 h-5 text-grey-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 text-left">
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-grey-900">
+                  {lowConfCriteria.length} criteria assessed with low confidence (&lt;70%)
+                </h4>
+                {lowConfExpanded ? (
+                  <ChevronDown className="w-4 h-4 text-grey-400" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-grey-400" />
+                )}
+              </div>
+              {lowConfExpanded && (
+                <ul className="mt-2 space-y-1.5">
+                  {lowConfCriteria.map((c, idx) => (
+                    <li key={idx} className="text-xs text-grey-600 flex items-start gap-1.5">
+                      <span className="font-medium text-grey-700 shrink-0">
+                        {c.criterion} ({Math.round(c.confidence * 100)}%):
+                      </span>
+                      <span className="line-clamp-2">{c.reasoning}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </button>
         </div>
       )}
 
@@ -251,7 +345,16 @@ export function AnalysisStep({
           </div>
         </button>
         {criteriaDetailsExpanded && (
-          <div className="p-5 border-t border-grey-200">
+          <div className="p-5 border-t border-grey-200 space-y-4">
+            {thoughtSteps.length > 0 && (
+              <ChainOfThought
+                agentType="PolicyAnalyzer"
+                agentLabel="Policy Analysis Reasoning"
+                steps={thoughtSteps}
+                summary={currentAnalysis?.reasoning}
+                totalConfidence={currentAnalysis?.confidence}
+              />
+            )}
             <PolicyValidationCard
               patientId={caseState.metadata?.source_patient_id as string}
               payerName={selectedPayerName || primaryPayerName}

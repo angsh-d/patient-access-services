@@ -23,6 +23,7 @@ from backend.config.request_context import get_correlation_id
 from backend.reasoning.claude_pa_client import ClaudePAClient, ClaudePolicyReasoningError
 from backend.reasoning.gemini_client import GeminiClient, GeminiError
 from backend.reasoning.openai_client import AzureOpenAIClient, AzureOpenAIError
+from backend.reasoning.langfuse_integration import create_trace, LangfuseTrace
 
 logger = get_logger(__name__)
 
@@ -245,6 +246,22 @@ class LLMGateway:
             logger.debug("Provider failure counter reset", provider=provider.value)
 
     # ------------------------------------------------------------------
+    # Model name helper for Langfuse traces
+    # ------------------------------------------------------------------
+
+    def _get_model_name(self, provider: LLMProvider) -> str:
+        """Return the model identifier string for a given provider."""
+        from backend.config.settings import get_settings
+        settings = get_settings()
+        if provider == LLMProvider.CLAUDE:
+            return settings.claude_model
+        elif provider == LLMProvider.GEMINI:
+            return settings.gemini_model
+        elif provider == LLMProvider.AZURE_OPENAI:
+            return settings.azure_openai_deployment
+        return provider.value
+
+    # ------------------------------------------------------------------
     # Core generate with error classification + circuit breaker
     # ------------------------------------------------------------------
 
@@ -277,21 +294,40 @@ class LLMGateway:
         """
         from backend.config.settings import get_settings
         timeout = get_settings().llm_gateway_timeout_seconds
+        cid = get_correlation_id()
+
+        # Create Langfuse trace for this gateway call
+        trace = create_trace(
+            name=task_category.value,
+            trace_id=cid,
+            metadata={"temperature": temperature, "response_format": response_format},
+            input_data=prompt[:500],
+            tags=[task_category.value],
+        )
+
         try:
-            return await asyncio.wait_for(
+            result = await asyncio.wait_for(
                 self._generate_inner(
                     task_category=task_category,
                     prompt=prompt,
                     system_prompt=system_prompt,
                     temperature=temperature,
                     response_format=response_format,
+                    trace=trace,
                 ),
                 timeout=timeout,
             )
+            trace.update(output=str(result.get("response", ""))[:500],
+                         metadata={"provider": result.get("provider")})
+            return result
         except asyncio.TimeoutError:
+            trace.update(output=f"TIMEOUT after {timeout}s", metadata={"error": "timeout"})
             raise LLMGatewayError(
                 f"LLM gateway timed out after {timeout}s for task {task_category.value}"
             )
+        except LLMGatewayError:
+            trace.update(output="ALL_PROVIDERS_FAILED", metadata={"error": "all_providers_failed"})
+            raise
 
     async def _generate_inner(
         self,
@@ -299,13 +335,16 @@ class LLMGateway:
         prompt: str,
         system_prompt: Optional[str] = None,
         temperature: float = 0.3,
-        response_format: str = "text"
+        response_format: str = "text",
+        trace: Optional[LangfuseTrace] = None,
     ) -> Dict[str, Any]:
         """Inner generate logic with provider routing, retries, and circuit breaker."""
         providers = TASK_MODEL_ROUTING.get(
             task_category, [LLMProvider.GEMINI, LLMProvider.AZURE_OPENAI]
         )
         cid = get_correlation_id()
+        if trace is None:
+            trace = LangfuseTrace()
 
         logger.info(
             "Routing LLM request",
@@ -316,7 +355,7 @@ class LLMGateway:
 
         last_error = None
 
-        for provider in providers:
+        for idx, provider in enumerate(providers):
             # --- Circuit breaker check ---
             if self._is_circuit_open(provider):
                 logger.warning(
@@ -326,6 +365,21 @@ class LLMGateway:
                     task_category=task_category.value,
                 )
                 continue
+
+            is_fallback = idx > 0
+            model_name = self._get_model_name(provider)
+
+            # Create Langfuse generation span
+            generation = trace.create_generation(
+                name=provider.value,
+                model=model_name,
+                input_data=prompt[:500],
+                metadata={
+                    "task": task_category.value,
+                    "temperature": temperature,
+                    "is_fallback": is_fallback,
+                },
+            )
 
             try:
                 result = await self._call_provider(
@@ -337,7 +391,23 @@ class LLMGateway:
                 )
                 result["provider"] = provider.value
                 result["task_category"] = task_category.value
+                result["model"] = model_name
+                result["is_fallback"] = is_fallback
                 self._record_provider_success(provider)
+
+                # Extract usage for Langfuse but keep it in result for provenance
+                usage_meta = result.get("_usage")
+                usage_for_langfuse = {}
+                if usage_meta:
+                    usage_for_langfuse = {
+                        "input": usage_meta.get("input_tokens", 0),
+                        "output": usage_meta.get("output_tokens", 0),
+                    }
+                generation.end(
+                    output=str(result.get("response", ""))[:500],
+                    usage=usage_for_langfuse if usage_for_langfuse else None,
+                )
+
                 logger.info(
                     "Provider succeeded",
                     correlation_id=cid,
@@ -359,6 +429,9 @@ class LLMGateway:
                 )
 
                 if transient:
+                    # Close the original generation span before retrying
+                    generation.end(output=str(e)[:500], level="WARNING")
+
                     # Retry the SAME provider once after a short backoff
                     logger.info(
                         "Transient error -- retrying same provider after backoff",
@@ -367,6 +440,14 @@ class LLMGateway:
                         backoff_s=_TRANSIENT_RETRY_DELAY,
                     )
                     await asyncio.sleep(_TRANSIENT_RETRY_DELAY)
+
+                    # New generation span for the retry
+                    retry_gen = trace.create_generation(
+                        name=f"{provider.value}_retry",
+                        model=model_name,
+                        input_data=prompt[:500],
+                        metadata={"task": task_category.value, "is_retry": True},
+                    )
                     try:
                         result = await self._call_provider(
                             provider=provider,
@@ -377,9 +458,24 @@ class LLMGateway:
                         )
                         result["provider"] = provider.value
                         result["task_category"] = task_category.value
+                        result["model"] = model_name
+                        result["is_fallback"] = is_fallback
                         self._record_provider_success(provider)
+
+                        usage_meta = result.get("_usage")
+                        usage_for_langfuse = {}
+                        if usage_meta:
+                            usage_for_langfuse = {
+                                "input": usage_meta.get("input_tokens", 0),
+                                "output": usage_meta.get("output_tokens", 0),
+                            }
+                        retry_gen.end(
+                            output=str(result.get("response", ""))[:500],
+                            usage=usage_for_langfuse if usage_for_langfuse else None,
+                        )
                         return result
                     except Exception as retry_err:
+                        retry_gen.end(output=str(retry_err)[:500], level="ERROR")
                         logger.warning(
                             "Transient retry also failed, moving to next provider",
                             correlation_id=cid,
@@ -391,6 +487,7 @@ class LLMGateway:
                         continue
                 else:
                     # Permanent error -- no point retrying this provider
+                    generation.end(output=str(e)[:500], level="ERROR")
                     last_error = e
                     self._record_provider_failure(provider)
                     continue

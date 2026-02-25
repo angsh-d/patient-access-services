@@ -6,7 +6,11 @@ from uuid import uuid4
 from sqlalchemy import select, update, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.storage.models import CaseModel, CaseStateSnapshotModel
+from backend.storage.models import (
+    CaseModel, CaseStateSnapshotModel, DecisionEventModel,
+    PredictionOutcomeModel, LLMUsageModel, StrategicIntelligenceCacheModel,
+)
+
 from backend.models.case_state import CaseState, PatientInfo, MedicationRequest, PayerState
 from backend.models.enums import CaseStage
 from backend.config.logging_config import get_logger
@@ -228,6 +232,62 @@ class CaseRepository:
         if deleted:
             logger.info("Case soft-deleted", case_id=case_id)
         return deleted
+
+    async def reset(self, case_id: str) -> Optional[CaseModel]:
+        """
+        Reset a case to initial intake state for demo re-runs.
+        Preserves case ID, patient, and medication data.
+        Deletes all related records (events, snapshots, predictions, LLM usage, caches).
+
+        Args:
+            case_id: Case ID
+
+        Returns:
+            Reset case model, or None if not found
+        """
+        case = await self.get_by_id(case_id)
+        if not case:
+            return None
+
+        # Delete related records not covered by ORM cascade
+        for model_cls in (PredictionOutcomeModel, LLMUsageModel, StrategicIntelligenceCacheModel):
+            await self.session.execute(
+                delete(model_cls).where(model_cls.case_id == case_id)
+            )
+
+        # Delete cascade-managed children explicitly to ensure clean state
+        await self.session.execute(
+            delete(CaseStateSnapshotModel).where(CaseStateSnapshotModel.case_id == case_id)
+        )
+        await self.session.execute(
+            delete(DecisionEventModel).where(DecisionEventModel.case_id == case_id)
+        )
+
+        # Reset case fields to initial state
+        now = datetime.now(timezone.utc)
+        case.version = 1
+        case.updated_at = now
+        case.stage = "intake"
+        case.payer_states = {}
+        case.coverage_assessments = {}
+        case.documentation_gaps = []
+        case.available_strategies = []
+        case.selected_strategy_id = None
+        case.strategy_rationale = None
+        case.pending_actions = []
+        case.completed_actions = []
+        case.human_decisions = []
+        case.requires_human_decision = False
+        case.human_decision_reason = None
+        case.error_message = None
+        case.metadata_json = {}
+
+        # Create fresh initial snapshot
+        await self._create_snapshot(case, "Case reset to intake")
+        await self.session.flush()
+
+        logger.info("Case reset to intake", case_id=case_id)
+        return case
 
     async def get_snapshots(self, case_id: str) -> List[CaseStateSnapshotModel]:
         """

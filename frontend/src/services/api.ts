@@ -254,6 +254,15 @@ export const casesApi = {
   },
 
   /**
+   * Reset a case to initial intake state (for demo re-runs)
+   */
+  reset: (caseId: string): Promise<{ message: string; case: import('@/types/case').CaseState }> => {
+    return request<{ message: string; case: import('@/types/case').CaseState }>(ENDPOINTS.resetCase(caseId), {
+      method: 'POST',
+    })
+  },
+
+  /**
    * Process a case (advance to next stage)
    */
   process: (caseId: string, data?: ProcessCaseRequest): Promise<ProcessCaseResponse> => {

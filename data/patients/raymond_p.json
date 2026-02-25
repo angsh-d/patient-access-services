@@ -1,0 +1,201 @@
+{
+  "patient_id": "raymond_p",
+  "extraction_metadata": {
+    "extracted_from": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf", "03_CT_Enterography_Report.pdf"],
+    "extraction_date": "2026-02-13",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Raymond",
+    "last_name": "Park",
+    "date_of_birth": "1980-10-02",
+    "age": 45,
+    "gender": "Male",
+    "ethnicity": "Korean American",
+    "address": { "street": "3455 Wilshire Boulevard, Apt 1204", "city": "Los Angeles", "state": "CA", "zip": "90010" },
+    "phone": "213-555-0176",
+    "mrn": "RAYMOND_P",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "Aetna",
+      "payer_id": "AETNA",
+      "plan_name": "Aetna Open Choice PPO",
+      "plan_type": "PPO",
+      "member_id": "AET567891234",
+      "group_number": "CA-PPO-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. David Kim",
+    "credentials": "MD, FACG",
+    "npi": "1123456789",
+    "specialty": "Gastroenterology",
+    "practice_name": "Cedars-Sinai IBD Center",
+    "address": { "street": "8700 Beverly Boulevard, Suite 4401", "city": "Los Angeles", "state": "CA", "zip": "90048" },
+    "phone": "310-555-0900",
+    "fax": "310-555-0901",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Infliximab",
+    "brand_name": "Inflectra",
+    "generic_name": "infliximab-dyyb",
+    "j_code": "Q5103",
+    "product_type": "preferred_biosimilar",
+    "dose": "5mg/kg",
+    "route": "Intravenous infusion",
+    "frequency": { "induction": "Weeks 0, 2, 6", "maintenance": "Every 8 weeks" },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "4 infusions",
+    "site_of_care": "Outpatient infusion center",
+    "start_date_requested": "2026-02-24",
+    "diagnosis": "Crohn's disease of small intestine with intestinal obstruction",
+    "icd10_code": "K50.012",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "K50.012",
+      "description": "Crohn's disease of small intestine with intestinal obstruction",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-08",
+    "cdai_score": 345,
+    "cdai_interpretation": "Moderate-to-severe active disease (CDAI >300)",
+    "ses_cd_score": 16,
+    "ses_cd_interpretation": "Moderate-to-severe endoscopic activity",
+    "disease_severity": "severe",
+    "disease_phenotype": "stricturing",
+    "disease_location": "Terminal ileum with stricture",
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_CT_Enterography_Report.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Recurrent partial bowel obstruction episodes, progressive narrowing of terminal ileum, weight loss",
+    "history_of_present_illness": "45-year-old male with stricturing Crohn's disease diagnosed 2020. CDAI 345, SES-CD 16. CT enterography shows inflammatory stricture of terminal ileum with proximal dilation and wall thickening with enhancement (indicating active inflammation amenable to medical therapy). Three episodes of partial small bowel obstruction in past 6 months requiring ER visits and liquid diet. 15 lb weight loss over 3 months. Surgical consultation deferred pending trial of anti-TNF therapy to reduce inflammation and potentially avoid resection. Failed budesonide, prednisone (steroid-dependent), and azathioprine (inadequate response at 12 months).",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Budesonide",
+      "brand_name": "Entocort EC",
+      "drug_class": "Corticosteroid (local)",
+      "dose": "9mg daily",
+      "start_date": "2021-01-01",
+      "end_date": "2021-04-01",
+      "duration_weeks": 13,
+      "outcome": "inadequate_response",
+      "outcome_description": "Partial response during course but relapse upon completion. Not suitable for long-term use.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Prednisone",
+      "drug_class": "Corticosteroid",
+      "dose": "40mg with taper",
+      "start_date": "2021-06-01",
+      "end_date": "2023-12-01",
+      "duration_weeks": 130,
+      "outcome": "steroid_dependent",
+      "outcome_description": "Steroid-dependent disease. Unable to taper below 20mg without obstruction symptoms returning.",
+      "taper_attempts": 4,
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Azathioprine",
+      "brand_name": "Imuran",
+      "drug_class": "Thiopurine immunomodulator",
+      "dose": "150mg daily (2mg/kg)",
+      "start_date": "2024-01-01",
+      "end_date": "2025-01-01",
+      "duration_weeks": 52,
+      "outcome": "inadequate_response",
+      "outcome_description": "12 months at therapeutic dose (6-TGN 290). Stricture progressed and obstruction episodes increased. Failed to prevent disease progression.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-06",
+    "ordering_provider": "Dr. David Kim",
+    "facility": "Cedars-Sinai Clinical Lab",
+    "report_status": "FINAL",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count (CBC)",
+        "results": [
+          {"test": "WBC", "value": 10.2, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "Hemoglobin", "value": 11.5, "unit": "g/dL", "reference_range": "13.5-17.5", "flag": "L"},
+          {"test": "Platelets", "value": 395, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel",
+        "results": [
+          {"test": "Albumin", "value": 2.8, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": "L"},
+          {"test": "ALT", "value": 26, "unit": "U/L", "reference_range": "7-56", "flag": null}
+        ]
+      },
+      "inflammatory_markers": {
+        "panel_name": "Inflammatory Markers",
+        "results": [
+          {"test": "CRP", "value": 32, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 45, "unit": "mm/hr", "reference_range": "0-15", "flag": "H"}
+        ]
+      },
+      "gi_markers": {
+        "panel_name": "GI-Specific Markers",
+        "results": [
+          {"test": "Fecal Calprotectin", "value": 1100, "unit": "ug/g", "reference_range": "<50", "flag": "H"}
+        ]
+      }
+    },
+    "interpretation": "Active inflammatory Crohn's with stricturing phenotype. Elevated CRP (32), FCP (1100). Anemia (11.5) and hypoalbuminemia (2.8) reflecting nutritional compromise from stricture."
+  },
+
+  "pre_biologic_screening": {
+    "status": "COMPLETE",
+    "tuberculosis_screening": { "status": "COMPLETE", "test_performed": "QuantiFERON-TB Gold Plus", "result": "Negative", "cleared_for_biologic": true },
+    "hepatitis_b_screening": { "status": "COMPLETE", "interpretation": "HBV negative with immunity from vaccination", "cleared_for_biologic": true },
+    "hepatitis_c_screening": { "status": "COMPLETE", "result": "Non-reactive", "cleared_for_biologic": true }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": { "met": true, "evidence": "Stricturing Crohn's confirmed by CT enterography and colonoscopy" },
+    "disease_severity_documented": { "met": true, "evidence": "CDAI 345, SES-CD 16, CRP 32, FCP 1100, albumin 2.8" },
+    "conventional_therapy_failed": {
+      "met": true,
+      "therapies_tried": [
+        {"medication": "Budesonide", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Prednisone", "outcome": "steroid_dependent", "duration_adequate": true},
+        {"medication": "Azathioprine", "outcome": "inadequate_response", "duration_adequate": true}
+      ]
+    },
+    "step_therapy_satisfied": { "met": true },
+    "pre_biologic_screening_complete": { "met": true },
+    "fda_approved_indication": { "met": true, "indication": "Moderate-to-severe Crohn's disease" }
+  },
+
+  "overall_pa_readiness": {
+    "status": "URGENT_SUBMISSION_RECOMMENDED",
+    "all_clinical_criteria_met": true,
+    "recommendation": "Urgent. Stricturing CD with recurrent obstruction episodes. Anti-TNF therapy may prevent need for surgical resection. Submit immediately."
+  }
+}

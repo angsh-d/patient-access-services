@@ -60,6 +60,11 @@ class Settings(BaseSettings):
     # LLM Gateway
     llm_gateway_timeout_seconds: int = Field(default=180, description="Wall-clock timeout for LLM gateway generate() calls")
 
+    # Langfuse Observability (optional)
+    langfuse_secret_key: str = Field(default="", description="Langfuse secret key")
+    langfuse_public_key: str = Field(default="", description="Langfuse public key")
+    langfuse_base_url: str = Field(default="http://localhost:3100", description="Langfuse base URL")
+
     # Data directories (relative to project root)
     patients_dir: str = Field(default="data/patients", description="Directory containing patient JSON files")
     policies_dir: str = Field(default="data/policies", description="Directory containing policy files")

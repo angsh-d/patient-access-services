@@ -32,6 +32,9 @@ langgraph>=0.0.40
 # Logging
 structlog>=24.1.0
 
+# Observability
+langfuse>=2.0.0
+
 # Utilities
 tenacity>=8.2.3
 aiosqlite

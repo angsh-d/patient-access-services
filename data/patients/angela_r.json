@@ -1,0 +1,209 @@
+{
+  "patient_id": "angela_r",
+  "extraction_metadata": {
+    "extracted_from": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf", "03_Imaging_Report.pdf"],
+    "extraction_date": "2026-02-14",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Angela",
+    "last_name": "Reeves",
+    "date_of_birth": "1963-02-14",
+    "age": 63,
+    "gender": "Female",
+    "ethnicity": "African American",
+    "address": { "street": "2100 West End Avenue, Suite 1500", "city": "Nashville", "state": "TN", "zip": "37203" },
+    "phone": "615-555-0145",
+    "mrn": "ANGELA_R",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "UHC",
+      "payer_id": "UHC",
+      "plan_name": "UnitedHealthcare Choice Plus POS",
+      "plan_type": "POS",
+      "member_id": "UHC912345678",
+      "group_number": "TN-POS-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Michael Patel",
+    "credentials": "MD, FACR",
+    "npi": "1234567892",
+    "specialty": "Rheumatology",
+    "practice_name": "Vanderbilt Rheumatology Clinic",
+    "address": { "street": "1211 Medical Center Drive", "city": "Nashville", "state": "TN", "zip": "37232" },
+    "phone": "615-555-1000",
+    "fax": "615-555-1001",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Infliximab",
+    "brand_name": "Inflectra",
+    "generic_name": "infliximab-dyyb",
+    "j_code": "Q5103",
+    "product_type": "preferred_biosimilar",
+    "dose": "3mg/kg",
+    "route": "Intravenous infusion",
+    "frequency": { "induction": "Weeks 0, 2, 6", "maintenance": "Every 8 weeks" },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "4 infusions",
+    "site_of_care": "Outpatient infusion center",
+    "start_date_requested": "2026-02-26",
+    "diagnosis": "Rheumatoid arthritis with rheumatoid factor",
+    "icd10_code": "M05.79",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "M05.79",
+      "description": "Rheumatoid arthritis with rheumatoid factor of multiple sites",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "M05.30",
+      "description": "Rheumatoid nodule, unspecified site",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-25",
+    "das28_crp": 6.2,
+    "das28_interpretation": "High disease activity (DAS28 >5.1)",
+    "swollen_joint_count": 14,
+    "tender_joint_count": 22,
+    "patient_global_assessment": 78,
+    "disease_severity": "severe",
+    "joint_erosions": true,
+    "erosion_sites": ["MCP 2-5 bilateral", "PIP 2-4 bilateral", "wrists bilateral", "MTP 2-5 bilateral"],
+    "rheumatoid_nodules": true,
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Imaging_Report.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Refractory RA with progressive erosive disease despite multiple DMARDs, severe functional limitation",
+    "history_of_present_illness": "63-year-old female with severe seropositive erosive RA diagnosed 2017. DAS28-CRP 6.2 (high activity). 14 swollen, 22 tender joints. Extensive erosions on X-ray involving MCPs, PIPs, wrists, and MTPs bilateral. Rheumatoid nodules on bilateral elbows. Failed methotrexate (25mg SQ weekly, 12 months with inadequate response), leflunomide (20mg, 9 months with inadequate response), and sulfasalazine (added as triple therapy, 6 months without significant improvement). Morning stiffness >3 hours. HAQ-DI score 1.8 indicating severe disability. Unable to perform ADLs including dressing, cooking, and personal hygiene without assistance. Currently on methotrexate 15mg weekly as concomitant therapy.",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Methotrexate",
+      "drug_class": "csDMARD",
+      "dose": "25mg SQ weekly",
+      "start_date": "2022-01-01",
+      "end_date": "2023-01-01",
+      "duration_weeks": 52,
+      "outcome": "inadequate_response",
+      "outcome_description": "Inadequate response at maximum dose for 12 months. DAS28 remained >5.5. Dose reduced to 15mg for maintenance/concomitant use.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Leflunomide",
+      "brand_name": "Arava",
+      "drug_class": "csDMARD",
+      "dose": "20mg daily",
+      "start_date": "2023-03-01",
+      "end_date": "2023-12-01",
+      "duration_weeks": 39,
+      "outcome": "inadequate_response",
+      "outcome_description": "Added to methotrexate combination. 9 months without significant improvement in disease activity. DAS28 remained >5.1.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Sulfasalazine",
+      "drug_class": "csDMARD",
+      "dose": "2g daily",
+      "start_date": "2024-02-01",
+      "end_date": "2024-08-01",
+      "duration_weeks": 26,
+      "outcome": "inadequate_response",
+      "outcome_description": "Triple DMARD therapy (MTX + SSZ + HCQ) for 6 months. No significant improvement.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-22",
+    "ordering_provider": "Dr. Michael Patel",
+    "facility": "Vanderbilt Clinical Lab",
+    "report_status": "FINAL",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count (CBC)",
+        "results": [
+          {"test": "WBC", "value": 8.0, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "Hemoglobin", "value": 11.2, "unit": "g/dL", "reference_range": "12.0-16.0", "flag": "L"},
+          {"test": "Platelets", "value": 385, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
+        ]
+      },
+      "inflammatory_markers": {
+        "panel_name": "Inflammatory Markers",
+        "results": [
+          {"test": "CRP", "value": 25, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 52, "unit": "mm/hr", "reference_range": "0-20", "flag": "H"}
+        ]
+      },
+      "rheumatology_panel": {
+        "panel_name": "Rheumatology Panel",
+        "results": [
+          {"test": "Rheumatoid Factor", "value": 256, "unit": "IU/mL", "reference_range": "<14", "flag": "H"},
+          {"test": "Anti-CCP Antibody", "value": 420, "unit": "U/mL", "reference_range": "<20", "flag": "H"}
+        ]
+      },
+      "hepatic_panel": {
+        "panel_name": "Hepatic Panel",
+        "results": [
+          {"test": "ALT", "value": 25, "unit": "U/L", "reference_range": "7-56", "flag": null},
+          {"test": "AST", "value": 22, "unit": "U/L", "reference_range": "10-40", "flag": null}
+        ]
+      }
+    },
+    "interpretation": "Highly seropositive RA (RF 256, anti-CCP 420) with high-titer autoantibodies predicting aggressive disease. Elevated CRP (25) and ESR (52). Anemia of chronic disease (Hgb 11.2)."
+  },
+
+  "pre_biologic_screening": {
+    "status": "COMPLETE",
+    "tuberculosis_screening": { "status": "COMPLETE", "test_performed": "QuantiFERON-TB Gold Plus", "result": "Negative", "cleared_for_biologic": true },
+    "hepatitis_b_screening": { "status": "COMPLETE", "interpretation": "HBV negative with immunity from vaccination", "cleared_for_biologic": true },
+    "hepatitis_c_screening": { "status": "COMPLETE", "result": "Non-reactive", "cleared_for_biologic": true }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": { "met": true, "evidence": "Seropositive erosive RA with RF 256, anti-CCP 420, radiographic erosions" },
+    "disease_severity_documented": { "met": true, "evidence": "DAS28 6.2, 14 swollen/22 tender joints, HAQ-DI 1.8, erosive disease, nodules" },
+    "conventional_therapy_failed": {
+      "met": true,
+      "therapies_tried": [
+        {"medication": "Methotrexate", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Leflunomide", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Sulfasalazine", "outcome": "inadequate_response", "duration_adequate": true}
+      ]
+    },
+    "step_therapy_satisfied": { "met": true, "evidence": "Failed 3 csDMARDs including MTX at adequate dose per ACR guidelines" },
+    "pre_biologic_screening_complete": { "met": true },
+    "fda_approved_indication": { "met": true, "indication": "Moderate-to-severe RA with inadequate response to DMARDs" }
+  },
+
+  "overall_pa_readiness": {
+    "status": "READY_FOR_SUBMISSION",
+    "all_clinical_criteria_met": true,
+    "recommendation": "Compelling case. Severe erosive seropositive RA with high-titer autoantibodies, failed 3 csDMARDs. HAQ-DI 1.8 documents severe disability. Submit immediately."
+  }
+}

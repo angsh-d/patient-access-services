@@ -294,6 +294,38 @@
     @apply text-xs font-semibold uppercase tracking-wider text-grey-400;
     letter-spacing: 0.06em;
   }
+
+  /* Salesforce Lightning Table Utilities */
+  .sf-table-header-cell {
+    @apply px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap select-none;
+    color: #181818;
+    background: #FAFAF9;
+    border-bottom: 1px solid #E5E5E5;
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+  }
+
+  .sf-table-cell {
+    @apply px-3 py-2 text-sm whitespace-nowrap;
+    color: #181818;
+    border-bottom: 1px solid #E5E5E5;
+    font-size: 0.8125rem;
+  }
+
+  .sf-table-row:hover {
+    background: #F3F3F3;
+  }
+
+  .sf-link {
+    color: #0176D3;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .sf-link:hover {
+    text-decoration: underline;
+    color: #014486;
+  }
 }
 
 @layer utilities {

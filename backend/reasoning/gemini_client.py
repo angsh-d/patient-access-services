@@ -129,11 +129,17 @@ class GeminiClient:
             logger.debug("Gemini response received", length=len(response_text),
                          input_tokens=input_tokens, output_tokens=output_tokens)
 
+            _usage_meta = {
+                "input_tokens": input_tokens, "output_tokens": output_tokens,
+                "latency_ms": round(latency_ms, 2), "model": self.model_name,
+            }
+
             if response_format == "json":
                 parsed = self._extract_json(response_text)
+                parsed["_usage"] = _usage_meta
                 return parsed
             else:
-                return {"response": response_text}
+                return {"response": response_text, "_usage": _usage_meta}
 
         except Exception as e:
             logger.error("Gemini generation failed", error=str(e))

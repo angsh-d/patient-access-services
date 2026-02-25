@@ -1,0 +1,211 @@
+{
+  "patient_id": "robert_c",
+  "extraction_metadata": {
+    "extracted_from": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf", "03_Colonoscopy_Report.pdf"],
+    "extraction_date": "2026-02-10",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Robert",
+    "last_name": "Chen",
+    "date_of_birth": "1978-03-15",
+    "age": 47,
+    "gender": "Male",
+    "ethnicity": "Asian",
+    "address": { "street": "1425 Pacific Avenue", "city": "San Francisco", "state": "CA", "zip": "94115" },
+    "phone": "415-555-0142",
+    "mrn": "ROBERT_C",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "UHC",
+      "payer_id": "UHC",
+      "plan_name": "UnitedHealthcare Choice Plus PPO",
+      "plan_type": "PPO",
+      "member_id": "UHC456789123",
+      "group_number": "CA-PPO-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Sarah Lin",
+    "credentials": "MD, FACG",
+    "npi": "1234567891",
+    "specialty": "Gastroenterology",
+    "practice_name": "UCSF Digestive Health Center",
+    "address": { "street": "1701 Divisadero Street, Suite 120", "city": "San Francisco", "state": "CA", "zip": "94115" },
+    "phone": "415-555-0200",
+    "fax": "415-555-0201",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Infliximab",
+    "brand_name": "Inflectra",
+    "generic_name": "infliximab-dyyb",
+    "j_code": "Q5103",
+    "product_type": "preferred_biosimilar",
+    "dose": "5mg/kg",
+    "route": "Intravenous infusion",
+    "frequency": { "induction": "Weeks 0, 2, 6", "maintenance": "Every 8 weeks" },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "4 infusions",
+    "site_of_care": "Outpatient infusion center",
+    "start_date_requested": "2026-02-15",
+    "diagnosis": "Crohn's disease of large intestine",
+    "icd10_code": "K50.10",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "K50.10",
+      "description": "Crohn's disease of large intestine without complications",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "D50.9",
+      "description": "Iron deficiency anemia, unspecified",
+      "status": "active",
+      "source_document": "02_Laboratory_Results.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2025-12-10",
+    "cdai_score": 310,
+    "cdai_interpretation": "Moderate-to-severe active disease (CDAI >300)",
+    "ses_cd_score": 15,
+    "ses_cd_interpretation": "Moderate endoscopic activity",
+    "disease_severity": "moderate_to_severe",
+    "disease_phenotype": "inflammatory_colonic",
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Worsening abdominal pain, bloody diarrhea 6-8x daily, fatigue, and weight loss despite immunomodulator therapy",
+    "history_of_present_illness": "47-year-old male with moderate-to-severe Crohn's disease diagnosed March 2023. CDAI 310, SES-CD 15. Reports 6-8 loose bloody stools daily, cramping abdominal pain rated 6/10, and 10 lb weight loss over 2 months. Failed mesalamine (inadequate response at max dose for 16 weeks), prednisone (steroid-dependent after 3 taper attempts), and methotrexate (intolerance due to persistent nausea and elevated LFTs). Two ER visits in past 60 days for dehydration requiring IV fluids.",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Mesalamine",
+      "brand_name": "Pentasa",
+      "drug_class": "5-ASA",
+      "dose": "1g QID (4g daily)",
+      "start_date": "2023-04-01",
+      "end_date": "2023-08-01",
+      "duration_weeks": 16,
+      "outcome": "inadequate_response",
+      "outcome_description": "Persistent symptoms despite maximum dose for 16 weeks",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Prednisone",
+      "drug_class": "Corticosteroid",
+      "dose": "40mg initially, taper attempts",
+      "start_date": "2023-09-01",
+      "end_date": "2024-06-01",
+      "duration_weeks": 39,
+      "outcome": "steroid_dependent",
+      "outcome_description": "Steroid-dependent after 3 failed taper attempts. Disease flares below 15mg.",
+      "taper_attempts": 3,
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Methotrexate",
+      "drug_class": "Immunomodulator",
+      "dose": "25mg SQ weekly",
+      "start_date": "2024-07-01",
+      "end_date": "2024-10-15",
+      "duration_weeks": 15,
+      "outcome": "intolerance",
+      "outcome_description": "Intolerance due to persistent nausea and elevated hepatic transaminases (ALT 2.5x ULN).",
+      "adverse_event": { "type": "hepatotoxicity", "details": "ALT 2.5x ULN with persistent nausea", "severity": "moderate" },
+      "adequate_trial": false,
+      "reason_inadequate": "discontinued_due_to_adverse_event",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2025-12-08",
+    "ordering_provider": "Dr. Sarah Lin",
+    "facility": "UCSF Clinical Laboratory",
+    "report_status": "FINAL",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count (CBC)",
+        "results": [
+          {"test": "WBC", "value": 10.5, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "Hemoglobin", "value": 10.8, "unit": "g/dL", "reference_range": "13.5-17.5", "flag": "L"},
+          {"test": "Hematocrit", "value": 33.2, "unit": "%", "reference_range": "38.8-50", "flag": "L"},
+          {"test": "Platelets", "value": 380, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel (CMP)",
+        "results": [
+          {"test": "Albumin", "value": 3.1, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": "L"},
+          {"test": "ALT", "value": 30, "unit": "U/L", "reference_range": "7-56", "flag": null},
+          {"test": "AST", "value": 25, "unit": "U/L", "reference_range": "10-40", "flag": null},
+          {"test": "Creatinine", "value": 0.9, "unit": "mg/dL", "reference_range": "0.7-1.3", "flag": null}
+        ]
+      },
+      "inflammatory_markers": {
+        "panel_name": "Inflammatory Markers",
+        "results": [
+          {"test": "CRP", "value": 35, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 42, "unit": "mm/hr", "reference_range": "0-15", "flag": "H"}
+        ]
+      },
+      "gi_markers": {
+        "panel_name": "GI-Specific Markers",
+        "results": [
+          {"test": "Fecal Calprotectin", "value": 980, "unit": "ug/g", "reference_range": "<50", "flag": "H"}
+        ]
+      }
+    },
+    "interpretation": "Elevated inflammatory markers (CRP 35, ESR 42, FCP 980) confirm active intestinal inflammation. Mild anemia (Hgb 10.8) and hypoalbuminemia (3.1) indicate nutritional impact from active disease."
+  },
+
+  "pre_biologic_screening": {
+    "status": "COMPLETE",
+    "tuberculosis_screening": { "status": "COMPLETE", "test_performed": "QuantiFERON-TB Gold Plus", "result": "Negative", "cleared_for_biologic": true },
+    "hepatitis_b_screening": { "status": "COMPLETE", "interpretation": "HBV negative with immunity from vaccination", "cleared_for_biologic": true },
+    "hepatitis_c_screening": { "status": "COMPLETE", "test_performed": "Hepatitis C Antibody", "result": "Non-reactive", "cleared_for_biologic": true }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": { "met": true, "evidence": "Colonoscopy confirms active Crohn's disease with SES-CD 15" },
+    "disease_severity_documented": { "met": true, "evidence": "CDAI 310, CRP 35, FCP 980, albumin 3.1 — moderate-to-severe active disease" },
+    "conventional_therapy_failed": {
+      "met": true,
+      "therapies_tried": [
+        {"medication": "Mesalamine", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Prednisone", "outcome": "steroid_dependent", "duration_adequate": true},
+        {"medication": "Methotrexate", "outcome": "intolerance", "duration_adequate": false}
+      ]
+    },
+    "step_therapy_satisfied": { "met": true, "evidence": "Failed 5-ASA, corticosteroids (steroid-dependent), immunomodulator (intolerance)" },
+    "pre_biologic_screening_complete": { "met": true },
+    "fda_approved_indication": { "met": true, "indication": "Moderate-to-severe Crohn's disease" }
+  },
+
+  "overall_pa_readiness": {
+    "status": "READY_FOR_SUBMISSION",
+    "all_clinical_criteria_met": true,
+    "recommendation": "All criteria met. Strong case with objective inflammatory markers, clear step therapy failure, and complete screening. Submit PA immediately."
+  }
+}

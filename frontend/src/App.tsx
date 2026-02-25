@@ -9,6 +9,7 @@ import CaseDetail from './pages/CaseDetail'
 import NewCase from './pages/NewCase'
 import Settings from './pages/Settings'
 import Analytics from './pages/Analytics'
+import PolicyVault from './pages/PolicyVault'
 import { pageTransition } from './lib/animations'
 
 function AnimatedRoutes() {
@@ -37,10 +38,10 @@ function AnimatedRoutes() {
           />
 
           <Route
-            path="/cases"
+            path="/policy-vault"
             element={
               <PageWrapper>
-                <Dashboard />
+                <PolicyVault />
               </PageWrapper>
             }
           />

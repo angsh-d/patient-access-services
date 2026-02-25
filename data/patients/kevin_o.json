@@ -1,0 +1,194 @@
+{
+  "patient_id": "kevin_o",
+  "extraction_metadata": {
+    "extracted_from": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf", "03_Dermatology_Report.pdf"],
+    "extraction_date": "2026-02-09",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Kevin",
+    "last_name": "Okafor",
+    "date_of_birth": "1982-12-05",
+    "age": 43,
+    "gender": "Male",
+    "ethnicity": "Nigerian American",
+    "address": { "street": "6200 Almeda Road, Unit 8", "city": "Houston", "state": "TX", "zip": "77021" },
+    "phone": "713-555-0289",
+    "mrn": "KEVIN_O",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "Cigna",
+      "payer_id": "CIGNA",
+      "plan_name": "Cigna EPO",
+      "plan_type": "EPO",
+      "member_id": "CIG891234567",
+      "group_number": "TX-EPO-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Patricia Nguyen",
+    "credentials": "MD, FAAD",
+    "npi": "1891234567",
+    "specialty": "Dermatology",
+    "practice_name": "Baylor Dermatology Associates",
+    "address": { "street": "7200 Cambridge Street, Suite 7A", "city": "Houston", "state": "TX", "zip": "77030" },
+    "phone": "713-555-0700",
+    "fax": "713-555-0701",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Infliximab",
+    "brand_name": "Inflectra",
+    "generic_name": "infliximab-dyyb",
+    "j_code": "Q5103",
+    "product_type": "preferred_biosimilar",
+    "dose": "5mg/kg",
+    "route": "Intravenous infusion",
+    "frequency": { "induction": "Weeks 0, 2, 6", "maintenance": "Every 8 weeks" },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "4 infusions",
+    "site_of_care": "Outpatient infusion center",
+    "start_date_requested": "2026-02-20",
+    "diagnosis": "Psoriasis vulgaris",
+    "icd10_code": "L40.0",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "L40.0",
+      "description": "Psoriasis vulgaris",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-12",
+    "pasi_score": 22.4,
+    "bsa_percentage": 32,
+    "dlqi_score": 18,
+    "dlqi_interpretation": "Very large effect on quality of life (DLQI 11-20)",
+    "disease_severity": "severe",
+    "affected_areas": ["trunk", "bilateral upper extremities", "bilateral lower extremities", "scalp"],
+    "nail_involvement": true,
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Dermatology_Report.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Severe widespread plaque psoriasis covering 32% BSA unresponsive to topicals and phototherapy",
+    "history_of_present_illness": "43-year-old male with severe plaque psoriasis diagnosed 2016. PASI 22.4, BSA 32%, DLQI 18. Thick, erythematous, well-demarcated plaques with silvery scale on trunk, extremities, and scalp. Significant impact on daily functioning and work (software engineer unable to type comfortably due to hand involvement). Failed high-potency topical corticosteroids, calcipotriene, and 6 months of narrow-band UVB phototherapy (3x/week). Methotrexate tried but discontinued due to hepatotoxicity. Patient reports significant psychological distress and social isolation.",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Clobetasol propionate",
+      "drug_class": "Topical corticosteroid (super-high potency)",
+      "dose": "0.05% ointment BID",
+      "start_date": "2022-01-01",
+      "end_date": "2022-06-01",
+      "duration_weeks": 22,
+      "outcome": "inadequate_response",
+      "outcome_description": "Insufficient for widespread disease. Unable to achieve clearance beyond localized areas. BSA >25% not amenable to topical-only approach.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Narrow-Band UVB Phototherapy",
+      "drug_class": "Phototherapy",
+      "dose": "3 sessions per week",
+      "start_date": "2023-01-15",
+      "end_date": "2023-07-15",
+      "duration_weeks": 26,
+      "outcome": "inadequate_response",
+      "outcome_description": "Partial improvement (PASI improved from 28 to 24) but unable to achieve PASI-75 response after 6 months. Relapsed rapidly after discontinuation due to scheduling constraints.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Methotrexate",
+      "drug_class": "csDMARD",
+      "dose": "15mg weekly (oral)",
+      "start_date": "2024-01-01",
+      "end_date": "2024-04-15",
+      "duration_weeks": 15,
+      "outcome": "intolerance",
+      "outcome_description": "Hepatotoxicity with ALT 4x ULN and persistent nausea/fatigue requiring discontinuation",
+      "adverse_event": { "type": "hepatotoxicity", "details": "ALT 4x ULN", "severity": "severe" },
+      "adequate_trial": false,
+      "reason_inadequate": "discontinued_due_to_adverse_event",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-10",
+    "ordering_provider": "Dr. Patricia Nguyen",
+    "facility": "Baylor Clinical Lab",
+    "report_status": "FINAL",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count (CBC)",
+        "results": [
+          {"test": "WBC", "value": 7.8, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "Hemoglobin", "value": 14.5, "unit": "g/dL", "reference_range": "13.5-17.5", "flag": null},
+          {"test": "Platelets", "value": 265, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
+        ]
+      },
+      "inflammatory_markers": {
+        "panel_name": "Inflammatory Markers",
+        "results": [
+          {"test": "CRP", "value": 8, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 18, "unit": "mm/hr", "reference_range": "0-15", "flag": "H"}
+        ]
+      },
+      "hepatic_panel": {
+        "panel_name": "Hepatic Panel",
+        "results": [
+          {"test": "ALT", "value": 22, "unit": "U/L", "reference_range": "7-56", "flag": null},
+          {"test": "AST", "value": 20, "unit": "U/L", "reference_range": "10-40", "flag": null}
+        ]
+      }
+    },
+    "interpretation": "Mildly elevated CRP (8) and ESR (18). LFTs normalized after methotrexate washout. CBC unremarkable."
+  },
+
+  "pre_biologic_screening": {
+    "status": "COMPLETE",
+    "tuberculosis_screening": { "status": "COMPLETE", "test_performed": "QuantiFERON-TB Gold Plus", "result": "Negative", "cleared_for_biologic": true },
+    "hepatitis_b_screening": { "status": "COMPLETE", "interpretation": "HBV negative with immunity from vaccination", "cleared_for_biologic": true },
+    "hepatitis_c_screening": { "status": "COMPLETE", "result": "Non-reactive", "cleared_for_biologic": true }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": { "met": true, "evidence": "Plaque psoriasis confirmed by dermatology exam. PASI 22.4, BSA 32%" },
+    "disease_severity_documented": { "met": true, "evidence": "PASI 22.4 (severe), BSA 32%, DLQI 18 — significant quality of life impact" },
+    "conventional_therapy_failed": {
+      "met": true,
+      "therapies_tried": [
+        {"medication": "Topical corticosteroids", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "NB-UVB Phototherapy", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Methotrexate", "outcome": "intolerance", "duration_adequate": false}
+      ]
+    },
+    "step_therapy_satisfied": { "met": true },
+    "pre_biologic_screening_complete": { "met": true },
+    "fda_approved_indication": { "met": true, "indication": "Chronic severe plaque psoriasis" }
+  },
+
+  "overall_pa_readiness": {
+    "status": "READY_FOR_SUBMISSION",
+    "all_clinical_criteria_met": true,
+    "recommendation": "All criteria met. Severe plaque psoriasis (PASI >20, BSA >30%) with failure of topicals, phototherapy, and systemic therapy. Submit immediately."
+  }
+}

@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   Sparkles,
   X,
+  RotateCcw,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import {
@@ -61,6 +62,7 @@ import {
   useRunStage,
   useApproveStage,
   useConfirmDecision,
+  useResetCase,
   type StageAnalysis,
 } from '@/hooks/useCase'
 import { useWebSocket } from '@/hooks/useWebSocket'
@@ -83,6 +85,7 @@ export function CaseDetail() {
   const [actionError, setActionError] = useState<string | null>(null)
   const [postDecisionRunning, setPostDecisionRunning] = useState(false)
   const [artificialProcessing, setArtificialProcessing] = useState(false)
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
 
   // Per-step analysis cache — survives step navigation, avoids re-triggering API calls
   const analysisCache = useRef<Record<number, StageAnalysis>>({})
@@ -106,6 +109,7 @@ export function CaseDetail() {
   const runStage = useRunStage(caseId || '')
   const approveStage = useApproveStage(caseId || '')
   const confirmDecision = useConfirmDecision(caseId || '')
+  const resetCase = useResetCase(caseId || '')
 
   // SSE streaming for progressive analysis output
   const sseStream = useSSEStream()
@@ -345,6 +349,23 @@ export function CaseDetail() {
     }
   }
 
+  const handleResetCase = async () => {
+    try {
+      await resetCase.mutateAsync()
+      setShowResetConfirm(false)
+      setCurrentAnalysis(null)
+      setAiRecommendation(null)
+      setViewingStep(null)
+      setDecisionReason('')
+      setActionError(null)
+      analysisCache.current = {}
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Failed to reset case'
+      setActionError(msg)
+      setShowResetConfirm(false)
+    }
+  }
+
   // Loading state
   if (caseLoading) {
     return (
@@ -538,6 +559,14 @@ export function CaseDetail() {
               {primaryPayer && (
                 <PayerStatusBadge status={primaryPayer.status} />
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowResetConfirm(true)}
+              >
+                <RotateCcw className="w-4 h-4 mr-1" />
+                Reset Case
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
@@ -772,6 +801,65 @@ export function CaseDetail() {
             <Sparkles className="w-5 h-5" />
           )}
         </motion.button>
+
+        {/* Reset confirmation dialog */}
+        {showResetConfirm && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            style={{ background: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setShowResetConfirm(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-white rounded-2xl shadow-xl"
+              style={{ padding: '28px', maxWidth: '380px', width: '90%' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#181818', letterSpacing: '-0.02em' }}>
+                Reset this case?
+              </h3>
+              <p style={{ fontSize: '0.875rem', color: '#706E6B', marginTop: '8px', lineHeight: 1.5 }}>
+                This will clear all analysis, strategies, and decisions, returning the case to the Review stage. Patient and medication data will be preserved.
+              </p>
+              <div className="flex items-center gap-2 mt-5" style={{ justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setShowResetConfirm(false)}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    color: '#706E6B',
+                    background: 'rgba(0, 0, 0, 0.04)',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleResetCase}
+                  disabled={resetCase.isPending}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    color: '#ffffff',
+                    background: '#181818',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    opacity: resetCase.isPending ? 0.6 : 1,
+                  }}
+                >
+                  {resetCase.isPending ? 'Resetting...' : 'Reset Case'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
 
         {/* Audit Trail Modal/Slide-out */}
         <AnimatePresence>

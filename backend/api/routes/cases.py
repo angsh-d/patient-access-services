@@ -801,6 +801,28 @@ async def delete_case(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
+@router.post("/{case_id}/reset")
+async def reset_case(
+    case_id: str,
+    case_service: CaseService = Depends(get_case_service),
+):
+    """
+    Reset a case to initial intake state for demo re-runs.
+    Preserves case ID, patient, and medication data.
+    Clears all analysis, strategies, decisions, and related records.
+    """
+    try:
+        case_data = await case_service.reset_case(case_id)
+        if not case_data:
+            raise HTTPException(status_code=404, detail=f"Case not found: {case_id}")
+        return {"message": "Case reset to intake", "case": case_data}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error resetting case", case_id=case_id, error=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 @router.post("/{case_id}/policy-qa")
 async def policy_qa(
     case_id: str,

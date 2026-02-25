@@ -60,6 +60,9 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database initialized")
 
+    from backend.reasoning.langfuse_integration import _init_langfuse
+    _init_langfuse()
+
     from backend.storage.seed_policies import seed_policies
     seeded = await seed_policies()
     if seeded:
@@ -71,6 +74,9 @@ async def lifespan(app: FastAPI):
     yield
 
     logger.info("Shutting down Patient Services Platform")
+
+    from backend.reasoning.langfuse_integration import shutdown_langfuse
+    shutdown_langfuse()
 
     try:
         from backend.mcp.mcp_client import get_mcp_client
@@ -133,6 +139,7 @@ async def health_check():
 async def health_check_llm():
     """Deep health check that verifies LLM provider connectivity."""
     from backend.reasoning.llm_gateway import get_llm_gateway
+    from backend.reasoning.langfuse_integration import is_langfuse_available
 
     llm_gateway = get_llm_gateway()
     llm_health = await llm_gateway.health_check()
@@ -141,11 +148,13 @@ async def health_check_llm():
         "claude": llm_health.get("claude", False),
         "gemini": llm_health.get("gemini", False),
         "azure_openai": llm_health.get("azure_openai", False),
+        "langfuse": is_langfuse_available(),
     }
-    all_healthy = all(components.values())
+    # Langfuse is optional — exclude from overall health determination
+    llm_healthy = all(v for k, v in components.items() if k != "langfuse")
 
     return {
-        "status": "healthy" if all_healthy else "degraded",
+        "status": "healthy" if llm_healthy else "degraded",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": "0.1.0",
         "platform": "patient-services",

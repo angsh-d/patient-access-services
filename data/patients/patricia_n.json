@@ -1,0 +1,223 @@
+{
+  "patient_id": "patricia_n",
+  "extraction_metadata": {
+    "extracted_from": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf", "03_Colonoscopy_Report.pdf"],
+    "extraction_date": "2026-02-16",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Patricia",
+    "last_name": "Novak",
+    "date_of_birth": "1958-03-25",
+    "age": 67,
+    "gender": "Female",
+    "ethnicity": "Eastern European",
+    "address": { "street": "1820 Spruce Street, Apt 3A", "city": "Philadelphia", "state": "PA", "zip": "19103" },
+    "phone": "215-555-0234",
+    "mrn": "PATRICIA_N",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "Humana",
+      "payer_id": "HUMANA",
+      "plan_name": "Humana PPO",
+      "plan_type": "PPO",
+      "member_id": "HUM789123456",
+      "group_number": "PA-PPO-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Lisa Romano",
+    "credentials": "MD, FACG",
+    "npi": "1456789012",
+    "specialty": "Gastroenterology",
+    "practice_name": "Penn Medicine IBD Program",
+    "address": { "street": "3400 Civic Center Boulevard, 7 South Pavilion", "city": "Philadelphia", "state": "PA", "zip": "19104" },
+    "phone": "215-555-1400",
+    "fax": "215-555-1401",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Infliximab",
+    "brand_name": "Inflectra",
+    "generic_name": "infliximab-dyyb",
+    "j_code": "Q5103",
+    "product_type": "preferred_biosimilar",
+    "dose": "5mg/kg",
+    "route": "Intravenous infusion",
+    "frequency": { "induction": "Weeks 0, 2, 6", "maintenance": "Every 8 weeks" },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "4 infusions",
+    "site_of_care": "Outpatient infusion center",
+    "start_date_requested": "2026-03-01",
+    "diagnosis": "Ulcerative colitis, unspecified, with other complication",
+    "icd10_code": "K51.80",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "K51.80",
+      "description": "Other ulcerative colitis without complications",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "D50.0",
+      "description": "Iron deficiency anemia secondary to blood loss",
+      "status": "active",
+      "source_document": "02_Laboratory_Results.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-02-01",
+    "mayo_score": 10,
+    "mayo_interpretation": "Severe ulcerative colitis (Mayo 10-12)",
+    "endoscopic_subscore": 3,
+    "disease_severity": "severe",
+    "disease_extent": "Extensive colitis (E3 — pancolitis)",
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Acute severe UC flare with 10-15 bloody stools daily, requiring recent hospitalization for IV steroids",
+    "history_of_present_illness": "67-year-old female with severe pancolitic UC diagnosed 2018. Mayo score 10, endoscopic subscore 3. Recent hospitalization (2 weeks ago) for acute severe flare with 10-15 bloody stools daily, hemodynamic instability, and Hgb drop to 7.8 requiring 2 units PRBC transfusion. Discharged on prednisone 40mg with outpatient infliximab initiation planned as steroid-sparing strategy. Long-term steroid-dependent (5+ years). Failed mesalamine, azathioprine (allergic reaction — fever and rash), and vedolizumab (primary non-response after 14 weeks of induction). Colectomy discussed but patient strongly prefers medical salvage therapy before surgery.",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Mesalamine",
+      "brand_name": "Lialda",
+      "drug_class": "5-ASA",
+      "dose": "4.8g daily",
+      "start_date": "2018-06-01",
+      "end_date": "2019-06-01",
+      "duration_weeks": 52,
+      "outcome": "inadequate_response",
+      "outcome_description": "12 months without achieving remission. Required steroids for disease control.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Prednisone",
+      "drug_class": "Corticosteroid",
+      "dose": "40mg with taper attempts",
+      "start_date": "2019-07-01",
+      "end_date": "2026-02-01",
+      "duration_weeks": 344,
+      "outcome": "steroid_dependent",
+      "outcome_description": "Steroid-dependent for over 5 years. Multiple taper failures. Significant steroid side effects including osteoporosis (T-score -2.8 lumbar spine), cataracts, and cushingoid features.",
+      "taper_attempts": 6,
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Azathioprine",
+      "brand_name": "Imuran",
+      "drug_class": "Thiopurine immunomodulator",
+      "dose": "100mg daily",
+      "start_date": "2020-03-01",
+      "end_date": "2020-03-10",
+      "duration_weeks": 1,
+      "outcome": "allergic_reaction",
+      "outcome_description": "Hypersensitivity reaction with fever (39.2C), diffuse maculopapular rash, and arthralgias within 7 days of initiation. Discontinued immediately.",
+      "adverse_event": { "type": "hypersensitivity", "details": "Fever, rash, arthralgias", "severity": "moderate" },
+      "adequate_trial": false,
+      "reason_inadequate": "discontinued_due_to_adverse_event",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Vedolizumab",
+      "brand_name": "Entyvio",
+      "drug_class": "Anti-integrin biologic",
+      "dose": "300mg IV at weeks 0, 2, 6",
+      "start_date": "2025-06-01",
+      "end_date": "2025-10-01",
+      "duration_weeks": 17,
+      "outcome": "primary_non_response",
+      "outcome_description": "No clinical response after full induction (3 doses over 14 weeks). Mayo score unchanged. Switched to anti-TNF class.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-30",
+    "ordering_provider": "Dr. Lisa Romano",
+    "facility": "Penn Medicine Clinical Lab",
+    "report_status": "FINAL",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count (CBC)",
+        "results": [
+          {"test": "WBC", "value": 12.5, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": "H"},
+          {"test": "Hemoglobin", "value": 9.2, "unit": "g/dL", "reference_range": "12.0-16.0", "flag": "L"},
+          {"test": "Platelets", "value": 465, "unit": "x10^9/L", "reference_range": "150-400", "flag": "H"}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel",
+        "results": [
+          {"test": "Albumin", "value": 2.5, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": "L"},
+          {"test": "Potassium", "value": 3.1, "unit": "mEq/L", "reference_range": "3.5-5.0", "flag": "L"},
+          {"test": "ALT", "value": 19, "unit": "U/L", "reference_range": "7-56", "flag": null}
+        ]
+      },
+      "inflammatory_markers": {
+        "panel_name": "Inflammatory Markers",
+        "results": [
+          {"test": "CRP", "value": 48, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 65, "unit": "mm/hr", "reference_range": "0-20", "flag": "H"}
+        ]
+      },
+      "gi_markers": {
+        "panel_name": "GI-Specific Markers",
+        "results": [
+          {"test": "Fecal Calprotectin", "value": 2200, "unit": "ug/g", "reference_range": "<50", "flag": "H"}
+        ]
+      }
+    },
+    "interpretation": "Acute severe UC. Markedly elevated CRP (48), ESR (65), FCP (2200). Severe anemia (Hgb 9.2 post-transfusion), hypoalbuminemia (2.5), hypokalemia (3.1). Leukocytosis (12.5) and thrombocytosis (465) from active inflammation."
+  },
+
+  "pre_biologic_screening": {
+    "status": "COMPLETE",
+    "tuberculosis_screening": { "status": "COMPLETE", "test_performed": "QuantiFERON-TB Gold Plus", "result": "Negative", "cleared_for_biologic": true },
+    "hepatitis_b_screening": { "status": "COMPLETE", "interpretation": "HBV negative with immunity from vaccination", "cleared_for_biologic": true },
+    "hepatitis_c_screening": { "status": "COMPLETE", "result": "Non-reactive", "cleared_for_biologic": true }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": { "met": true, "evidence": "Severe pancolitic UC confirmed by colonoscopy. Mayo 10, endoscopic subscore 3." },
+    "disease_severity_documented": { "met": true, "evidence": "Mayo 10, CRP 48, FCP 2200, albumin 2.5, recent hospitalization with transfusion requirement" },
+    "conventional_therapy_failed": {
+      "met": true,
+      "therapies_tried": [
+        {"medication": "Mesalamine", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Prednisone", "outcome": "steroid_dependent", "duration_adequate": true},
+        {"medication": "Azathioprine", "outcome": "allergic_reaction", "duration_adequate": false},
+        {"medication": "Vedolizumab", "outcome": "primary_non_response", "duration_adequate": true}
+      ]
+    },
+    "step_therapy_satisfied": { "met": true },
+    "pre_biologic_screening_complete": { "met": true },
+    "fda_approved_indication": { "met": true, "indication": "Moderate-to-severe ulcerative colitis with inadequate response to conventional therapy" }
+  },
+
+  "overall_pa_readiness": {
+    "status": "URGENT_SUBMISSION_RECOMMENDED",
+    "all_clinical_criteria_met": true,
+    "recommendation": "Urgent. Acute severe UC with recent hospitalization, transfusion, and vedolizumab failure. Anti-TNF is the appropriate next-line therapy. Alternative is colectomy. Submit immediately."
+  }
+}

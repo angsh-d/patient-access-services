@@ -143,11 +143,17 @@ class AzureOpenAIClient:
 
             logger.debug("Azure OpenAI response received", length=len(response_text))
 
+            _usage_meta = {
+                "input_tokens": input_tokens, "output_tokens": output_tokens,
+                "latency_ms": round(latency_ms, 2), "model": self.deployment,
+            }
+
             if response_format == "json":
                 parsed = json.loads(response_text)
+                parsed["_usage"] = _usage_meta
                 return parsed
             else:
-                return {"response": response_text}
+                return {"response": response_text, "_usage": _usage_meta}
 
         except json.JSONDecodeError as e:
             logger.error("Failed to parse Azure OpenAI response as JSON", error=str(e))

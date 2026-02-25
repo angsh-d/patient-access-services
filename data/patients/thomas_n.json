@@ -1,0 +1,211 @@
+{
+  "patient_id": "thomas_n",
+  "extraction_metadata": {
+    "extracted_from": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf", "03_Imaging_Report.pdf"],
+    "extraction_date": "2026-02-05",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Thomas",
+    "last_name": "Nakamura",
+    "date_of_birth": "1970-07-08",
+    "age": 55,
+    "gender": "Male",
+    "ethnicity": "Japanese American",
+    "address": { "street": "2200 Westlake Avenue N", "city": "Seattle", "state": "WA", "zip": "98109" },
+    "phone": "206-555-0156",
+    "mrn": "THOMAS_N",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "BCBS",
+      "payer_id": "BCBS_WA",
+      "plan_name": "Blue Cross Blue Shield Preferred PPO",
+      "plan_type": "PPO",
+      "member_id": "BCBS892345678",
+      "group_number": "WA-PPO-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Jennifer Tanaka",
+    "credentials": "MD, FACR",
+    "npi": "1456789123",
+    "specialty": "Rheumatology",
+    "practice_name": "Virginia Mason Rheumatology",
+    "address": { "street": "1100 9th Avenue", "city": "Seattle", "state": "WA", "zip": "98101" },
+    "phone": "206-555-0400",
+    "fax": "206-555-0401",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Infliximab",
+    "brand_name": "Inflectra",
+    "generic_name": "infliximab-dyyb",
+    "j_code": "Q5103",
+    "product_type": "preferred_biosimilar",
+    "dose": "3mg/kg",
+    "route": "Intravenous infusion",
+    "frequency": { "induction": "Weeks 0, 2, 6", "maintenance": "Every 8 weeks" },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "4 infusions",
+    "site_of_care": "Outpatient infusion center",
+    "start_date_requested": "2026-02-25",
+    "diagnosis": "Rheumatoid arthritis, unspecified",
+    "icd10_code": "M06.09",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "M06.09",
+      "description": "Rheumatoid arthritis, unspecified, multiple sites",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "M06.4",
+      "description": "Inflammatory polyarthropathy",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-15",
+    "das28_crp": 5.8,
+    "das28_interpretation": "High disease activity (DAS28 >5.1)",
+    "swollen_joint_count": 12,
+    "tender_joint_count": 18,
+    "patient_global_assessment": 72,
+    "disease_severity": "severe",
+    "joint_erosions": true,
+    "erosion_sites": ["MCP joints bilateral", "PIP joints bilateral", "wrists bilateral"],
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Imaging_Report.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Progressive joint pain, swelling, and morning stiffness lasting >2 hours despite methotrexate therapy",
+    "history_of_present_illness": "55-year-old male with seropositive rheumatoid arthritis diagnosed 2020, now with DAS28-CRP 5.8 indicating high disease activity. 12 swollen and 18 tender joints. Morning stiffness >2 hours daily. Radiographic evidence of erosive disease in bilateral MCPs and wrists. Failed methotrexate at maximum tolerated dose (20mg weekly for 6 months) with inadequate response, and leflunomide (intolerance due to persistent diarrhea and alopecia). Currently on concomitant methotrexate 15mg/week which will continue alongside infliximab.",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Methotrexate",
+      "drug_class": "csDMARD",
+      "dose": "20mg weekly (oral, then SQ)",
+      "start_date": "2024-03-01",
+      "end_date": "2025-09-01",
+      "duration_weeks": 78,
+      "outcome": "inadequate_response",
+      "outcome_description": "Inadequate response at maximum tolerated dose (20mg SQ weekly for 6 months). DAS28 remained >5.1. Dose reduced to 15mg due to GI side effects; continuing as concomitant therapy with biologic.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Leflunomide",
+      "brand_name": "Arava",
+      "drug_class": "csDMARD",
+      "dose": "20mg daily",
+      "start_date": "2025-04-01",
+      "end_date": "2025-07-15",
+      "duration_weeks": 15,
+      "outcome": "intolerance",
+      "outcome_description": "Discontinued due to persistent diarrhea (6-8 loose stools/day) and significant alopecia despite dose reduction to 10mg",
+      "adverse_event": { "type": "GI_intolerance_and_alopecia", "severity": "moderate" },
+      "adequate_trial": false,
+      "reason_inadequate": "discontinued_due_to_adverse_event",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Hydroxychloroquine",
+      "brand_name": "Plaquenil",
+      "drug_class": "csDMARD",
+      "dose": "400mg daily",
+      "start_date": "2020-08-01",
+      "end_date": "2024-02-01",
+      "duration_weeks": 183,
+      "outcome": "inadequate_response",
+      "outcome_description": "Used as initial therapy with partial response. Disease progressed despite 3+ years of therapy.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-12",
+    "ordering_provider": "Dr. Jennifer Tanaka",
+    "facility": "Virginia Mason Clinical Lab",
+    "report_status": "FINAL",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count (CBC)",
+        "results": [
+          {"test": "WBC", "value": 7.5, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "Hemoglobin", "value": 12.8, "unit": "g/dL", "reference_range": "13.5-17.5", "flag": "L"},
+          {"test": "Platelets", "value": 340, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
+        ]
+      },
+      "inflammatory_markers": {
+        "panel_name": "Inflammatory Markers",
+        "results": [
+          {"test": "CRP", "value": 18, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 38, "unit": "mm/hr", "reference_range": "0-15", "flag": "H"}
+        ]
+      },
+      "rheumatology_panel": {
+        "panel_name": "Rheumatology Panel",
+        "results": [
+          {"test": "Rheumatoid Factor", "value": 145, "unit": "IU/mL", "reference_range": "<14", "flag": "H"},
+          {"test": "Anti-CCP Antibody", "value": 280, "unit": "U/mL", "reference_range": "<20", "flag": "H"}
+        ]
+      },
+      "hepatic_panel": {
+        "panel_name": "Hepatic Panel",
+        "results": [
+          {"test": "ALT", "value": 28, "unit": "U/L", "reference_range": "7-56", "flag": null},
+          {"test": "AST", "value": 24, "unit": "U/L", "reference_range": "10-40", "flag": null}
+        ]
+      }
+    },
+    "interpretation": "Seropositive RA with elevated RF (145) and anti-CCP (280). Active inflammation with CRP 18, ESR 38. Mild anemia of chronic disease. LFTs normal on current methotrexate dose."
+  },
+
+  "pre_biologic_screening": {
+    "status": "COMPLETE",
+    "tuberculosis_screening": { "status": "COMPLETE", "test_performed": "QuantiFERON-TB Gold Plus", "result": "Negative", "cleared_for_biologic": true },
+    "hepatitis_b_screening": { "status": "COMPLETE", "interpretation": "HBV negative with immunity from vaccination", "cleared_for_biologic": true },
+    "hepatitis_c_screening": { "status": "COMPLETE", "result": "Non-reactive", "cleared_for_biologic": true }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": { "met": true, "evidence": "Seropositive RA confirmed with RF 145, anti-CCP 280, radiographic erosions" },
+    "disease_severity_documented": { "met": true, "evidence": "DAS28-CRP 5.8 (high activity), 12 swollen/18 tender joints, erosive disease" },
+    "conventional_therapy_failed": {
+      "met": true,
+      "therapies_tried": [
+        {"medication": "Hydroxychloroquine", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Methotrexate", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Leflunomide", "outcome": "intolerance", "duration_adequate": false}
+      ]
+    },
+    "step_therapy_satisfied": { "met": true, "evidence": "Failed 2 csDMARDs including methotrexate at adequate dose/duration per ACR guidelines" },
+    "pre_biologic_screening_complete": { "met": true },
+    "fda_approved_indication": { "met": true, "indication": "Moderate-to-severe rheumatoid arthritis with inadequate response to DMARDs" }
+  },
+
+  "overall_pa_readiness": {
+    "status": "READY_FOR_SUBMISSION",
+    "all_clinical_criteria_met": true,
+    "recommendation": "Strong case. Seropositive RA with erosive disease, high DAS28, failed multiple csDMARDs. Will continue methotrexate as concomitant therapy per label. Submit immediately."
+  }
+}

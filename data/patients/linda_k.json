@@ -1,0 +1,206 @@
+{
+  "patient_id": "linda_k",
+  "extraction_metadata": {
+    "extracted_from": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf", "03_Imaging_Report.pdf"],
+    "extraction_date": "2026-02-07",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Linda",
+    "last_name": "Kowalski",
+    "date_of_birth": "1968-04-12",
+    "age": 57,
+    "gender": "Female",
+    "ethnicity": "Polish American",
+    "address": { "street": "4521 North Oakland Avenue", "city": "Milwaukee", "state": "WI", "zip": "53211" },
+    "phone": "414-555-0167",
+    "mrn": "LINDA_K",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "Humana",
+      "payer_id": "HUMANA",
+      "plan_name": "Humana Gold Plus HMO",
+      "plan_type": "HMO",
+      "member_id": "HUM345678912",
+      "group_number": "WI-HMO-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Elizabeth Murray",
+    "credentials": "MD, FACR",
+    "npi": "1789123456",
+    "specialty": "Rheumatology",
+    "practice_name": "Medical College of Wisconsin Rheumatology",
+    "address": { "street": "9200 W Wisconsin Avenue", "city": "Milwaukee", "state": "WI", "zip": "53226" },
+    "phone": "414-555-0600",
+    "fax": "414-555-0601",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Infliximab",
+    "brand_name": "Inflectra",
+    "generic_name": "infliximab-dyyb",
+    "j_code": "Q5103",
+    "product_type": "preferred_biosimilar",
+    "dose": "5mg/kg",
+    "route": "Intravenous infusion",
+    "frequency": { "induction": "Weeks 0, 2, 6", "maintenance": "Every 8 weeks" },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "4 infusions",
+    "site_of_care": "Outpatient infusion center",
+    "start_date_requested": "2026-02-28",
+    "diagnosis": "Psoriatic arthritis",
+    "icd10_code": "L40.50",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "L40.50",
+      "description": "Arthropathic psoriasis, unspecified",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "L40.0",
+      "description": "Psoriasis vulgaris",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-18",
+    "swollen_joint_count": 8,
+    "tender_joint_count": 14,
+    "dactylitis_present": true,
+    "dactylitis_digits": ["left 2nd toe", "right 3rd finger"],
+    "enthesitis_present": true,
+    "enthesitis_sites": ["bilateral Achilles", "bilateral plantar fascia"],
+    "bsa_psoriasis": 18,
+    "pasi_score": 14.2,
+    "disease_severity": "moderate_to_severe",
+    "nail_involvement": true,
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Progressive joint pain and swelling with worsening skin psoriasis, dactylitis, and enthesitis despite methotrexate",
+    "history_of_present_illness": "57-year-old female with psoriatic arthritis diagnosed 2019, with concurrent plaque psoriasis (BSA 18%, PASI 14.2). 8 swollen and 14 tender joints, active dactylitis in 2 digits, bilateral Achilles enthesitis. Nail psoriasis in 8/10 fingernails. Failed methotrexate (25mg SQ weekly for 6 months, inadequate response for both skin and joints) and leflunomide (elevated LFTs requiring discontinuation). Current functional limitations include difficulty with grip strength, walking >1 block, and climbing stairs.",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Methotrexate",
+      "drug_class": "csDMARD",
+      "dose": "25mg SQ weekly",
+      "start_date": "2024-04-01",
+      "end_date": "2025-04-01",
+      "duration_weeks": 52,
+      "outcome": "inadequate_response",
+      "outcome_description": "Inadequate response for both articular and cutaneous disease at maximum dose for 12 months. Persistent polyarthritis with PASI >12.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Leflunomide",
+      "brand_name": "Arava",
+      "drug_class": "csDMARD",
+      "dose": "20mg daily",
+      "start_date": "2025-05-01",
+      "end_date": "2025-08-15",
+      "duration_weeks": 15,
+      "outcome": "intolerance",
+      "outcome_description": "Elevated hepatic transaminases (ALT 3.5x ULN) requiring discontinuation",
+      "adverse_event": { "type": "hepatotoxicity", "details": "ALT 3.5x ULN", "severity": "moderate" },
+      "adequate_trial": false,
+      "reason_inadequate": "discontinued_due_to_adverse_event",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Apremilast",
+      "brand_name": "Otezla",
+      "drug_class": "PDE4 inhibitor",
+      "dose": "30mg BID",
+      "start_date": "2025-09-01",
+      "end_date": "2025-12-15",
+      "duration_weeks": 15,
+      "outcome": "inadequate_response",
+      "outcome_description": "Minimal improvement in joint symptoms. PASI improved only marginally (from 16 to 14.2). Persistent enthesitis and dactylitis.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-15",
+    "ordering_provider": "Dr. Elizabeth Murray",
+    "facility": "MCW Clinical Lab",
+    "report_status": "FINAL",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count (CBC)",
+        "results": [
+          {"test": "WBC", "value": 8.2, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "Hemoglobin", "value": 12.5, "unit": "g/dL", "reference_range": "12.0-16.0", "flag": null},
+          {"test": "Platelets", "value": 295, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
+        ]
+      },
+      "inflammatory_markers": {
+        "panel_name": "Inflammatory Markers",
+        "results": [
+          {"test": "CRP", "value": 15, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 28, "unit": "mm/hr", "reference_range": "0-20", "flag": "H"}
+        ]
+      },
+      "hepatic_panel": {
+        "panel_name": "Hepatic Panel",
+        "results": [
+          {"test": "ALT", "value": 32, "unit": "U/L", "reference_range": "7-56", "flag": null},
+          {"test": "AST", "value": 28, "unit": "U/L", "reference_range": "10-40", "flag": null}
+        ]
+      }
+    },
+    "interpretation": "Moderately elevated CRP (15) and ESR (28) consistent with active inflammatory arthritis. LFTs normalized after leflunomide washout. CBC normal."
+  },
+
+  "pre_biologic_screening": {
+    "status": "COMPLETE",
+    "tuberculosis_screening": { "status": "COMPLETE", "test_performed": "QuantiFERON-TB Gold Plus", "result": "Negative", "cleared_for_biologic": true },
+    "hepatitis_b_screening": { "status": "COMPLETE", "interpretation": "HBV negative with immunity from vaccination", "cleared_for_biologic": true },
+    "hepatitis_c_screening": { "status": "COMPLETE", "result": "Non-reactive", "cleared_for_biologic": true }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": { "met": true, "evidence": "PsA confirmed with polyarthritis, dactylitis, enthesitis, and concurrent plaque psoriasis (PASI 14.2)" },
+    "disease_severity_documented": { "met": true, "evidence": "8 swollen/14 tender joints, active dactylitis, enthesitis, BSA 18%, PASI 14.2" },
+    "conventional_therapy_failed": {
+      "met": true,
+      "therapies_tried": [
+        {"medication": "Methotrexate", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Leflunomide", "outcome": "intolerance", "duration_adequate": false},
+        {"medication": "Apremilast", "outcome": "inadequate_response", "duration_adequate": true}
+      ]
+    },
+    "step_therapy_satisfied": { "met": true },
+    "pre_biologic_screening_complete": { "met": true },
+    "fda_approved_indication": { "met": true, "indication": "Active psoriatic arthritis" }
+  },
+
+  "overall_pa_readiness": {
+    "status": "READY_FOR_SUBMISSION",
+    "all_clinical_criteria_met": true,
+    "recommendation": "All criteria met. Multi-domain PsA (polyarthritis, dactylitis, enthesitis, skin) with failure of 3 conventional agents. Submit immediately."
+  }
+}

@@ -1,0 +1,207 @@
+{
+  "patient_id": "jason_r",
+  "extraction_metadata": {
+    "extracted_from": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf", "03_MRI_Spine_Report.pdf"],
+    "extraction_date": "2026-02-17",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Jason",
+    "last_name": "Rivera",
+    "date_of_birth": "1986-05-10",
+    "age": 39,
+    "gender": "Male",
+    "ethnicity": "Hispanic",
+    "address": { "street": "4450 N 32nd Street", "city": "Phoenix", "state": "AZ", "zip": "85018" },
+    "phone": "602-555-0321",
+    "mrn": "JASON_R",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "BCBS",
+      "payer_id": "BCBS_AZ",
+      "plan_name": "Blue Cross Blue Shield of Arizona PPO",
+      "plan_type": "PPO",
+      "member_id": "BCBS567891234",
+      "group_number": "AZ-PPO-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Steven Ortiz",
+    "credentials": "MD, FACR",
+    "npi": "1567890123",
+    "specialty": "Rheumatology",
+    "practice_name": "Arizona Arthritis & Rheumatology Associates",
+    "address": { "street": "2001 W Camelback Road, Suite 150", "city": "Phoenix", "state": "AZ", "zip": "85015" },
+    "phone": "602-555-1500",
+    "fax": "602-555-1501",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Infliximab",
+    "brand_name": "Inflectra",
+    "generic_name": "infliximab-dyyb",
+    "j_code": "Q5103",
+    "product_type": "preferred_biosimilar",
+    "dose": "5mg/kg",
+    "route": "Intravenous infusion",
+    "frequency": { "induction": "Weeks 0, 2, 6", "maintenance": "Every 6 weeks" },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "4 infusions",
+    "site_of_care": "Outpatient infusion center",
+    "start_date_requested": "2026-03-05",
+    "diagnosis": "Ankylosing spondylitis",
+    "icd10_code": "M45.9",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "M45.9",
+      "description": "Ankylosing spondylitis of unspecified sites in spine",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "M07.3",
+      "description": "Other psoriatic arthropathy",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-02-05",
+    "basdai_score": 6.5,
+    "basdai_interpretation": "High disease activity (BASDAI >=4)",
+    "basfi_score": 5.8,
+    "basfi_interpretation": "Moderate-to-significant functional impairment",
+    "asdas_crp": 3.2,
+    "asdas_interpretation": "High disease activity (ASDAS 2.1-3.5)",
+    "disease_severity": "severe",
+    "hla_b27": "Positive",
+    "peripheral_arthritis": true,
+    "peripheral_joints_affected": ["bilateral knees", "left ankle"],
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_MRI_Spine_Report.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Severe inflammatory back pain with peripheral joint involvement, progressive spinal fusion despite NSAIDs",
+    "history_of_present_illness": "39-year-old Hispanic male with HLA-B27 positive AS diagnosed 2019, complicated by peripheral arthritis in bilateral knees and left ankle. BASDAI 6.5, ASDAS-CRP 3.2. MRI shows active sacroiliitis with extensive bone marrow edema and new syndesmophyte formation at L3-L4. Spinal mobility severely reduced (modified Schober <3cm, chest expansion <2cm). Failed 2 NSAIDs at maximum dose (diclofenac 150mg/day for 3 months, meloxicam 15mg/day for 4 months). Sulfasalazine tried for peripheral component with minimal benefit. Patient is a firefighter, currently on disability due to inability to perform physical duties. Onset of anterior uveitis 6 months ago (resolved with topical steroids) supports systemic TNF-driven disease.",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Diclofenac",
+      "drug_class": "NSAID",
+      "dose": "75mg BID (150mg daily)",
+      "start_date": "2024-01-01",
+      "end_date": "2024-04-01",
+      "duration_weeks": 13,
+      "outcome": "inadequate_response",
+      "outcome_description": "Persistent high disease activity (BASDAI >6) despite maximum dose for 3 months",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Meloxicam",
+      "drug_class": "NSAID (COX-2 preferential)",
+      "dose": "15mg daily",
+      "start_date": "2024-05-01",
+      "end_date": "2024-09-01",
+      "duration_weeks": 17,
+      "outcome": "inadequate_response",
+      "outcome_description": "Minimal improvement. BASDAI remained >6. Progressive radiographic changes on follow-up X-ray.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Sulfasalazine",
+      "drug_class": "csDMARD",
+      "dose": "2g daily",
+      "start_date": "2024-10-01",
+      "end_date": "2025-06-01",
+      "duration_weeks": 35,
+      "outcome": "inadequate_response",
+      "outcome_description": "Minimal improvement in peripheral arthritis. No effect on axial disease as expected per ASAS guidelines.",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-02-03",
+    "ordering_provider": "Dr. Steven Ortiz",
+    "facility": "Banner Health Clinical Lab",
+    "report_status": "FINAL",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count (CBC)",
+        "results": [
+          {"test": "WBC", "value": 9.0, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "Hemoglobin", "value": 14.2, "unit": "g/dL", "reference_range": "13.5-17.5", "flag": null},
+          {"test": "Platelets", "value": 275, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
+        ]
+      },
+      "inflammatory_markers": {
+        "panel_name": "Inflammatory Markers",
+        "results": [
+          {"test": "CRP", "value": 18, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 30, "unit": "mm/hr", "reference_range": "0-15", "flag": "H"}
+        ]
+      },
+      "hla_typing": {
+        "panel_name": "HLA Typing",
+        "results": [
+          {"test": "HLA-B27", "value": "Positive", "reference_range": "Negative", "flag": "Positive"}
+        ]
+      },
+      "hepatic_panel": {
+        "panel_name": "Hepatic Panel",
+        "results": [
+          {"test": "ALT", "value": 20, "unit": "U/L", "reference_range": "7-56", "flag": null},
+          {"test": "Creatinine", "value": 0.9, "unit": "mg/dL", "reference_range": "0.7-1.3", "flag": null}
+        ]
+      }
+    },
+    "interpretation": "Active AS with elevated CRP (18) and ESR (30). HLA-B27 positive. CBC and metabolic panel normal."
+  },
+
+  "pre_biologic_screening": {
+    "status": "COMPLETE",
+    "tuberculosis_screening": { "status": "COMPLETE", "test_performed": "QuantiFERON-TB Gold Plus", "result": "Negative", "cleared_for_biologic": true },
+    "hepatitis_b_screening": { "status": "COMPLETE", "interpretation": "HBV negative with immunity from vaccination", "cleared_for_biologic": true },
+    "hepatitis_c_screening": { "status": "COMPLETE", "result": "Non-reactive", "cleared_for_biologic": true }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": { "met": true, "evidence": "HLA-B27 positive AS with MRI-confirmed active sacroiliitis and syndesmophytes" },
+    "disease_severity_documented": { "met": true, "evidence": "BASDAI 6.5, ASDAS-CRP 3.2, CRP 18, history of uveitis, progressive radiographic changes" },
+    "conventional_therapy_failed": {
+      "met": true,
+      "therapies_tried": [
+        {"medication": "Diclofenac", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Meloxicam", "outcome": "inadequate_response", "duration_adequate": true}
+      ]
+    },
+    "step_therapy_satisfied": { "met": true, "evidence": "Failed >=2 NSAIDs at maximum dose per ASAS/EULAR guidelines" },
+    "pre_biologic_screening_complete": { "met": true },
+    "fda_approved_indication": { "met": true, "indication": "Active ankylosing spondylitis" }
+  },
+
+  "overall_pa_readiness": {
+    "status": "READY_FOR_SUBMISSION",
+    "all_clinical_criteria_met": true,
+    "recommendation": "Strong case. HLA-B27 positive AS with high disease activity, progressive spinal fusion, extra-articular manifestation (uveitis), and NSAID failure. Submit immediately."
+  }
+}

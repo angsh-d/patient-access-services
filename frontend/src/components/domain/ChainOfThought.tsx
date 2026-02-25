@@ -33,7 +33,7 @@ export interface ThoughtStep {
   title: string
   reasoning: string
   conclusion?: string
-  confidence: number
+  confidence?: number
   source?: {
     type: 'policy' | 'clinical' | 'patient_record' | 'guideline' | 'inference'
     name: string
@@ -226,9 +226,11 @@ function ThoughtStepCard({
                 <span className="text-sm font-medium text-grey-900">{step.title}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="neutral" size="sm">
-                  {Math.round(step.confidence * 100)}%
-                </Badge>
+                {step.confidence != null && (
+                  <Badge variant="neutral" size="sm">
+                    {Math.round(step.confidence * 100)}%
+                  </Badge>
+                )}
                 <ChevronRight
                   className={cn(
                     'w-4 h-4 text-grey-400 transition-transform',
@@ -297,7 +299,10 @@ export function ChainOfThoughtCompact({
   onExpand?: () => void
 }) {
   const completedSteps = steps.filter((s) => s.status === 'complete').length
-  const avgConfidence = steps.reduce((acc, s) => acc + s.confidence, 0) / steps.length
+  const stepsWithConf = steps.filter((s) => s.confidence != null)
+  const avgConfidence = stepsWithConf.length > 0
+    ? stepsWithConf.reduce((acc, s) => acc + (s.confidence ?? 0), 0) / stepsWithConf.length
+    : 0
 
   return (
     <button

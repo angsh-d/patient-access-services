@@ -65,11 +65,14 @@ class DecisionAction(str, Enum):
     REJECT = "reject"
     OVERRIDE = "override"
     ESCALATE = "escalate"
+    SUBMIT_TO_PAYER = "submit_to_payer"
+    RETURN_TO_PROVIDER = "return_to_provider"
+    FOLLOW_RECOMMENDATION = "follow_recommendation"
 
 
 class ConfirmDecisionRequest(BaseModel):
     """Request to confirm a human decision at the decision gate."""
-    action: DecisionAction = Field(..., description="Decision action: approve, reject, override, escalate")
+    action: DecisionAction = Field(..., description="Decision action")
     reviewer_id: str = Field(..., description="ID of the human reviewer")
     reviewer_name: Optional[str] = Field(default=None, description="Name of the reviewer")
     reason: Optional[str] = Field(default=None, description="Reason for rejection or override")

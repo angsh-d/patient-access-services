@@ -1,0 +1,208 @@
+{
+  "patient_id": "sandra_m",
+  "extraction_metadata": {
+    "extracted_from": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf", "03_Colonoscopy_Report.pdf"],
+    "extraction_date": "2026-02-11",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Sandra",
+    "last_name": "Mitchell",
+    "date_of_birth": "1975-06-28",
+    "age": 50,
+    "gender": "Female",
+    "ethnicity": "Caucasian",
+    "address": { "street": "1250 Pearl Street, Apt 5C", "city": "Denver", "state": "CO", "zip": "80203" },
+    "phone": "720-555-0213",
+    "mrn": "SANDRA_M",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "BCBS",
+      "payer_id": "BCBS_CO",
+      "plan_name": "Anthem Blue Cross Blue Shield PPO",
+      "plan_type": "PPO",
+      "member_id": "BCBS456123789",
+      "group_number": "CO-PPO-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Amanda Torres",
+    "credentials": "MD, FACG",
+    "npi": "1912345678",
+    "specialty": "Gastroenterology",
+    "practice_name": "Rocky Mountain Gastroenterology",
+    "address": { "street": "1601 E 19th Avenue, Suite 3100", "city": "Denver", "state": "CO", "zip": "80218" },
+    "phone": "720-555-0800",
+    "fax": "720-555-0801",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Infliximab",
+    "brand_name": "Inflectra",
+    "generic_name": "infliximab-dyyb",
+    "j_code": "Q5103",
+    "product_type": "preferred_biosimilar",
+    "dose": "5mg/kg",
+    "route": "Intravenous infusion",
+    "frequency": { "induction": "Weeks 0, 2, 6", "maintenance": "Every 8 weeks" },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "4 infusions",
+    "site_of_care": "Outpatient infusion center",
+    "start_date_requested": "2026-02-25",
+    "diagnosis": "Ulcerative colitis, unspecified",
+    "icd10_code": "K51.90",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "K51.90",
+      "description": "Ulcerative colitis, unspecified, without complications",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "E87.6",
+      "description": "Hypokalemia",
+      "status": "active",
+      "source_document": "02_Laboratory_Results.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-22",
+    "mayo_score": 8,
+    "mayo_interpretation": "Moderate ulcerative colitis (Mayo 6-12)",
+    "endoscopic_subscore": 2,
+    "disease_severity": "moderate",
+    "disease_extent": "Pancolitis (E3)",
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Steroid-dependent UC with 5-7 bloody stools daily despite azathioprine therapy",
+    "history_of_present_illness": "50-year-old female with moderate pancolitic UC diagnosed 2019. Mayo score 8, endoscopic subscore 2. Currently steroid-dependent on prednisone 15mg (unable to taper below 10mg without flare). Reports 5-7 bloody stools daily, urgency, and intermittent nocturnal symptoms. Failed mesalamine (oral and rectal), steroid taper attempts (3 failures), and azathioprine (52 weeks with inadequate response at therapeutic 6-TGN levels). Hypokalemia from chronic diarrhea. No hospitalizations but 2 urgent clinic visits for IV hydration.",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Mesalamine",
+      "brand_name": "Asacol HD",
+      "drug_class": "5-ASA",
+      "dose": "4.8g daily + rectal suppository",
+      "start_date": "2019-08-01",
+      "end_date": "2020-06-01",
+      "duration_weeks": 44,
+      "outcome": "inadequate_response",
+      "outcome_description": "Persistent disease activity despite maximum oral and topical mesalamine for 10 months",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Prednisone",
+      "drug_class": "Corticosteroid",
+      "dose": "40mg initially with taper",
+      "start_date": "2020-07-01",
+      "end_date": "2025-12-01",
+      "duration_weeks": 283,
+      "outcome": "steroid_dependent",
+      "outcome_description": "Steroid-dependent after 3 taper failures. Currently on 15mg with ongoing active disease.",
+      "taper_attempts": 3,
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Azathioprine",
+      "brand_name": "Imuran",
+      "drug_class": "Thiopurine immunomodulator",
+      "dose": "150mg daily (2mg/kg)",
+      "start_date": "2024-01-01",
+      "end_date": "2025-01-01",
+      "duration_weeks": 52,
+      "outcome": "inadequate_response",
+      "outcome_description": "Inadequate response despite 12 months at therapeutic dose with 6-TGN level 310 (therapeutic range 235-450). Disease remained active (Mayo 8) on therapy.",
+      "therapeutic_drug_monitoring": { "6_tgn_level": 310, "6_tgn_range": "235-450", "interpretation": "Therapeutic" },
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-20",
+    "ordering_provider": "Dr. Amanda Torres",
+    "facility": "UCHealth Clinical Lab",
+    "report_status": "FINAL",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count (CBC)",
+        "results": [
+          {"test": "WBC", "value": 9.2, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
+          {"test": "Hemoglobin", "value": 11.0, "unit": "g/dL", "reference_range": "12.0-16.0", "flag": "L"},
+          {"test": "Platelets", "value": 355, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel",
+        "results": [
+          {"test": "Potassium", "value": 3.2, "unit": "mEq/L", "reference_range": "3.5-5.0", "flag": "L"},
+          {"test": "Albumin", "value": 3.3, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": "L"},
+          {"test": "ALT", "value": 20, "unit": "U/L", "reference_range": "7-56", "flag": null}
+        ]
+      },
+      "inflammatory_markers": {
+        "panel_name": "Inflammatory Markers",
+        "results": [
+          {"test": "CRP", "value": 18, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 32, "unit": "mm/hr", "reference_range": "0-20", "flag": "H"}
+        ]
+      },
+      "gi_markers": {
+        "panel_name": "GI-Specific Markers",
+        "results": [
+          {"test": "Fecal Calprotectin", "value": 750, "unit": "ug/g", "reference_range": "<50", "flag": "H"}
+        ]
+      }
+    },
+    "interpretation": "Active UC with elevated inflammatory markers (CRP 18, FCP 750). Mild anemia (Hgb 11.0), hypokalemia (3.2) from diarrhea, and borderline hypoalbuminemia (3.3)."
+  },
+
+  "pre_biologic_screening": {
+    "status": "COMPLETE",
+    "tuberculosis_screening": { "status": "COMPLETE", "test_performed": "QuantiFERON-TB Gold Plus", "result": "Negative", "cleared_for_biologic": true },
+    "hepatitis_b_screening": { "status": "COMPLETE", "interpretation": "HBV negative with immunity from vaccination", "cleared_for_biologic": true },
+    "hepatitis_c_screening": { "status": "COMPLETE", "result": "Non-reactive", "cleared_for_biologic": true }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": { "met": true, "evidence": "Pancolitic UC confirmed by colonoscopy, Mayo score 8" },
+    "disease_severity_documented": { "met": true, "evidence": "Mayo 8, CRP 18, FCP 750, steroid-dependent" },
+    "conventional_therapy_failed": {
+      "met": true,
+      "therapies_tried": [
+        {"medication": "Mesalamine", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Prednisone", "outcome": "steroid_dependent", "duration_adequate": true},
+        {"medication": "Azathioprine", "outcome": "inadequate_response", "duration_adequate": true}
+      ]
+    },
+    "step_therapy_satisfied": { "met": true },
+    "pre_biologic_screening_complete": { "met": true },
+    "fda_approved_indication": { "met": true, "indication": "Moderate-to-severe ulcerative colitis" }
+  },
+
+  "overall_pa_readiness": {
+    "status": "READY_FOR_SUBMISSION",
+    "all_clinical_criteria_met": true,
+    "recommendation": "All criteria met. Steroid-dependent pancolitic UC with 12-month azathioprine failure at therapeutic levels. Strong case. Submit immediately."
+  }
+}

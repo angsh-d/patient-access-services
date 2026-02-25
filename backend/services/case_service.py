@@ -374,6 +374,34 @@ class CaseService:
         """
         return await self.repository.delete(case_id)
 
+    async def reset_case(self, case_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Reset a case to initial intake state for demo re-runs.
+
+        Args:
+            case_id: Case identifier
+
+        Returns:
+            Reset case data, or None if not found
+        """
+        case = await self.repository.reset(case_id)
+        if not case:
+            return None
+
+        # Log audit event for the reset (fresh chain start)
+        await self.audit_logger.log_event(
+            case_id=case_id,
+            event_type=EventType.CASE_CREATED,
+            decision_made="Case reset to intake for demo re-run",
+            reasoning="User-initiated reset — all prior analysis, strategies, and decisions cleared",
+            stage="intake",
+            input_data={"action": "reset"},
+            actor="user",
+        )
+
+        logger.info("Case reset", case_id=case_id)
+        return case.to_dict()
+
     async def run_stage(self, case_id: str, stage: str, refresh: bool = False) -> Dict[str, Any]:
         """
         Run a single workflow stage and return agent analysis.
@@ -486,6 +514,25 @@ class CaseService:
                 if all_gaps:
                     recommendations.append(f"Address {len(all_gaps)} documentation gaps to improve approval chances")
 
+                # Reconstruct confidence details from cached assessment data
+                cached_criterion_confidences = []
+                cached_low_conf = []
+                for _p, _ad in cached_assessments.items():
+                    criteria_list = (
+                        _ad.get("criteria_assessments", []) if isinstance(_ad, dict)
+                        else getattr(_ad, "criteria_assessments", [])
+                    )
+                    for _c in criteria_list:
+                        _c_conf = _c.get("confidence", 0) if isinstance(_c, dict) else getattr(_c, "confidence", 0)
+                        cached_criterion_confidences.append(_c_conf)
+                        if _c_conf < 0.7:
+                            cached_low_conf.append({
+                                "payer": _p,
+                                "criterion": _c.get("criterion_name", "") if isinstance(_c, dict) else getattr(_c, "criterion_name", ""),
+                                "confidence": _c_conf,
+                                "reasoning": _c.get("reasoning", "") if isinstance(_c, dict) else getattr(_c, "reasoning", ""),
+                            })
+
                 return {
                     "stage": "policy_analysis",
                     "reasoning": reasoning,
@@ -495,12 +542,26 @@ class CaseService:
                     "warnings": [f"Documentation gap: {gap.get('description', gap) if isinstance(gap, dict) else gap}" for gap in all_gaps[:3]] if all_gaps else [],
                     "assessments": serialize_for_json(cached_assessments),
                     "documentation_gaps": all_gaps,
+                    "provenance": {
+                        "is_cached": True,
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    },
+                    "reasoning_chains": {},
+                    "confidence_details": {
+                        "aggregate": {
+                            "min": round(min(cached_criterion_confidences), 3) if cached_criterion_confidences else 0.0,
+                            "mean": round(sum(cached_criterion_confidences) / len(cached_criterion_confidences), 3) if cached_criterion_confidences else 0.0,
+                            "max": round(max(cached_criterion_confidences), 3) if cached_criterion_confidences else 0.0,
+                        },
+                        "low_confidence_criteria": cached_low_conf,
+                    },
                 }
 
         reasoner = get_policy_reasoner()
         payers = list(case_state.payer_states.keys())
 
         assessments = {}
+        raw_assessments = {}  # Keep CoverageAssessment objects for provenance extraction
         findings = []
         all_gaps = []
 
@@ -566,6 +627,7 @@ class CaseService:
                 skip_cache=refresh,
             )
 
+            raw_assessments[payer] = assessment
             assessments[payer] = assessment.model_dump()
 
             # Build findings from assessment
@@ -612,6 +674,40 @@ class CaseService:
             change_description="Policy analysis completed"
         )
 
+        # Build provenance and confidence details from raw assessments
+        from backend.config.settings import get_settings
+        _settings = get_settings()
+
+        # Extract per-criterion confidence values
+        all_criterion_confidences = [
+            c.confidence
+            for a in raw_assessments.values()
+            for c in a.criteria_assessments
+        ]
+        min_conf = min(all_criterion_confidences) if all_criterion_confidences else 0.0
+        max_conf = max(all_criterion_confidences) if all_criterion_confidences else 0.0
+        mean_conf = (sum(all_criterion_confidences) / len(all_criterion_confidences)) if all_criterion_confidences else 0.0
+
+        # Low-confidence criteria (below 0.7)
+        low_confidence_criteria = [
+            {
+                "payer": p,
+                "criterion": c.criterion_name,
+                "confidence": c.confidence,
+                "reasoning": c.reasoning,
+            }
+            for p, a in raw_assessments.items()
+            for c in a.criteria_assessments
+            if c.confidence < 0.7
+        ]
+
+        # Extract reasoning chains from llm_raw_response
+        reasoning_chains = {
+            p: a.llm_raw_response.get("reasoning_chain", [])
+            for p, a in raw_assessments.items()
+            if a.llm_raw_response
+        }
+
         return {
             "stage": "policy_analysis",
             "reasoning": reasoning,
@@ -620,7 +716,18 @@ class CaseService:
             "recommendations": recommendations,
             "warnings": [f"Documentation gap: {gap['description']}" for gap in all_gaps[:3]] if all_gaps else [],
             "assessments": assessments,
-            "documentation_gaps": all_gaps
+            "documentation_gaps": all_gaps,
+            "provenance": {
+                "provider": "claude",
+                "model": _settings.claude_model,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "is_cached": False,
+            },
+            "reasoning_chains": reasoning_chains,
+            "confidence_details": {
+                "aggregate": {"min": round(min_conf, 3), "mean": round(mean_conf, 3), "max": round(max_conf, 3)},
+                "low_confidence_criteria": low_confidence_criteria,
+            },
         }
 
     async def stream_policy_analysis(self, case_id: str, refresh: bool = False):
@@ -1127,7 +1234,7 @@ class CaseService:
                 recommendation = {"recommended_action": "submit_to_payer", "summary": str(response_text), "evidence": [], "risk_factors": []}
         else:
             # Result IS the recommendation dict (Claude JSON mode returns parsed dict directly)
-            recommendation = {k: v for k, v in result.items() if k not in ("provider", "task_category")}
+            recommendation = {k: v for k, v in result.items() if k not in ("provider", "task_category", "model", "is_fallback", "_usage")}
 
         # Build stage response
         action = recommendation.get("recommended_action", "submit_to_payer")
@@ -1165,6 +1272,13 @@ class CaseService:
             "recommendations": [action.replace("_", " ").title()] + provider_actions[:2],
             "warnings": warnings,
             "recommendation": serialize_for_json(recommendation),
+            "provenance": {
+                "provider": result.get("provider", "unknown"),
+                "model": result.get("model", "unknown"),
+                "is_fallback": result.get("is_fallback", False),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "is_cached": False,
+            },
         }
 
         # Cache the recommendation indefinitely
@@ -1756,7 +1870,7 @@ class CaseService:
             change_description=change_description
         )
 
-        # Log audit event
+        # Log audit event with actual reviewer attribution
         await self.audit_logger.log_event(
             case_id=case_id,
             event_type=EventType.STAGE_CHANGED,
@@ -1768,7 +1882,8 @@ class CaseService:
                 "reviewer_id": reviewer_id,
                 "reviewer_name": reviewer_name,
                 "notes": notes
-            }
+            },
+            actor=reviewer_id,
         )
 
         logger.info(

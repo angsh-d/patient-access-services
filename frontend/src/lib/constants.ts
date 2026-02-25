@@ -16,6 +16,7 @@ export const ENDPOINTS = {
   cases: `${API_BASE_URL}/cases`,
   case: (id: string) => `${API_BASE_URL}/cases/${id}`,
   deleteCase: (id: string) => `${API_BASE_URL}/cases/${id}`,
+  resetCase: (id: string) => `${API_BASE_URL}/cases/${id}/reset`,
   processCase: (id: string) => `${API_BASE_URL}/cases/${id}/process`,
   caseAuditTrail: (id: string) => `${API_BASE_URL}/cases/${id}/audit-trail`,
   generateStrategies: (id: string) => `${API_BASE_URL}/cases/${id}/generate-strategies`,

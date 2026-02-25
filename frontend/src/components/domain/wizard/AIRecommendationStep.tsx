@@ -6,7 +6,7 @@
  * if no results exist.
  */
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import {
   Sparkles,
   ChevronRight,
@@ -14,6 +14,7 @@ import {
   CheckCircle,
   ArrowLeft,
   FileText,
+  Database,
 } from 'lucide-react'
 import { WizardStep } from '@/components/domain/WizardStep'
 import { ReferenceInfoContent } from '@/components/domain/wizard/ReferenceInfoContent'
@@ -63,6 +64,17 @@ export function AIRecommendationStep({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recommendation = (currentAnalysis as any)?.recommendation as Record<string, unknown> | undefined
+
+  // Format relative time from provenance (stable across re-renders)
+  const provenance = currentAnalysis?.provenance
+  const provenanceTime = useMemo(() => {
+    const ts = provenance?.timestamp
+    if (!ts) return null
+    const diff = Date.now() - new Date(ts).getTime()
+    if (diff < 60000) return 'just now'
+    if (diff < 3600000) return `${Math.round(diff / 60000)}m ago`
+    return `${Math.round(diff / 3600000)}h ago`
+  }, [provenance?.timestamp])
 
   return (
     <WizardStep
@@ -114,6 +126,21 @@ export function AIRecommendationStep({
                     )}
                   </div>
                   <p className="text-sm text-grey-700">{String(recommendation.summary || '')}</p>
+                  {provenance && (
+                    <div className="mt-2 flex items-center gap-2 text-[11px] text-grey-400">
+                      {provenance.is_cached ? (
+                        <span className="flex items-center gap-1"><Database className="w-3 h-3" /> Cached result</span>
+                      ) : (
+                        <>
+                          {provenance.model && <span>Analyzed by {provenance.model}</span>}
+                          {provenanceTime && <span>· {provenanceTime}</span>}
+                          {provenance.is_fallback && (
+                            <span className="text-grey-500 italic">· Fallback provider used</span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

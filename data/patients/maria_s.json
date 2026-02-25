@@ -1,0 +1,210 @@
+{
+  "patient_id": "maria_s",
+  "extraction_metadata": {
+    "extracted_from": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf", "03_MRI_Pelvis_Report.pdf", "04_Clinical_Summary.pdf"],
+    "extraction_date": "2026-02-12",
+    "extraction_method": "clinical_document_extraction"
+  },
+
+  "demographics": {
+    "first_name": "Maria",
+    "last_name": "Santos",
+    "date_of_birth": "1990-09-18",
+    "age": 35,
+    "gender": "Female",
+    "ethnicity": "Hispanic",
+    "address": { "street": "8450 Coral Way, Apt 12B", "city": "Miami", "state": "FL", "zip": "33155" },
+    "phone": "305-555-0234",
+    "mrn": "MARIA_S",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "insurance": {
+    "primary": {
+      "payer_name": "Aetna",
+      "payer_id": "AETNA",
+      "plan_name": "Aetna Choice POS II",
+      "plan_type": "POS",
+      "member_id": "AET234567891",
+      "group_number": "FL-POS-2024",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  },
+
+  "prescriber": {
+    "name": "Dr. Carlos Fernandez",
+    "credentials": "MD, FACG",
+    "npi": "1567891234",
+    "specialty": "Gastroenterology",
+    "practice_name": "Miami Gastroenterology Group",
+    "address": { "street": "8940 N Kendall Drive, Suite 300", "city": "Miami", "state": "FL", "zip": "33176" },
+    "phone": "305-555-0400",
+    "fax": "305-555-0401",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "medication_request": {
+    "medication_name": "Infliximab",
+    "brand_name": "Inflectra",
+    "generic_name": "infliximab-dyyb",
+    "j_code": "Q5103",
+    "product_type": "preferred_biosimilar",
+    "dose": "5mg/kg",
+    "route": "Intravenous infusion",
+    "frequency": { "induction": "Weeks 0, 2, 6", "maintenance": "Every 8 weeks" },
+    "duration_requested": "12 months initial authorization",
+    "quantity_requested": "4 infusions",
+    "site_of_care": "Outpatient infusion center",
+    "start_date_requested": "2026-02-18",
+    "diagnosis": "Crohn's disease, unspecified, with fistula",
+    "icd10_code": "K50.913",
+    "source_document": "01_Prior_Auth_Request_Form.pdf"
+  },
+
+  "diagnoses": [
+    {
+      "rank": "primary",
+      "icd10_code": "K50.913",
+      "description": "Crohn's disease, unspecified, with fistula",
+      "status": "active",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "K60.3",
+      "description": "Anal fistula",
+      "status": "active",
+      "source_document": "03_MRI_Pelvis_Report.pdf"
+    }
+  ],
+
+  "disease_activity": {
+    "assessment_date": "2026-01-20",
+    "cdai_score": 380,
+    "cdai_interpretation": "Severe active disease (CDAI >300)",
+    "ses_cd_score": 18,
+    "ses_cd_interpretation": "Severe endoscopic activity",
+    "harvey_bradshaw_index": 14,
+    "hbi_interpretation": "Severe disease activity (HBI >=12)",
+    "disease_severity": "severe",
+    "disease_phenotype": "fistulizing",
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "04_Clinical_Summary.pdf"]
+  },
+
+  "clinical_history": {
+    "chief_complaint": "Worsening perianal fistula drainage, severe abdominal pain, and 12 lb weight loss in 8 weeks",
+    "history_of_present_illness": "35-year-old Hispanic female with severe fistulizing Crohn's disease diagnosed 2022. CDAI 380, SES-CD 18. Complex perianal fistula confirmed by MRI with intersphincteric tract and active drainage. Reports 8-10 loose stools daily, severe RLQ pain rated 8/10, and 12 lb weight loss (7% body weight) over 8 weeks. Failed mesalamine, budesonide, prednisone (steroid-dependent), and azathioprine (pancreatitis requiring discontinuation). Two ER visits in past 45 days. Surgical consultation recommends medical therapy with anti-TNF before seton placement.",
+    "source_document": "04_Clinical_Summary.pdf"
+  },
+
+  "prior_treatments": [
+    {
+      "medication_name": "Mesalamine",
+      "brand_name": "Pentasa",
+      "drug_class": "5-ASA",
+      "dose": "1g QID",
+      "start_date": "2022-05-01",
+      "end_date": "2022-10-01",
+      "duration_weeks": 22,
+      "outcome": "inadequate_response",
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Prednisone",
+      "drug_class": "Corticosteroid",
+      "dose": "40mg with taper attempts",
+      "start_date": "2022-11-01",
+      "end_date": "2025-10-01",
+      "duration_weeks": 152,
+      "outcome": "steroid_dependent",
+      "outcome_description": "Steroid-dependent after 5 taper attempts. Currently on 20mg with ongoing active disease.",
+      "taper_attempts": 5,
+      "adequate_trial": true,
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Azathioprine",
+      "brand_name": "Imuran",
+      "drug_class": "Thiopurine immunomodulator",
+      "dose": "100mg daily",
+      "start_date": "2023-06-01",
+      "end_date": "2023-07-15",
+      "duration_weeks": 6,
+      "outcome": "intolerance",
+      "outcome_description": "Acute pancreatitis within 6 weeks requiring hospitalization. Amylase 450, lipase 890.",
+      "adverse_event": { "type": "acute_pancreatitis", "details": "Amylase 450, Lipase 890", "severity": "severe" },
+      "adequate_trial": false,
+      "reason_inadequate": "discontinued_due_to_adverse_event",
+      "source_document": "01_Prior_Auth_Request_Form.pdf"
+    }
+  ],
+
+  "laboratory_results": {
+    "collection_date": "2026-01-18",
+    "ordering_provider": "Dr. Carlos Fernandez",
+    "facility": "Miami Clinical Lab",
+    "report_status": "FINAL",
+    "source_document": "02_Laboratory_Results.pdf",
+    "panels": {
+      "cbc": {
+        "panel_name": "Complete Blood Count (CBC)",
+        "results": [
+          {"test": "WBC", "value": 12.1, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": "H"},
+          {"test": "Hemoglobin", "value": 9.8, "unit": "g/dL", "reference_range": "12.0-16.0", "flag": "L"},
+          {"test": "Platelets", "value": 445, "unit": "x10^9/L", "reference_range": "150-400", "flag": "H"}
+        ]
+      },
+      "cmp": {
+        "panel_name": "Comprehensive Metabolic Panel",
+        "results": [
+          {"test": "Albumin", "value": 2.4, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": "L"},
+          {"test": "ALT", "value": 20, "unit": "U/L", "reference_range": "7-56", "flag": null}
+        ]
+      },
+      "inflammatory_markers": {
+        "panel_name": "Inflammatory Markers",
+        "results": [
+          {"test": "CRP", "value": 55, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+          {"test": "ESR", "value": 62, "unit": "mm/hr", "reference_range": "0-20", "flag": "H"}
+        ]
+      },
+      "gi_markers": {
+        "panel_name": "GI-Specific Markers",
+        "results": [
+          {"test": "Fecal Calprotectin", "value": 1800, "unit": "ug/g", "reference_range": "<50", "flag": "H"}
+        ]
+      }
+    },
+    "interpretation": "Severely active fistulizing Crohn's with markedly elevated CRP (55), ESR (62), FCP (1800). Severe anemia (Hgb 9.8), significant hypoalbuminemia (2.4). Leukocytosis (12.1) and thrombocytosis (445) indicating active systemic inflammation."
+  },
+
+  "pre_biologic_screening": {
+    "status": "COMPLETE",
+    "tuberculosis_screening": { "status": "COMPLETE", "test_performed": "QuantiFERON-TB Gold Plus", "result": "Negative", "cleared_for_biologic": true },
+    "hepatitis_b_screening": { "status": "COMPLETE", "interpretation": "HBV negative with immunity from vaccination", "cleared_for_biologic": true },
+    "hepatitis_c_screening": { "status": "COMPLETE", "result": "Non-reactive", "cleared_for_biologic": true }
+  },
+
+  "pa_criteria_assessment": {
+    "diagnosis_confirmed": { "met": true, "evidence": "Fistulizing Crohn's confirmed by MRI and colonoscopy. K50.913" },
+    "disease_severity_documented": { "met": true, "evidence": "CDAI 380, SES-CD 18, CRP 55, FCP 1800, albumin 2.4 — severe active disease" },
+    "conventional_therapy_failed": {
+      "met": true,
+      "therapies_tried": [
+        {"medication": "Mesalamine", "outcome": "inadequate_response", "duration_adequate": true},
+        {"medication": "Prednisone", "outcome": "steroid_dependent", "duration_adequate": true},
+        {"medication": "Azathioprine", "outcome": "intolerance", "duration_adequate": false}
+      ]
+    },
+    "step_therapy_satisfied": { "met": true, "evidence": "Fistulizing phenotype qualifies for accelerated biologic access per most payer policies" },
+    "pre_biologic_screening_complete": { "met": true },
+    "fda_approved_indication": { "met": true, "indication": "Fistulizing Crohn's disease" }
+  },
+
+  "overall_pa_readiness": {
+    "status": "URGENT_SUBMISSION_RECOMMENDED",
+    "all_clinical_criteria_met": true,
+    "recommendation": "Urgent submission recommended. Severe fistulizing Crohn's with strong objective evidence. Fistulizing phenotype independently qualifies for biologic therapy under most payer policies."
+  }
+}
