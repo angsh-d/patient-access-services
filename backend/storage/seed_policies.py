@@ -51,7 +51,7 @@ async def seed_policies() -> int:
                 PolicyCacheModel.medication_name == medication,
             )
             result = await session.execute(stmt)
-            existing = result.scalar_one_or_none()
+            existing = result.scalars().first()
             if existing:
                 logger.info("Policy already seeded, skipping", payer=payer, medication=medication)
                 continue
@@ -102,7 +102,7 @@ async def seed_policies() -> int:
                 PolicyCacheModel.medication_name == medication,
             )
             result = await session.execute(stmt)
-            existing = result.scalar_one_or_none()
+            existing = result.scalars().first()
             if existing:
                 logger.info("Policy already seeded, skipping", payer=payer, medication=medication)
                 continue

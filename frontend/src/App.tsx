@@ -10,6 +10,7 @@ import NewCase from './pages/NewCase'
 import Settings from './pages/Settings'
 import Analytics from './pages/Analytics'
 import PolicyVault from './pages/PolicyVault'
+import Appeals from './pages/Appeals'
 import { pageTransition } from './lib/animations'
 
 function AnimatedRoutes() {
@@ -42,6 +43,14 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <PolicyVault />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/appeals"
+            element={
+              <PageWrapper>
+                <Appeals />
               </PageWrapper>
             }
           />

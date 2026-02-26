@@ -115,6 +115,18 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
   const [p2pChecked, setP2pChecked] = useState<Record<number, boolean>>({})
   const [isRevealingStrategy, setIsRevealingStrategy] = useState(false)
   const [isRevealingLetter, setIsRevealingLetter] = useState(false)
+  // Inner strategy sub-sections: only these three open by default
+  const [expandedInner, setExpandedInner] = useState<Set<string>>(
+    new Set(['primary_argument', 'supporting_arguments', 'policy_sections'])
+  )
+  const toggleInner = (key: string) => {
+    setExpandedInner(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
 
   const strategyCacheKey = `appeal-strategy-${caseId}`
   const letterCacheKey = `appeal-letter-${caseId}`
@@ -305,27 +317,28 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
             </div>
 
             {/* Primary argument */}
-            <div className="bg-grey-50 rounded-xl border border-grey-100 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Target className="w-3.5 h-3.5 text-grey-500" />
-                <span className="text-xs font-medium text-grey-400 uppercase tracking-wider">
-                  Primary Clinical Argument
-                </span>
+            <InnerCollapsible
+              title="Primary Clinical Argument"
+              icon={<Target className="w-3.5 h-3.5 text-grey-500" />}
+              expanded={expandedInner.has('primary_argument')}
+              onToggle={() => toggleInner('primary_argument')}
+            >
+              <div className="bg-grey-50 rounded-xl border border-grey-100 p-4">
+                <p className="text-sm text-grey-800 leading-relaxed">
+                  {appealStrategy.primary_clinical_argument}
+                </p>
               </div>
-              <p className="text-sm text-grey-800 leading-relaxed">
-                {appealStrategy.primary_clinical_argument}
-              </p>
-            </div>
+            </InnerCollapsible>
 
             {/* Supporting arguments */}
             {appealStrategy.supporting_arguments.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <ClipboardList className="w-3.5 h-3.5 text-grey-500" />
-                  <span className="text-xs font-medium text-grey-400 uppercase tracking-wider">
-                    Supporting Arguments
-                  </span>
-                </div>
+              <InnerCollapsible
+                title="Supporting Arguments"
+                icon={<ClipboardList className="w-3.5 h-3.5 text-grey-500" />}
+                expanded={expandedInner.has('supporting_arguments')}
+                onToggle={() => toggleInner('supporting_arguments')}
+                count={appealStrategy.supporting_arguments.length}
+              >
                 <div className="space-y-2">
                   {appealStrategy.supporting_arguments.map((arg, idx) => (
                     <div key={idx} className="flex items-start gap-3 p-3 bg-grey-50 rounded-xl border border-grey-100">
@@ -339,18 +352,18 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
                     </div>
                   ))}
                 </div>
-              </div>
+              </InnerCollapsible>
             )}
 
             {/* Evidence to cite */}
             {appealStrategy.evidence_to_cite.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <BookOpen className="w-3.5 h-3.5 text-grey-500" />
-                  <span className="text-xs font-medium text-grey-400 uppercase tracking-wider">
-                    Evidence to Cite
-                  </span>
-                </div>
+              <InnerCollapsible
+                title="Evidence to Cite"
+                icon={<BookOpen className="w-3.5 h-3.5 text-grey-500" />}
+                expanded={expandedInner.has('evidence_to_cite')}
+                onToggle={() => toggleInner('evidence_to_cite')}
+                count={appealStrategy.evidence_to_cite.length}
+              >
                 <div className="space-y-1.5">
                   {appealStrategy.evidence_to_cite.map((ev, idx) => {
                     const label = typeof ev === 'string'
@@ -364,60 +377,68 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
                     )
                   })}
                 </div>
-              </div>
+              </InnerCollapsible>
             )}
 
-            {/* Policy sections + literature */}
-            {(appealStrategy.policy_sections_to_reference.length > 0 || appealStrategy.medical_literature_citations.length > 0) && (
-              <div className="grid grid-cols-2 gap-3">
-                {appealStrategy.policy_sections_to_reference.length > 0 && (
-                  <div className="bg-grey-50 rounded-xl border border-grey-100 p-3">
-                    <span className="text-[10px] font-medium text-grey-400 uppercase tracking-wider">
-                      Policy Sections
-                    </span>
-                    <div className="mt-2 space-y-1">
-                      {appealStrategy.policy_sections_to_reference.map((s, idx) => (
-                        <p key={idx} className="text-xs text-grey-600">{s}</p>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {appealStrategy.medical_literature_citations.length > 0 && (
-                  <div className="bg-grey-50 rounded-xl border border-grey-100 p-3">
-                    <span className="text-[10px] font-medium text-grey-400 uppercase tracking-wider">
-                      Literature
-                    </span>
-                    <div className="mt-2 space-y-1">
-                      {appealStrategy.medical_literature_citations.map((c, idx) => (
-                        <p key={idx} className="text-xs text-grey-600">{c}</p>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+            {/* Policy sections */}
+            {appealStrategy.policy_sections_to_reference.length > 0 && (
+              <InnerCollapsible
+                title="Policy Sections"
+                icon={<BookOpen className="w-3.5 h-3.5 text-grey-500" />}
+                expanded={expandedInner.has('policy_sections')}
+                onToggle={() => toggleInner('policy_sections')}
+                count={appealStrategy.policy_sections_to_reference.length}
+              >
+                <div className="bg-grey-50 rounded-xl border border-grey-100 p-3 space-y-1">
+                  {appealStrategy.policy_sections_to_reference.map((s, idx) => (
+                    <p key={idx} className="text-xs text-grey-600">{s}</p>
+                  ))}
+                </div>
+              </InnerCollapsible>
+            )}
+
+            {/* Medical literature */}
+            {appealStrategy.medical_literature_citations.length > 0 && (
+              <InnerCollapsible
+                title="Medical Literature"
+                icon={<BookOpen className="w-3.5 h-3.5 text-grey-500" />}
+                expanded={expandedInner.has('literature')}
+                onToggle={() => toggleInner('literature')}
+                count={appealStrategy.medical_literature_citations.length}
+              >
+                <div className="bg-grey-50 rounded-xl border border-grey-100 p-3 space-y-1">
+                  {appealStrategy.medical_literature_citations.map((c, idx) => (
+                    <p key={idx} className="text-xs text-grey-600">{c}</p>
+                  ))}
+                </div>
+              </InnerCollapsible>
             )}
 
             {/* Success reasoning */}
             {appealStrategy.success_probability_reasoning && (
-              <div className="px-3 py-2.5 bg-grey-50 rounded-xl border border-grey-100">
-                <span className="text-[10px] font-medium text-grey-400 uppercase tracking-wider">
-                  Success Assessment
-                </span>
-                <p className="text-xs text-grey-600 mt-1 leading-relaxed">
-                  {appealStrategy.success_probability_reasoning}
-                </p>
-              </div>
+              <InnerCollapsible
+                title="Success Assessment"
+                icon={<Target className="w-3.5 h-3.5 text-grey-500" />}
+                expanded={expandedInner.has('success_assessment')}
+                onToggle={() => toggleInner('success_assessment')}
+              >
+                <div className="px-3 py-2.5 bg-grey-50 rounded-xl border border-grey-100">
+                  <p className="text-xs text-grey-600 leading-relaxed">
+                    {appealStrategy.success_probability_reasoning}
+                  </p>
+                </div>
+              </InnerCollapsible>
             )}
 
             {/* Key risks */}
             {appealStrategy.key_risks.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <ShieldAlert className="w-3.5 h-3.5 text-grey-500" />
-                  <span className="text-xs font-medium text-grey-400 uppercase tracking-wider">
-                    Key Risks
-                  </span>
-                </div>
+              <InnerCollapsible
+                title="Key Risks"
+                icon={<ShieldAlert className="w-3.5 h-3.5 text-grey-500" />}
+                expanded={expandedInner.has('key_risks')}
+                onToggle={() => toggleInner('key_risks')}
+                count={appealStrategy.key_risks.length}
+              >
                 <div className="space-y-1.5">
                   {appealStrategy.key_risks.map((risk, idx) => (
                     <div key={idx} className="flex items-start gap-2 text-xs text-grey-600 px-3 py-2 bg-grey-50 rounded-lg border border-grey-100">
@@ -426,23 +447,26 @@ export function AppealPanel({ caseId, caseData: _caseData, denialContext, classN
                     </div>
                   ))}
                 </div>
-              </div>
+              </InnerCollapsible>
             )}
 
             {/* Fallback strategies */}
             {appealStrategy.fallback_strategies.length > 0 && (
-              <div className="px-3 py-2.5 bg-grey-50 rounded-xl border border-grey-100">
-                <span className="text-[10px] font-medium text-grey-400 uppercase tracking-wider">
-                  Fallback Options
-                </span>
-                <div className="mt-1.5 space-y-1">
+              <InnerCollapsible
+                title="Fallback Options"
+                icon={<ClipboardList className="w-3.5 h-3.5 text-grey-500" />}
+                expanded={expandedInner.has('fallback_options')}
+                onToggle={() => toggleInner('fallback_options')}
+                count={appealStrategy.fallback_strategies.length}
+              >
+                <div className="px-3 py-2.5 bg-grey-50 rounded-xl border border-grey-100 space-y-1">
                   {appealStrategy.fallback_strategies.map((fb, idx) => (
                     <p key={idx} className="text-xs text-grey-600">
                       {idx + 1}. {fb}
                     </p>
                   ))}
                 </div>
-              </div>
+              </InnerCollapsible>
             )}
           </div>
         ) : null}
@@ -721,6 +745,58 @@ function CollapsibleSection({ title, icon, expanded, onToggle, badge, children }
             className="overflow-hidden"
           >
             <div className="px-4 pb-4">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// ── Inner Collapsible (lightweight sub-section toggle) ──
+
+interface InnerCollapsibleProps {
+  title: string
+  icon: ReactNode
+  expanded: boolean
+  onToggle: () => void
+  count?: number
+  children: ReactNode
+}
+
+function InnerCollapsible({ title, icon, expanded, onToggle, count, children }: InnerCollapsibleProps) {
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center gap-2 py-1.5 group"
+      >
+        {icon}
+        <span className="text-xs font-medium text-grey-700 group-hover:text-grey-900 transition-colors">
+          {title}
+        </span>
+        {count !== undefined && (
+          <span className="text-[10px] font-medium px-1.5 py-0.5 bg-grey-100 text-grey-400 rounded">
+            {count}
+          </span>
+        )}
+        <ChevronDown className={cn(
+          'w-3 h-3 text-grey-300 ml-auto transition-transform duration-200',
+          expanded && 'rotate-180'
+        )} />
+      </button>
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="pt-1.5 pb-1">
               {children}
             </div>
           </motion.div>

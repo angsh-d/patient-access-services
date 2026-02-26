@@ -4,9 +4,12 @@
     "extracted_from": [
       "01_Prior_Auth_Request_Form.pdf",
       "02_Laboratory_Results.pdf",
-      "03_Colonoscopy_Report.pdf"
+      "03_Colonoscopy_Report.pdf",
+      "04_Updated_Colonoscopy_Report.pdf",
+      "05_ER_Visit_Summary.pdf",
+      "06_Updated_Laboratory_Results.pdf"
     ],
-    "extraction_date": "2026-01-25",
+    "extraction_date": "2026-02-20",
     "extraction_method": "clinical_document_extraction"
   },
 
@@ -14,7 +17,7 @@
     "first_name": "David",
     "last_name": "Chen",
     "date_of_birth": "1985-08-14",
-    "age": 39,
+    "age": 40,
     "gender": "Male",
     "address": {
       "street": "1542 Riverside Drive",
@@ -81,29 +84,87 @@
   "diagnoses": [
     {
       "rank": "primary",
-      "icd10_code": "K50.10",
-      "description": "Crohn's disease of large intestine without complications",
+      "icd10_code": "K50.112",
+      "description": "Crohn's disease of large intestine with intestinal obstruction",
       "status": "active",
-      "source_document": "01_Prior_Auth_Request_Form.pdf"
+      "source_document": "04_Updated_Colonoscopy_Report.pdf",
+      "coding_note": "Updated from K50.10 after January 2026 colonoscopy demonstrated developing stricture in transverse colon with partial luminal narrowing"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "D50.9",
+      "description": "Iron deficiency anemia, unspecified",
+      "status": "active",
+      "source_document": "06_Updated_Laboratory_Results.pdf",
+      "coding_note": "New diagnosis - hemoglobin dropped from 14.0 to 10.8 g/dL with low ferritin (15 ng/mL) indicating iron deficiency from chronic GI inflammation and blood loss"
+    },
+    {
+      "rank": "secondary",
+      "icd10_code": "E46",
+      "description": "Unspecified protein-calorie malnutrition",
+      "status": "active",
+      "source_document": "06_Updated_Laboratory_Results.pdf",
+      "coding_note": "New diagnosis - albumin dropped from 4.0 to 2.9 g/dL with 18 lb unintentional weight loss over 3 months"
     }
   ],
 
   "disease_activity": {
-    "assessment_date": "2024-01-10",
-    "cdai_score": 228,
-    "cdai_interpretation": "Borderline moderate active disease (CDAI 220-450); near the mild-moderate threshold",
-    "ses_cd_score": 8,
-    "ses_cd_interpretation": "Mild-to-moderate endoscopic activity",
-    "disease_severity": "moderate",
-    "disease_phenotype": "inflammatory_colonic",
-    "disease_location": "Large intestine (transverse and descending colon)",
-    "assessment_staleness_note": "Disease activity assessment is over 12 months old — may not reflect current disease status",
-    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf"]
+    "initial_assessment": {
+      "assessment_date": "2024-01-10",
+      "cdai_score": 228,
+      "cdai_interpretation": "Borderline moderate active disease (CDAI 220-450); near the mild-moderate threshold",
+      "ses_cd_score": 8,
+      "ses_cd_interpretation": "Mild-to-moderate endoscopic activity",
+      "disease_severity": "moderate",
+      "note": "This was the assessment submitted with the original PA request that was denied"
+    },
+    "current_assessment": {
+      "assessment_date": "2026-01-28",
+      "cdai_score": 365,
+      "cdai_interpretation": "Moderate-to-severe active disease (CDAI >300 indicates severe disease activity)",
+      "harvey_bradshaw_index": 13,
+      "harvey_bradshaw_interpretation": "Severe disease activity (HBI >12)",
+      "ses_cd_score": 18,
+      "ses_cd_interpretation": "Severe endoscopic activity with deep ulceration and developing stricture",
+      "disease_severity": "severe",
+      "disease_phenotype": "stricturing_inflammatory",
+      "disease_location": "Large intestine (transverse, descending, and now ascending colon involvement)",
+      "progression_note": "Significant disease progression since initial assessment. CDAI increased from 228 to 365 (+60%). SES-CD increased from 8 to 18 (+125%). Disease phenotype evolved from purely inflammatory to stricturing. New ascending colon involvement indicates proximal extension."
+    },
+    "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf", "04_Updated_Colonoscopy_Report.pdf"]
   },
 
   "clinical_history": {
-    "chief_complaint": "Persistent Crohn's disease symptoms despite immunomodulator therapy, requesting biologic escalation",
-    "history_of_present_illness": "39-year-old male with Crohn's disease (CDAI 228 as of January 2024, SES-CD 8) who reports inadequate response to conventional therapy. Treatment history: (1) Budesonide 9mg x 13 weeks - partial response, unable to taper; (2) Prednisone 40mg x 24 weeks - steroid-dependent with multiple taper failures; (3) Azathioprine 150mg x 52 weeks (12 months) - inadequate response despite therapeutic 6-TGN levels of 285 pmol. Patient reports 3-4 loose stools daily, mild-to-moderate abdominal discomfort, and intermittent fatigue. No ER visits. No weight loss. No fistulizing or stricturing complications. Last colonoscopy was January 2024 showing mild-to-moderate activity. Current symptoms are manageable but patient desires escalation to biologic therapy for better disease control.",
+    "chief_complaint": "Rapidly worsening Crohn's disease with developing stricture, ER visits for obstruction symptoms, and significant weight loss following PA denial",
+    "history_of_present_illness": "40-year-old male with Crohn's disease originally submitted for biologic PA in October 2025 with borderline moderate disease (CDAI 228, SES-CD 8). PA was denied by Cigna on grounds of insufficient evidence of moderate-to-severe disease activity (stale endoscopic data, borderline CDAI, mild inflammatory markers). Since the denial, patient has experienced dramatic clinical deterioration: (1) CDAI increased from 228 to 365, crossing into severe territory; (2) Unintentional weight loss of 18 lbs (10% body weight) over 3 months; (3) Stool frequency increased from 3-4/day to 8-10/day with visible blood; (4) Severe cramping abdominal pain (7/10) especially postprandial, concerning for developing stricture; (5) Two ER visits — December 2025 for partial small bowel obstruction managed conservatively, and January 2026 for severe pain and dehydration requiring IV fluids; (6) Hemoglobin dropped from 14.0 to 10.8 g/dL (new iron deficiency anemia); (7) Albumin dropped from 4.0 to 2.9 g/dL (malnutrition). Updated colonoscopy (January 28, 2026) now shows severe endoscopic disease (SES-CD 18) with deep ulcerations throughout the colon and a developing stricture in the transverse colon. Fecal calprotectin markedly elevated at 1180 ug/g. Patient failed to respond to rescue prednisone course (40mg x 4 weeks, unable to taper below 30mg without flare). The clinical picture has fundamentally changed since the original submission and now unequivocally demonstrates severe, progressive Crohn's disease requiring urgent biologic therapy.",
+    "er_visits": [
+      {
+        "date": "2025-12-18",
+        "facility": "Memorial Hermann Hospital — Texas Medical Center",
+        "chief_complaint": "Severe abdominal pain, nausea, vomiting, unable to tolerate oral intake for 36 hours",
+        "diagnosis": "Partial small bowel obstruction secondary to Crohn's disease stricture",
+        "treatment": "NPO, IV fluids, IV methylprednisolone 40mg, CT abdomen/pelvis showing wall thickening and partial obstruction at transverse colon, nasogastric decompression",
+        "disposition": "Discharged after 48 hours observation, obstruction resolved with conservative management",
+        "source_document": "05_ER_Visit_Summary.pdf"
+      },
+      {
+        "date": "2026-01-15",
+        "facility": "Memorial Hermann Hospital — Texas Medical Center",
+        "chief_complaint": "Severe cramping abdominal pain (8/10), bloody diarrhea x 12 episodes, dizziness, orthostatic symptoms",
+        "diagnosis": "Crohn's disease flare with dehydration and iron deficiency anemia",
+        "treatment": "IV fluids (3L LR), IV methylprednisolone 60mg, blood transfusion (1 unit pRBC for Hgb 9.2), pain management",
+        "disposition": "Discharged after 24 hours, stable on oral prednisone 40mg with GI follow-up in 3 days",
+        "source_document": "05_ER_Visit_Summary.pdf"
+      }
+    ],
+    "weight_loss": {
+      "baseline_weight_lbs": 176,
+      "current_weight_lbs": 158,
+      "loss_lbs": 18,
+      "loss_percent": 10.2,
+      "timeframe": "3 months (November 2025 — February 2026)",
+      "classification": "Clinically significant unintentional weight loss (>5% in 3 months)"
+    },
     "source_document": "01_Prior_Auth_Request_Form.pdf"
   },
 
@@ -123,13 +184,14 @@
     },
     {
       "medication_name": "Prednisone",
+      "brand_name": "Deltasone",
       "drug_class": "Corticosteroid (systemic)",
       "dose": "40mg taper",
       "start_date": "2023-01-15",
       "end_date": "2023-06-30",
       "duration_weeks": 24,
       "outcome": "steroid_dependent",
-      "outcome_description": "Steroid-dependent disease with multiple taper failures. Disease activity returns upon dose reduction.",
+      "outcome_description": "Steroid-dependent disease with multiple taper failures. Disease activity returns upon dose reduction below 20mg.",
       "adequate_trial": true,
       "source_document": "01_Prior_Auth_Request_Form.pdf"
     },
@@ -142,7 +204,7 @@
       "end_date": "2024-07-01",
       "duration_weeks": 52,
       "outcome": "inadequate_response",
-      "outcome_description": "Inadequate response despite 12 months of optimized therapy with therapeutic 6-TGN levels (285 pmol). Disease activity persisted with CDAI >220 and moderate endoscopic inflammation.",
+      "outcome_description": "Inadequate response despite 12 months of optimized therapy with therapeutic 6-TGN levels (285 pmol). Disease activity persisted with CDAI >220 and moderate endoscopic inflammation. Disease subsequently worsened further after discontinuation.",
       "therapeutic_drug_monitoring": {
         "tpmt_genotype": "*1/*1 (Wild type)",
         "6_tgn_level": 285,
@@ -156,145 +218,218 @@
       "adequate_trial": true,
       "acg_guideline_compliant": true,
       "source_document": "01_Prior_Auth_Request_Form.pdf"
+    },
+    {
+      "medication_name": "Prednisone",
+      "brand_name": "Deltasone",
+      "drug_class": "Corticosteroid (systemic)",
+      "dose": "40mg rescue course",
+      "start_date": "2025-12-20",
+      "end_date": "2026-02-15",
+      "duration_weeks": 8,
+      "outcome": "steroid_dependent_worsening",
+      "outcome_description": "Rescue prednisone course initiated after ER visit for partial obstruction. Unable to taper below 30mg — disease flares with bloody diarrhea and severe pain within 48 hours of dose reduction. Despite 8 weeks at 30-40mg, CDAI remains 365 and patient continues to lose weight. Ongoing steroid exposure with cushingoid features developing (moon face, acne). This confirms steroid-refractory/dependent disease requiring biologic escalation.",
+      "adequate_trial": true,
+      "source_document": "05_ER_Visit_Summary.pdf",
+      "note": "Post-denial rescue course — further demonstrates medical necessity for biologic therapy"
     }
   ],
 
   "laboratory_results": {
-    "collection_date": "2024-10-10",
-    "accession_number": "26025-141317",
-    "ordering_provider": "Dr. Michelle Park",
-    "facility": "Clinical Laboratory Services",
-    "facility_address": "3500 Gaston Avenue, Dallas, TX 75246",
-    "facility_clia": "45D0987654",
-    "facility_cap": "7654321-01",
-    "report_status": "FINAL",
-    "source_document": "02_Laboratory_Results.pdf",
-
-    "panels": {
-      "cbc": {
-        "panel_name": "Complete Blood Count (CBC)",
-        "results": [
-          {"test": "WBC", "value": 8.2, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": null},
-          {"test": "RBC", "value": 4.6, "unit": "x10^12/L", "reference_range": "4.5-5.5", "flag": null},
-          {"test": "Hemoglobin", "value": 14.0, "unit": "g/dL", "reference_range": "13.5-17.5", "flag": null},
-          {"test": "Hematocrit", "value": 40.1, "unit": "%", "reference_range": "38.8-50", "flag": null},
-          {"test": "MCV", "value": 87, "unit": "fL", "reference_range": "80-100", "flag": null},
-          {"test": "MCH", "value": 28.7, "unit": "pg", "reference_range": "27-33", "flag": null},
-          {"test": "Platelets", "value": 285, "unit": "x10^9/L", "reference_range": "150-400", "flag": null}
-        ]
+    "original_results": {
+      "collection_date": "2024-10-10",
+      "note": "These were the labs submitted with the original PA request (pre-denial). Inflammatory markers were only mildly elevated.",
+      "key_values": {
+        "hemoglobin": {"value": 14.0, "unit": "g/dL", "flag": null},
+        "albumin": {"value": 4.0, "unit": "g/dL", "flag": null},
+        "crp": {"value": 8.5, "unit": "mg/L", "flag": "H"},
+        "esr": {"value": 16, "unit": "mm/hr", "flag": "H"}
       },
-      "cmp": {
-        "panel_name": "Comprehensive Metabolic Panel (CMP)",
-        "results": [
-          {"test": "Sodium", "value": 140, "unit": "mEq/L", "reference_range": "136-145", "flag": null},
-          {"test": "Potassium", "value": 4.2, "unit": "mEq/L", "reference_range": "3.5-5.0", "flag": null},
-          {"test": "Chloride", "value": 101, "unit": "mEq/L", "reference_range": "98-106", "flag": null},
-          {"test": "CO2", "value": 25, "unit": "mEq/L", "reference_range": "23-29", "flag": null},
-          {"test": "BUN", "value": 15, "unit": "mg/dL", "reference_range": "7-20", "flag": null},
-          {"test": "Creatinine", "value": 1.0, "unit": "mg/dL", "reference_range": "0.7-1.3", "flag": null},
-          {"test": "Glucose", "value": 95, "unit": "mg/dL", "reference_range": "70-100", "flag": null},
-          {"test": "Calcium", "value": 9.4, "unit": "mg/dL", "reference_range": "8.5-10.5", "flag": null},
-          {"test": "Total Protein", "value": 7.0, "unit": "g/dL", "reference_range": "6.0-8.3", "flag": null},
-          {"test": "Albumin", "value": 4.0, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": null},
-          {"test": "Total Bilirubin", "value": 0.8, "unit": "mg/dL", "reference_range": "0.1-1.2", "flag": null},
-          {"test": "Alkaline Phosphatase", "value": 68, "unit": "U/L", "reference_range": "44-147", "flag": null},
-          {"test": "AST", "value": 22, "unit": "U/L", "reference_range": "10-40", "flag": null},
-          {"test": "ALT", "value": 25, "unit": "U/L", "reference_range": "7-56", "flag": null}
-        ]
-      },
-      "inflammatory_markers": {
-        "panel_name": "Inflammatory Markers",
-        "results": [
-          {"test": "CRP", "value": 8.5, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
-          {"test": "ESR", "value": 16, "unit": "mm/hr", "reference_range": "0-15", "flag": "H"}
-        ]
-      },
-      "gi_markers": {
-        "panel_name": "GI-Specific Markers",
-        "results": [],
-        "note": "Fecal calprotectin was not ordered. This test would provide objective evidence of intestinal inflammation independent of clinical scoring."
-      },
-      "thiopurine_monitoring": {
-        "panel_name": "Thiopurine Monitoring",
-        "results": [
-          {"test": "TPMT Genotype", "value": "*1/*1", "interpretation": "Wild type - normal metabolism"},
-          {"test": "6-TGN", "value": 285, "unit": "pmol/8x10^8 RBC", "reference_range": "235-450 (therapeutic)", "flag": null},
-          {"test": "6-MMP", "value": 3200, "unit": "pmol/8x10^8 RBC", "reference_range": "<5700", "flag": null}
-        ],
-        "interpretation": "Patient has achieved therapeutic 6-TGN levels, confirming adequate azathioprine exposure. Despite therapeutic drug levels, disease remains active, supporting escalation to biologic therapy."
-      }
+      "source_document": "02_Laboratory_Results.pdf"
     },
+    "updated_results": {
+      "collection_date": "2026-02-05",
+      "accession_number": "26025-189742",
+      "ordering_provider": "Dr. Michelle Park",
+      "facility": "Clinical Laboratory Services",
+      "facility_address": "6550 Fannin Street, Houston, TX 77030",
+      "facility_clia": "45D0987654",
+      "facility_cap": "7654321-01",
+      "report_status": "FINAL",
+      "source_document": "06_Updated_Laboratory_Results.pdf",
 
-    "interpretation": "Results show mildly elevated CRP (8.5) and borderline ESR (16). No fecal calprotectin obtained — this objective marker of intestinal inflammation would strengthen the clinical picture. CBC and CMP are essentially normal (Hgb 14.0, albumin 4.0). Thiopurine monitoring confirms therapeutic drug levels. Pre-biologic screening complete and cleared. Note: inflammatory markers are only mildly elevated, which may not strongly support the clinical assertion of moderate-to-severe disease activity."
+      "panels": {
+        "cbc": {
+          "panel_name": "Complete Blood Count (CBC)",
+          "results": [
+            {"test": "WBC", "value": 12.4, "unit": "x10^9/L", "reference_range": "4.5-11.0", "flag": "H"},
+            {"test": "RBC", "value": 3.8, "unit": "x10^12/L", "reference_range": "4.5-5.5", "flag": "L"},
+            {"test": "Hemoglobin", "value": 10.8, "unit": "g/dL", "reference_range": "13.5-17.5", "flag": "L"},
+            {"test": "Hematocrit", "value": 32.5, "unit": "%", "reference_range": "38.8-50", "flag": "L"},
+            {"test": "MCV", "value": 76, "unit": "fL", "reference_range": "80-100", "flag": "L"},
+            {"test": "MCH", "value": 24.1, "unit": "pg", "reference_range": "27-33", "flag": "L"},
+            {"test": "Platelets", "value": 445, "unit": "x10^9/L", "reference_range": "150-400", "flag": "H"},
+            {"test": "RDW", "value": 17.2, "unit": "%", "reference_range": "11.5-14.5", "flag": "H"}
+          ]
+        },
+        "iron_studies": {
+          "panel_name": "Iron Studies",
+          "results": [
+            {"test": "Iron", "value": 28, "unit": "ug/dL", "reference_range": "60-170", "flag": "L"},
+            {"test": "Ferritin", "value": 15, "unit": "ng/mL", "reference_range": "20-250", "flag": "L"},
+            {"test": "TIBC", "value": 425, "unit": "ug/dL", "reference_range": "250-370", "flag": "H"},
+            {"test": "Transferrin Saturation", "value": 6.6, "unit": "%", "reference_range": "20-50", "flag": "L"}
+          ],
+          "interpretation": "Iron deficiency anemia confirmed — consistent with chronic GI blood loss and malabsorption from active Crohn's disease"
+        },
+        "cmp": {
+          "panel_name": "Comprehensive Metabolic Panel (CMP)",
+          "results": [
+            {"test": "Sodium", "value": 138, "unit": "mEq/L", "reference_range": "136-145", "flag": null},
+            {"test": "Potassium", "value": 3.6, "unit": "mEq/L", "reference_range": "3.5-5.0", "flag": null},
+            {"test": "Chloride", "value": 100, "unit": "mEq/L", "reference_range": "98-106", "flag": null},
+            {"test": "CO2", "value": 24, "unit": "mEq/L", "reference_range": "23-29", "flag": null},
+            {"test": "BUN", "value": 22, "unit": "mg/dL", "reference_range": "7-20", "flag": "H"},
+            {"test": "Creatinine", "value": 1.1, "unit": "mg/dL", "reference_range": "0.7-1.3", "flag": null},
+            {"test": "Glucose", "value": 112, "unit": "mg/dL", "reference_range": "70-100", "flag": "H"},
+            {"test": "Calcium", "value": 8.3, "unit": "mg/dL", "reference_range": "8.5-10.5", "flag": "L"},
+            {"test": "Total Protein", "value": 5.8, "unit": "g/dL", "reference_range": "6.0-8.3", "flag": "L"},
+            {"test": "Albumin", "value": 2.9, "unit": "g/dL", "reference_range": "3.5-5.0", "flag": "L"},
+            {"test": "Total Bilirubin", "value": 0.7, "unit": "mg/dL", "reference_range": "0.1-1.2", "flag": null},
+            {"test": "Alkaline Phosphatase", "value": 72, "unit": "U/L", "reference_range": "44-147", "flag": null},
+            {"test": "AST", "value": 28, "unit": "U/L", "reference_range": "10-40", "flag": null},
+            {"test": "ALT", "value": 31, "unit": "U/L", "reference_range": "7-56", "flag": null}
+          ]
+        },
+        "inflammatory_markers": {
+          "panel_name": "Inflammatory Markers",
+          "results": [
+            {"test": "CRP", "value": 32.4, "unit": "mg/L", "reference_range": "0-5", "flag": "H"},
+            {"test": "ESR", "value": 42, "unit": "mm/hr", "reference_range": "0-15", "flag": "H"}
+          ]
+        },
+        "gi_markers": {
+          "panel_name": "GI-Specific Markers",
+          "results": [
+            {"test": "Fecal Calprotectin", "value": 1180, "unit": "ug/g", "reference_range": "<50", "flag": "H"}
+          ],
+          "interpretation": "Markedly elevated fecal calprotectin (1180 ug/g, >23x upper limit of normal) confirms severe active intestinal inflammation. This objective biomarker was not available at the time of the original PA submission."
+        },
+        "thiopurine_monitoring": {
+          "panel_name": "Thiopurine Monitoring (Historical)",
+          "results": [
+            {"test": "TPMT Genotype", "value": "*1/*1", "interpretation": "Wild type - normal metabolism"},
+            {"test": "6-TGN", "value": 285, "unit": "pmol/8x10^8 RBC", "reference_range": "235-450 (therapeutic)", "flag": null},
+            {"test": "6-MMP", "value": 3200, "unit": "pmol/8x10^8 RBC", "reference_range": "<5700", "flag": null}
+          ],
+          "interpretation": "Historical values from azathioprine trial. Therapeutic 6-TGN levels confirmed adequate drug exposure. Azathioprine was discontinued after 12 months of inadequate response."
+        }
+      },
+
+      "interpretation": "Dramatic laboratory deterioration since original PA submission (October 2024 vs February 2026): CRP 8.5 → 32.4 mg/L (4x increase), ESR 16 → 42 mm/hr (2.6x increase), Hgb 14.0 → 10.8 g/dL (new iron deficiency anemia), Albumin 4.0 → 2.9 g/dL (malnutrition), Fecal calprotectin 1180 ug/g (not previously obtained — now markedly elevated). Reactive thrombocytosis (platelets 445) consistent with active inflammation. Microcytic indices (MCV 76, MCH 24.1) confirm iron deficiency. Steroid-induced hyperglycemia (glucose 112) from rescue prednisone. This laboratory profile unequivocally supports severe, active Crohn's disease — a fundamentally different picture from the borderline values at original submission."
+    }
   },
 
   "procedures": {
-    "colonoscopy": {
-      "procedure_name": "Colonoscopy with Biopsy",
+    "original_colonoscopy": {
+      "procedure_name": "Colonoscopy with Biopsy (Original — submitted with denied PA)",
       "procedure_date": "2024-01-10",
-      "procedure_time": "09:30 - 10:15 AM",
       "accession_number": "ENDO260253308",
       "facility": "Houston Gastroenterology Center",
-      "facility_address": "3500 Gaston Avenue, Suite 450, Dallas, TX 75246",
+      "performed_by": "Dr. Michelle Park, MD, FACG",
+      "indication": "Crohn's disease surveillance",
+      "source_document": "03_Colonoscopy_Report.pdf",
+      "endoscopic_score": {
+        "score_type": "SES-CD",
+        "score_value": 8,
+        "interpretation": "Mild-to-moderate endoscopic activity"
+      },
+      "staleness_note": "This colonoscopy was submitted with the original PA and was over 12 months old at time of submission — a key factor in the denial"
+    },
+    "updated_colonoscopy": {
+      "procedure_name": "Colonoscopy with Biopsy (Updated — post-denial)",
+      "procedure_date": "2026-01-28",
+      "procedure_time": "08:00 - 08:55 AM",
+      "accession_number": "ENDO260289156",
+      "facility": "Houston Gastroenterology Center",
+      "facility_address": "6550 Fannin Street, Suite 450, Houston, TX 77030",
       "performed_by": "Dr. Michelle Park, MD, FACG",
       "referring_md": "Dr. Michelle Park",
-      "asa_class": "II",
-      "indication": "Crohn's disease surveillance and assessment of disease activity on current therapy",
-      "staleness_warning": "This colonoscopy was performed over 12 months ago. Payers typically require endoscopic evidence within 6-12 months of PA submission to confirm current disease activity.",
+      "asa_class": "III",
+      "indication": "Crohn's disease reassessment following clinical deterioration and PA denial; evaluate for stricturing disease given obstructive symptoms and ER visits",
       "sedation": "Moderate sedation (midazolam/fentanyl)",
-      "source_document": "03_Colonoscopy_Report.pdf",
+      "source_document": "04_Updated_Colonoscopy_Report.pdf",
 
       "findings": {
         "terminal_ileum": {
-          "description": "Normal appearing mucosa, no ulceration or inflammation",
-          "severity": "normal"
+          "description": "Mild erythema and aphthous ulceration noted — new involvement since prior examination",
+          "severity": "mild"
         },
         "cecum": {
-          "description": "Normal",
-          "severity": "normal"
+          "description": "Moderate edema with scattered aphthous ulcers",
+          "severity": "moderate"
         },
         "ascending_colon": {
-          "description": "Mild patchy erythema",
-          "severity": "mild"
+          "description": "Moderate-to-severe inflammation with linear ulcerations, contact bleeding, and mucosal friability. New involvement — previously only mild patchy erythema",
+          "severity": "moderate-severe"
         },
         "transverse_colon": {
-          "description": "Moderate inflammation with scattered aphthous ulcers, edematous mucosa, loss of vascular pattern",
-          "severity": "moderate"
+          "description": "SEVERE inflammation with deep serpiginous ulcers, cobblestoning, and a DEVELOPING STRICTURE with 50% luminal narrowing. Scope passed with difficulty. Wall appears thickened and rigid. This is new stricturing disease not present on prior examination.",
+          "severity": "severe"
         },
         "descending_colon": {
-          "description": "Moderate inflammation with linear ulcerations, contact bleeding, skip areas of normal mucosa",
-          "severity": "moderate"
+          "description": "Severe inflammation with confluent deep ulcerations, spontaneous bleeding, pseudopolyps, and complete loss of vascular pattern",
+          "severity": "severe"
         },
         "sigmoid_colon": {
-          "description": "Mild patchy erythema",
-          "severity": "mild"
+          "description": "Moderate inflammation with scattered ulcers and contact bleeding. Worsened from mild patchy erythema on prior exam",
+          "severity": "moderate"
         },
         "rectum": {
-          "description": "Normal",
-          "severity": "normal"
+          "description": "Mild erythema — previously normal",
+          "severity": "mild"
         }
       },
 
       "endoscopic_score": {
         "score_type": "SES-CD",
-        "score_value": 8,
-        "interpretation": "mild-to-moderate endoscopic activity"
+        "score_value": 18,
+        "interpretation": "Severe endoscopic activity — increased from SES-CD 8 (mild-moderate) to 18 (severe), representing a 125% increase in endoscopic disease burden"
       },
 
       "biopsies": [
-        {"location": "Transverse colon", "type": "Biopsy", "specimens": 4, "container": "#1"},
-        {"location": "Descending colon", "type": "Biopsy", "specimens": 4, "container": "#2"}
+        {"location": "Terminal ileum", "type": "Biopsy", "specimens": 2, "container": "#1"},
+        {"location": "Ascending colon", "type": "Biopsy", "specimens": 4, "container": "#2"},
+        {"location": "Transverse colon (stricture margin)", "type": "Biopsy", "specimens": 4, "container": "#3"},
+        {"location": "Descending colon", "type": "Biopsy", "specimens": 4, "container": "#4"}
       ],
 
       "pathology": {
         "pathologist": "Dr. Robert Kim, MD",
-        "report_date": "2024-01-14",
-        "microscopic_findings": "Active chronic colitis with crypt architectural distortion, cryptitis, and focal crypt abscesses. Non-caseating granulomas present.",
+        "report_date": "2026-02-01",
+        "microscopic_findings": "Severe active chronic colitis with transmural inflammation, deep fissuring ulcers extending to muscularis propria, crypt destruction with architectural distortion, prominent fibrosis at stricture site, and non-caseating granulomas. Terminal ileum biopsies show early granulomatous inflammation.",
         "granulomas_present": true,
-        "diagnosis": "Active Crohn's disease, transverse and descending colon"
+        "fibrosis_noted": true,
+        "diagnosis": "Severe active Crohn's disease with stricturing phenotype. Transmural inflammation and fibrosis at transverse colon consistent with developing fibrostenotic stricture. Proximal extension to terminal ileum (new). Disease progression since January 2024."
       },
 
-      "impression": "Mild-to-moderate disease activity in transverse and descending colon. Patient on azathioprine with therapeutic drug levels — consider repeat assessment in 6-12 months to determine if escalation to biologic therapy is warranted."
+      "impression": "Dramatic disease progression since January 2024 colonoscopy. Disease has evolved from mild-to-moderate inflammatory colonic Crohn's to severe pan-colonic Crohn's with stricturing phenotype. SES-CD increased from 8 to 18. New terminal ileum involvement. Developing fibrostenotic stricture in transverse colon with 50% luminal narrowing — without effective medical therapy, patient is on a trajectory toward surgical resection. Urgent initiation of biologic (anti-TNF) therapy is critical to prevent irreversible bowel damage and need for colectomy."
+    },
+
+    "ct_abdomen_pelvis": {
+      "procedure_name": "CT Abdomen and Pelvis with IV Contrast",
+      "procedure_date": "2025-12-18",
+      "facility": "Memorial Hermann Hospital — Texas Medical Center",
+      "performed_by": "Dr. Linda Torres, MD (Radiology)",
+      "indication": "Severe abdominal pain, nausea, vomiting — evaluate for obstruction",
+      "source_document": "05_ER_Visit_Summary.pdf",
+      "findings": {
+        "description": "Circumferential wall thickening of the transverse colon (wall thickness 12mm, normal <3mm) with surrounding mesenteric fat stranding and vascular engorgement (comb sign). Proximal mild dilation of ascending colon and cecum suggesting partial obstruction. No free air or abscess. Mild reactive lymphadenopathy in the mesentery.",
+        "stricture_location": "Transverse colon",
+        "obstruction_grade": "Partial (incomplete)",
+        "complications": "No perforation, no abscess, no fistula identified"
+      },
+      "impression": "Findings consistent with active Crohn's disease with developing stricture at transverse colon causing partial large bowel obstruction. No surgical emergency. Recommend GI follow-up for disease management optimization."
     }
   },
 
@@ -331,74 +466,92 @@
     }
   },
 
+  "prior_authorization_history": {
+    "original_submission": {
+      "submission_date": "2025-10-15",
+      "payer": "Cigna",
+      "reference_number": "CIG-20251015-PA-4827",
+      "decision": "DENIED",
+      "decision_date": "2025-10-28",
+      "denial_reason": "Clinical documentation insufficient to support medical necessity. CDAI 228 is borderline moderate (threshold 220). Endoscopic evidence (SES-CD 8, January 2024) is over 12 months old and does not reflect current disease status. Inflammatory markers (CRP 8.5, ESR 16) are only mildly elevated and do not strongly support moderate-to-severe disease activity. Required: updated endoscopic assessment within 6 months, current disease activity scoring, and objective biomarker evidence (fecal calprotectin). Reference: Cigna Clinical Policy Bulletin 0814, Section 4.2.",
+      "denial_code": "CLIN-001",
+      "appeal_deadline": "2026-04-26",
+      "appeal_deadline_note": "180 days from denial decision (standard Cigna appeal window)"
+    },
+    "appeal_status": "NOT_YET_FILED",
+    "new_evidence_available": [
+      "Updated colonoscopy (2026-01-28) showing severe endoscopic disease (SES-CD 18, up from 8)",
+      "Developing transverse colon stricture with 50% luminal narrowing (new)",
+      "Fecal calprotectin 1180 ug/g (23x normal — not previously available)",
+      "CDAI now 365 (severe, up from 228 borderline moderate)",
+      "CRP 32.4 mg/L (up from 8.5 — 4x increase)",
+      "Two ER visits (December 2025, January 2026) for obstruction and severe flare",
+      "New iron deficiency anemia (Hgb 10.8, was 14.0)",
+      "Malnutrition with albumin 2.9 (was 4.0) and 18 lb weight loss",
+      "Failed rescue prednisone course (steroid-refractory at 30-40mg)"
+    ],
+    "appeal_grounds": "Every deficiency cited in the denial has now been addressed with new evidence. The clinical picture has fundamentally changed — this is no longer a borderline case. The patient now has unequivocal severe Crohn's disease with stricturing complications, and delay in biologic therapy risks irreversible bowel damage requiring surgical resection."
+  },
+
   "documentation_gaps": [
     {
       "gap_id": "GAP-001",
       "gap_type": "stale_endoscopic_evidence",
-      "description": "Colonoscopy is over 12 months old (performed 2024-01-10). Payers typically require endoscopic evidence within 6-12 months to confirm current disease activity.",
-      "required_by_policy": true,
-      "impact": "WEAKENS_APPROVAL_LIKELIHOOD",
-      "resolution_action": "Obtain updated colonoscopy or sigmoidoscopy with SES-CD scoring to document current endoscopic disease activity",
-      "estimated_timeline": "2-4 weeks for scheduling and completion"
+      "description": "RESOLVED — Updated colonoscopy performed January 28, 2026 now shows severe endoscopic disease (SES-CD 18) with developing stricture",
+      "status": "RESOLVED",
+      "resolution_date": "2026-01-28",
+      "resolution_evidence": "Updated colonoscopy report (04_Updated_Colonoscopy_Report.pdf)"
     },
     {
       "gap_id": "GAP-002",
       "gap_type": "missing_objective_marker",
-      "description": "Fecal calprotectin test not performed. This objective biomarker of intestinal inflammation is increasingly required by payers as objective evidence alongside clinical scoring.",
-      "required_by_policy": false,
-      "impact": "WEAKENS_APPROVAL_LIKELIHOOD",
-      "resolution_action": "Order fecal calprotectin test — elevated result (>250 ug/g) would provide strong objective evidence of active intestinal inflammation independent of clinical scoring",
-      "estimated_timeline": "1-2 weeks for results"
+      "description": "RESOLVED — Fecal calprotectin now obtained: 1180 ug/g (markedly elevated, >23x upper limit of normal)",
+      "status": "RESOLVED",
+      "resolution_date": "2026-02-05",
+      "resolution_evidence": "Updated laboratory results (06_Updated_Laboratory_Results.pdf)"
     },
     {
       "gap_id": "GAP-003",
       "gap_type": "stale_disease_activity_assessment",
-      "description": "CDAI assessment is over 12 months old (last assessed 2024-01-10 at 228). Current disease activity may have changed. A CDAI of 228 is borderline moderate — an updated assessment could either strengthen or weaken the case.",
-      "required_by_policy": true,
-      "impact": "WEAKENS_APPROVAL_LIKELIHOOD",
-      "resolution_action": "Perform updated CDAI assessment at next clinic visit to document current disease activity level",
-      "estimated_timeline": "At next scheduled visit"
+      "description": "RESOLVED — Updated CDAI assessment: 365 (severe active disease, up from 228). Harvey-Bradshaw Index: 13 (severe).",
+      "status": "RESOLVED",
+      "resolution_date": "2026-01-28",
+      "resolution_evidence": "Clinical assessment concurrent with updated colonoscopy"
     },
     {
       "gap_id": "GAP-004",
       "gap_type": "borderline_inflammatory_markers",
-      "description": "CRP 8.5 mg/L is only mildly elevated (normal <5). ESR 16 mm/hr is borderline (normal <15). These values do not strongly support moderate-to-severe disease activity. Albumin is normal (4.0).",
-      "required_by_policy": false,
-      "impact": "WEAKENS_APPROVAL_LIKELIHOOD",
-      "resolution_action": "Consider repeating inflammatory markers closer to submission date, or obtain fecal calprotectin as a more specific GI inflammation marker"
+      "description": "RESOLVED — Updated inflammatory markers dramatically elevated: CRP 32.4 mg/L (was 8.5), ESR 42 mm/hr (was 16). No longer borderline.",
+      "status": "RESOLVED",
+      "resolution_date": "2026-02-05",
+      "resolution_evidence": "Updated laboratory results (06_Updated_Laboratory_Results.pdf)"
     }
   ],
 
   "pa_criteria_assessment": {
     "diagnosis_confirmed": {
       "met": true,
-      "evidence": "ICD-10 K50.10 documented on PA form; colonoscopy confirms active Crohn's disease with non-caseating granulomas in transverse and descending colon",
-      "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf"]
+      "evidence": "ICD-10 K50.112 (Crohn's disease of large intestine with intestinal obstruction). Updated colonoscopy confirms severe active Crohn's disease with stricturing phenotype and non-caseating granulomas. CT abdomen confirms stricture with partial obstruction.",
+      "source_documents": ["04_Updated_Colonoscopy_Report.pdf", "05_ER_Visit_Summary.pdf"]
     },
     "disease_severity_documented": {
-      "met": "partially",
-      "evidence": "CDAI 228 (borderline moderate, assessed January 2024 — over 12 months ago), SES-CD 8 (mild-to-moderate, also from January 2024). CRP only mildly elevated at 8.5. No fecal calprotectin obtained. Current disease severity documentation is stale and borderline — may not adequately support moderate-to-severe disease claim.",
-      "concerns": [
-        "CDAI 228 is just above the 220 threshold for moderate disease",
-        "Disease activity assessment is >12 months old",
-        "Inflammatory markers (CRP 8.5, ESR 16) are only mildly elevated",
-        "No fecal calprotectin to objectively confirm intestinal inflammation",
-        "Normal albumin (4.0) does not suggest significant nutritional impact from disease"
-      ],
-      "source_documents": ["01_Prior_Auth_Request_Form.pdf", "03_Colonoscopy_Report.pdf"]
+      "met": true,
+      "evidence": "CDAI 365 (severe, >300), SES-CD 18 (severe endoscopic activity), HBI 13 (severe), CRP 32.4 mg/L (markedly elevated), fecal calprotectin 1180 ug/g (markedly elevated). Multiple concordant severity measures all indicate severe, active Crohn's disease. This is no longer borderline — every measure now clearly exceeds moderate-to-severe thresholds.",
+      "source_documents": ["04_Updated_Colonoscopy_Report.pdf", "06_Updated_Laboratory_Results.pdf"]
     },
     "conventional_therapy_failed": {
       "met": true,
       "therapies_tried": [
         {"medication": "Budesonide", "outcome": "partial_response", "duration_adequate": true},
         {"medication": "Prednisone", "outcome": "steroid_dependent", "duration_adequate": true},
-        {"medication": "Azathioprine", "outcome": "inadequate_response", "duration_adequate": true, "therapeutic_drug_monitoring": "6-TGN 285 pmol (therapeutic)"}
+        {"medication": "Azathioprine", "outcome": "inadequate_response", "duration_adequate": true, "therapeutic_drug_monitoring": "6-TGN 285 pmol (therapeutic)"},
+        {"medication": "Prednisone (rescue)", "outcome": "steroid_refractory", "duration_adequate": true, "note": "Post-denial rescue course — unable to taper, ongoing severe disease at 30-40mg"}
       ],
-      "source_documents": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf"]
+      "source_documents": ["01_Prior_Auth_Request_Form.pdf", "02_Laboratory_Results.pdf", "05_ER_Visit_Summary.pdf"]
     },
     "step_therapy_satisfied": {
       "met": true,
-      "evidence": "Failed corticosteroids (budesonide 13 weeks, prednisone 24 weeks - steroid-dependent), immunomodulator (azathioprine 52 weeks with therapeutic 6-TGN levels). Meets ACG guideline criteria for biologic escalation.",
+      "evidence": "Failed corticosteroids (budesonide 13 weeks, prednisone 24 weeks - steroid-dependent, prednisone rescue 8 weeks - steroid-refractory), immunomodulator (azathioprine 52 weeks with therapeutic 6-TGN levels). Exceeds ACG guideline criteria for biologic escalation. Exhausted all conventional options.",
       "acg_guideline_compliant": true,
       "source_documents": ["01_Prior_Auth_Request_Form.pdf"]
     },
@@ -416,38 +569,38 @@
     },
     "therapeutic_drug_monitoring_documented": {
       "met": true,
-      "evidence": "6-TGN level 285 pmol/8x10^8 RBC (therapeutic range 235-450) confirms adequate azathioprine exposure. Disease activity persists despite therapeutic levels, objectively supporting need for biologic escalation.",
+      "evidence": "6-TGN level 285 pmol/8x10^8 RBC (therapeutic range 235-450) confirms adequate azathioprine exposure. Disease progressed despite therapeutic levels — objectively supports need for biologic escalation.",
       "source_documents": ["02_Laboratory_Results.pdf"]
+    },
+    "clinical_urgency_established": {
+      "met": true,
+      "evidence": "2 ER visits in 4 weeks, developing stricture with partial obstruction on CT, 18 lb weight loss (10% body weight), new iron deficiency anemia requiring blood transfusion, albumin 2.9 indicating malnutrition. Without biologic therapy, patient faces likely surgical resection (colectomy) for stricturing disease.",
+      "source_documents": ["05_ER_Visit_Summary.pdf", "04_Updated_Colonoscopy_Report.pdf", "06_Updated_Laboratory_Results.pdf"]
     }
   },
 
   "overall_pa_readiness": {
-    "status": "ADDITIONAL_DOCUMENTATION_RECOMMENDED",
-    "blocking_issues": [
-      "Colonoscopy is over 12 months old (January 2024) — payers may reject as stale evidence",
-      "CDAI 228 is borderline moderate (threshold is 220) — an updated assessment is critical",
-      "No fecal calprotectin to objectively confirm active intestinal inflammation",
-      "CRP 8.5 and ESR 16 are only mildly elevated — do not strongly support moderate-to-severe claim"
-    ],
-    "criteria_technically_met": true,
-    "approval_risk": "Submitting with current documentation carries significant denial risk due to borderline disease severity markers and stale endoscopic evidence. Cigna reviewers may determine that CDAI 228 with CRP 8.5 does not meet the threshold for moderate-to-severe disease requiring biologic therapy.",
-    "recommendation": "Collect additional documentation before submission to significantly strengthen the case: (1) Updated colonoscopy with SES-CD scoring to confirm current endoscopic activity, (2) Fecal calprotectin test to provide objective biomarker evidence, (3) Updated CDAI assessment at next clinic visit. The step therapy documentation is strong (12-month azathioprine trial with TDM), but the current disease activity evidence is the weak link.",
+    "status": "APPEAL_READY_STRONG_CASE",
+    "appeal_recommendation": "FILE APPEAL IMMEDIATELY with all new evidence. Every deficiency cited in the original denial has been comprehensively addressed. The clinical picture is dramatically different from the original submission and now unequivocally demonstrates severe, progressive, steroid-refractory Crohn's disease with stricturing complications requiring urgent biologic therapy.",
     "strengths": [
-      "12-month adequate trial of azathioprine per ACG guidelines",
-      "Therapeutic drug monitoring confirms adequate drug exposure (6-TGN 285)",
-      "Complete pre-biologic screening with documented results",
-      "Pathology-confirmed Crohn's disease with non-caseating granulomas",
-      "Clear documentation of steroid dependence"
+      "All original denial deficiencies resolved with new evidence",
+      "Updated colonoscopy (SES-CD 18) shows severe endoscopic disease — no longer borderline",
+      "CDAI 365 clearly exceeds moderate-to-severe threshold (was borderline 228)",
+      "Fecal calprotectin 1180 ug/g provides objective biomarker evidence (not previously available)",
+      "CRP 32.4 and ESR 42 now markedly elevated (was mildly elevated CRP 8.5, ESR 16)",
+      "Developing stricture with 50% luminal narrowing — risk of surgical resection without biologic",
+      "2 ER visits including partial bowel obstruction — clinical urgency established",
+      "New iron deficiency anemia (Hgb 10.8) and malnutrition (albumin 2.9) — systemic disease impact",
+      "Failed rescue prednisone course — steroid-refractory in addition to steroid-dependent",
+      "18 lb weight loss (10% body weight) in 3 months",
+      "12-month azathioprine trial with therapeutic drug monitoring (strong step therapy documentation)",
+      "Complete pre-biologic screening with all clearances",
+      "Pathology-confirmed Crohn's with non-caseating granulomas and transmural inflammation"
     ],
     "weaknesses": [
-      "Colonoscopy >12 months old — does not reflect current disease status",
-      "CDAI 228 is borderline (just 8 points above 220 moderate threshold)",
-      "SES-CD 8 indicates mild-to-moderate, not moderate-to-severe endoscopic activity",
-      "CRP 8.5 is only mildly elevated — does not strongly indicate active inflammation",
-      "ESR 16 is borderline normal",
-      "Albumin 4.0 is normal — no nutritional compromise suggesting severe disease",
-      "No fecal calprotectin obtained — missing key objective biomarker",
-      "No recent ER visits or hospitalizations suggesting clinical urgency"
-    ]
+      "Prior denial on record (though all cited deficiencies are now resolved)",
+      "Steroid-induced hyperglycemia may require monitoring during biologic initiation"
+    ],
+    "estimated_appeal_success_likelihood": "HIGH — 85-90% based on comprehensive new evidence addressing all denial grounds, plus clinical urgency factors (stricture, ER visits, weight loss) that provide additional justification beyond the standard criteria"
   }
 }

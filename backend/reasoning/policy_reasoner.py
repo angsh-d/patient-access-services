@@ -367,7 +367,7 @@ class PolicyReasoner:
         )
 
         # --- Multi-model consensus for borderline assessments ---
-        if 0.35 <= assessment.approval_likelihood <= 0.65:
+        if assessment.approval_likelihood is not None and 0.35 <= assessment.approval_likelihood <= 0.65:
             logger.info(
                 "Borderline approval likelihood — triggering multi-model consensus",
                 payer=payer_name,
@@ -1115,7 +1115,7 @@ class PolicyReasoner:
             return CoverageStatus.REQUIRES_HUMAN_REVIEW
 
         # Low confidence also triggers human review
-        if approval_likelihood < 0.3:
+        if approval_likelihood is not None and approval_likelihood < 0.3:
             logger.info(
                 "Conservative mapping: Low confidence -> REQUIRES_HUMAN_REVIEW",
                 original_status=status_str,
@@ -1125,7 +1125,7 @@ class PolicyReasoner:
             return CoverageStatus.REQUIRES_HUMAN_REVIEW
 
         # Borderline cases get PEND instead of denial
-        if coverage_status == CoverageStatus.UNKNOWN and approval_likelihood < 0.5:
+        if coverage_status == CoverageStatus.UNKNOWN and approval_likelihood is not None and approval_likelihood < 0.5:
             logger.info(
                 "Conservative mapping: UNKNOWN with low likelihood -> REQUIRES_HUMAN_REVIEW",
                 original_status=status_str,

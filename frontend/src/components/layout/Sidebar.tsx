@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutGrid,
   Shield,
+  Scale,
   Settings,
   Plus,
 } from 'lucide-react'
@@ -11,6 +12,7 @@ import { cn } from '@/lib/utils'
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: <LayoutGrid className="w-[18px] h-[18px]" /> },
   { path: '/policy-vault', label: 'Policy Vault', icon: <Shield className="w-[18px] h-[18px]" /> },
+  { path: '/appeals', label: 'Appeals', icon: <Scale className="w-[18px] h-[18px]" /> },
   { path: '/settings', label: 'Settings', icon: <Settings className="w-[18px] h-[18px]" /> },
 ]
 

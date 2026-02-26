@@ -2665,6 +2665,12 @@ class StrategicIntelligenceAgent:
         def _sample_size(cases: List["SimilarCase"]) -> int:
             return sum(1 for c in cases if c.case_data.get("outcome") in ("approved", "denied"))
 
+        def _approved_count(cases: List["SimilarCase"]) -> int:
+            return sum(1 for c in cases if c.case_data.get("outcome") == "approved")
+
+        def _denied_count(cases: List["SimilarCase"]) -> int:
+            return sum(1 for c in cases if c.case_data.get("outcome") == "denied")
+
         # Overall rates
         overall = {
             "denial_rate_when_missing": round(_denial_rate(cases_missing), 3),
@@ -2672,6 +2678,10 @@ class StrategicIntelligenceAgent:
             "impact_delta": round(_denial_rate(cases_missing) - _denial_rate(cases_present), 3),
             "sample_size_missing": _sample_size(cases_missing),
             "sample_size_present": _sample_size(cases_present),
+            "approved_when_missing": _approved_count(cases_missing),
+            "denied_when_missing": _denied_count(cases_missing),
+            "approved_when_present": _approved_count(cases_present),
+            "denied_when_present": _denied_count(cases_present),
         }
 
         # This payer vs other payers
@@ -2688,6 +2698,8 @@ class StrategicIntelligenceAgent:
             "impact_delta": round(_denial_rate(this_payer_missing) - _denial_rate(this_payer_present), 3),
             "sample_size_missing": _sample_size(this_payer_missing),
             "sample_size_present": _sample_size(this_payer_present),
+            "approved_when_missing": _approved_count(this_payer_missing),
+            "denied_when_missing": _denied_count(this_payer_missing),
         }
 
         other_payers = {
@@ -2696,6 +2708,8 @@ class StrategicIntelligenceAgent:
             "impact_delta": round(_denial_rate(other_payer_missing) - _denial_rate(other_payer_present), 3),
             "sample_size_missing": _sample_size(other_payer_missing),
             "sample_size_present": _sample_size(other_payer_present),
+            "approved_when_missing": _approved_count(other_payer_missing),
+            "denied_when_missing": _denied_count(other_payer_missing),
         }
 
         # Per-payer breakdown
@@ -2767,6 +2781,14 @@ class StrategicIntelligenceAgent:
             for period, cases in sorted(quarter_groups.items())
         ]
 
+        # Appeal stats for denied cases with this doc missing
+        appeals_filed = sum(1 for c in cases_missing if c.case_data.get("outcome") == "denied" and c.case_data.get("appeal_filed"))
+        appeals_successful = sum(1 for c in cases_missing if c.case_data.get("outcome") == "denied" and c.case_data.get("appeal_filed") and c.case_data.get("appeal_outcome") == "approved")
+        gap_appeal_stats = {
+            "total_appeals": appeals_filed,
+            "successful_appeals": appeals_successful,
+        }
+
         # Data availability signal for frontend three-state rendering
         has_missing_data = len(cases_missing) >= 2
         if not cases_missing:
@@ -2791,6 +2813,7 @@ class StrategicIntelligenceAgent:
             "other_payers": other_payers,
             "by_payer": by_payer,
             "top_denial_reasons": top_denial_reasons,
+            "appeal_stats": gap_appeal_stats,
             "severity_breakdown": severity_breakdown,
             "time_trend": time_trend,
             "data_status": data_status,

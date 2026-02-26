@@ -12,7 +12,7 @@ from backend.storage.models import (
 )
 
 from backend.models.case_state import CaseState, PatientInfo, MedicationRequest, PayerState
-from backend.models.enums import CaseStage
+from backend.models.enums import CaseStage, PayerStatus
 from backend.config.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -268,7 +268,37 @@ class CaseRepository:
         case.version = 1
         case.updated_at = now
         case.stage = "intake"
-        case.payer_states = {}
+
+        # Reinitialize payer_states from patient_data instead of empty dict
+        payer_states = {}
+        if case.patient_data:
+            primary = case.patient_data.get("primary_payer", "")
+            secondary = case.patient_data.get("secondary_payer")
+            if primary:
+                payer_states[primary] = {
+                    "payer_name": primary,
+                    "status": PayerStatus.NOT_SUBMITTED.value,
+                    "reference_number": None,
+                    "submitted_at": None,
+                    "last_updated": None,
+                    "response_details": None,
+                    "required_documents": [],
+                    "denial_reason": None,
+                    "appeal_deadline": None,
+                }
+            if secondary:
+                payer_states[secondary] = {
+                    "payer_name": secondary,
+                    "status": PayerStatus.NOT_SUBMITTED.value,
+                    "reference_number": None,
+                    "submitted_at": None,
+                    "last_updated": None,
+                    "response_details": None,
+                    "required_documents": [],
+                    "denial_reason": None,
+                    "appeal_deadline": None,
+                }
+        case.payer_states = payer_states
         case.coverage_assessments = {}
         case.documentation_gaps = []
         case.available_strategies = []
@@ -369,6 +399,17 @@ class CaseRepository:
         if case.payer_states:
             for name, data in case.payer_states.items():
                 payer_states[name] = PayerState(**data)
+        elif case.patient_data:
+            # Derive from patient data when DB field is NULL/empty (legacy cases, post-reset)
+            primary = case.patient_data.get("primary_payer", "")
+            secondary = case.patient_data.get("secondary_payer")
+            if primary:
+                payer_states[primary] = PayerState(payer_name=primary, status=PayerStatus.NOT_SUBMITTED)
+            if secondary:
+                payer_states[secondary] = PayerState(payer_name=secondary, status=PayerStatus.NOT_SUBMITTED)
+            if payer_states:
+                logger.warning("Derived payer_states from patient_data (DB field was empty)",
+                              case_id=case.id, payers=list(payer_states.keys()))
 
         return CaseState(
             case_id=case.id,

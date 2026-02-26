@@ -14,7 +14,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft,
@@ -75,13 +75,17 @@ import type { CaseStage, HumanDecisionAction } from '@/types/case'
 export function CaseDetail() {
   const { caseId } = useParams<{ caseId: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const initialStep = searchParams.get('step')
   const [currentAnalysis, setCurrentAnalysis] = useState<StageAnalysis | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [aiRecommendation, setAiRecommendation] = useState<Record<string, any> | null>(null)
   const [decisionReason, setDecisionReason] = useState('')
   const [showAuditTrail, setShowAuditTrail] = useState(false)
   const [showAssistant, setShowAssistant] = useState(false)
-  const [viewingStep, setViewingStep] = useState<number | null>(null)
+  const [viewingStep, setViewingStep] = useState<number | null>(
+    initialStep !== null ? parseInt(initialStep, 10) : null
+  )
   const [actionError, setActionError] = useState<string | null>(null)
   const [postDecisionRunning, setPostDecisionRunning] = useState(false)
   const [artificialProcessing, setArtificialProcessing] = useState(false)
@@ -92,8 +96,16 @@ export function CaseDetail() {
   // Track SSE start time for minimum processing animation
   const sseStartTimeRef = useRef<number>(0)
 
-  // Data fetching
+  // Data fetching — force refetch when deep-linking (e.g. from Appeals page via ?step=)
+  // so we always show the latest case state, not stale cache
   const { data: caseData, isLoading: caseLoading, refetch: refetchCase } = useCase(caseId)
+  const didDeepLinkRefetch = useRef(false)
+  useEffect(() => {
+    if (initialStep !== null && !didDeepLinkRefetch.current && caseId) {
+      didDeepLinkRefetch.current = true
+      refetchCase()
+    }
+  }, [initialStep, caseId, refetchCase])
   const caseState = caseData?.case
 
   // Use strategies from caseState.available_strategies

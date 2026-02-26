@@ -42,6 +42,21 @@ from backend.config.logging_config import get_logger
 logger = get_logger(__name__)
 
 
+def _derive_payers_from_patient(case_state: CaseState) -> list[str]:
+    """Derive payer list from payer_states, falling back to patient data fields."""
+    if case_state.payer_states:
+        return list(case_state.payer_states.keys())
+    payers = []
+    if case_state.patient and case_state.patient.primary_payer:
+        payers.append(case_state.patient.primary_payer)
+    if case_state.patient and case_state.patient.secondary_payer:
+        payers.append(case_state.patient.secondary_payer)
+    if payers:
+        logger.warning("Derived payers from patient data (payer_states empty)",
+                       case_id=case_state.case_id, payers=payers)
+    return payers
+
+
 class CaseService:
     """
     Service for managing prior authorization cases.
@@ -202,7 +217,7 @@ class CaseService:
             patient_id=case_state.patient.patient_id,
             patient_data=patient_data,
             medication_data=medication_data,
-            payers=list(case_state.payer_states.keys())
+            payers=_derive_payers_from_patient(case_state)
         )
 
         # Serialize all data for JSON storage
@@ -558,7 +573,13 @@ class CaseService:
                 }
 
         reasoner = get_policy_reasoner()
-        payers = list(case_state.payer_states.keys())
+        payers = _derive_payers_from_patient(case_state)
+
+        if not payers:
+            raise ValueError(
+                f"No payers found for case {case_state.case_id}. "
+                f"Both payer_states and patient data are empty — cannot run policy analysis."
+            )
 
         assessments = {}
         raw_assessments = {}  # Keep CoverageAssessment objects for provenance extraction
@@ -645,6 +666,11 @@ class CaseService:
                 all_gaps.append(gap.model_dump())
 
         # Generate reasoning summary
+        if not assessments:
+            raise ValueError(
+                f"Policy analysis produced no assessments for case {case_state.case_id}. "
+                f"Payers analyzed: {payers}"
+            )
         best_payer = max(assessments.keys(), key=lambda p: assessments[p]["approval_likelihood"])
         best_likelihood = assessments[best_payer]["approval_likelihood"]
 
@@ -764,8 +790,16 @@ class CaseService:
         from backend.agents.intake_agent import IntakeAgent
 
         reasoner = get_policy_reasoner()
-        payers = list(case_state.payer_states.keys())
+        payers = _derive_payers_from_patient(case_state)
         total_payers = len(payers)
+
+        if not payers:
+            yield {
+                "event": "error",
+                "message": f"No payers found for case {case_state.case_id}. "
+                           f"Both payer_states and patient data are empty — cannot run policy analysis."
+            }
+            return
 
         yield {"event": "progress", "message": f"Analyzing {total_payers} payer(s)", "percent": 5}
 
@@ -869,6 +903,14 @@ class CaseService:
 
         # Build final result
         yield {"event": "progress", "message": "Finalizing analysis...", "percent": 92}
+
+        if not assessments:
+            yield {
+                "event": "error",
+                "message": f"Policy analysis produced no assessments for case {case_state.case_id}. "
+                           f"Payers analyzed: {payers}"
+            }
+            return
 
         best_payer = max(assessments.keys(), key=lambda p: assessments[p]["approval_likelihood"])
         best_likelihood = assessments[best_payer]["approval_likelihood"]
@@ -1452,7 +1494,7 @@ class CaseService:
             patient_id=case_state.patient.patient_id,
             patient_data=patient_data,
             medication_data=medication_data,
-            payers=list(case_state.payer_states.keys())
+            payers=_derive_payers_from_patient(case_state)
         )
 
         # Get selected strategy (need full strategy data including payer_sequence)
@@ -1468,7 +1510,7 @@ class CaseService:
                 break
 
         # Get payer list from case state
-        payers = list(case_state.payer_states.keys())
+        payers = _derive_payers_from_patient(case_state)
 
         # Ensure selected_strategy has a valid payer_sequence
         if not selected_strategy:
@@ -1571,7 +1613,7 @@ class CaseService:
             patient_id=case_state.patient.patient_id,
             patient_data=patient_data,
             medication_data=medication_data,
-            payers=list(case_state.payer_states.keys())
+            payers=_derive_payers_from_patient(case_state)
         )
         orch_state["payer_states"] = payer_states
 

@@ -261,12 +261,15 @@ export function PolicyValidationCard({
   // Category display names
   const categoryLabels: Record<string, string> = {
     age: 'Age Requirements',
+    demographics: 'Age Requirements',
     diagnosis: 'Diagnosis',
     step_therapy: 'Step Therapy',
     prior_treatment: 'Prior Treatments',
+    treatment_history: 'Treatment History',
     safety: 'Safety Screenings',
     safety_screening: 'Pre-Biologic Safety Screening',
     prescriber: 'Prescriber Requirements',
+    formulary: 'Formulary Requirements',
     lab: 'Laboratory',
     documentation: 'Documentation',
     clinical: 'Clinical Criteria',

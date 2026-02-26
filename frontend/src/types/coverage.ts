@@ -126,6 +126,10 @@ export interface GapCohortStats {
   impact_delta: number
   sample_size_missing: number
   sample_size_present: number
+  approved_when_missing?: number
+  denied_when_missing?: number
+  approved_when_present?: number
+  denied_when_present?: number
   payer_name?: string
 }
 
@@ -145,6 +149,7 @@ export interface GapAnalysis {
   other_payers: GapCohortStats
   by_payer: Array<{ payer_name: string; denial_rate_missing: number; sample_size: number }>
   top_denial_reasons: Array<{ reason: string; count: number; pct: number }>
+  appeal_stats?: { total_appeals: number; successful_appeals: number }
   compensating_factors: Array<{
     pattern_type: string
     missing_documentation?: string

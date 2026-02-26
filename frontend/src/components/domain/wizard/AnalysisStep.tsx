@@ -356,7 +356,7 @@ export function AnalysisStep({
               />
             )}
             <PolicyValidationCard
-              patientId={caseState.metadata?.source_patient_id as string}
+              patientId={(caseState.metadata?.source_patient_id || caseState.patient?.patient_id) as string}
               payerName={selectedPayerName || primaryPayerName}
               medicationName={caseState.medication.medication_name}
               coverageAssessment={selectedAssessment}

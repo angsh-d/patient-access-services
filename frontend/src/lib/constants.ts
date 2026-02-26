@@ -142,7 +142,7 @@ export const QUERY_KEYS = {
   patientData: (patientId: string) => ['patient-data', patientId] as const,
   patientDocuments: (patientId: string) => ['patient-documents', patientId] as const,
   policies: ['policies'] as const,
-  policyDigitized: (payer: string, medication: string) => ['policy', 'digitized', payer, medication] as const,
+  policyDigitized: (payer: string, medication: string) => ['policy', 'digitized', payer, medication, 'v2'] as const,
   policyCriteria: (payer: string, medication: string) => ['policy', 'criteria', payer, medication] as const,
   aiActivity: ['ai-activity'] as const,
   analyticsLLMCosts: ['analytics', 'llm-costs'] as const,

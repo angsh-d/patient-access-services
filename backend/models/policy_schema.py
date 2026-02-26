@@ -128,6 +128,9 @@ class CriterionType(str, Enum):
     CONCURRENT_THERAPY = "concurrent_therapy"
     NO_CONCURRENT_THERAPY = "no_concurrent_therapy"
 
+    # Response assessment (continuation criteria)
+    RESPONSE_ASSESSMENT = "response_assessment"
+
     # Custom/Other
     CUSTOM = "custom"
 

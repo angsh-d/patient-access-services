@@ -305,7 +305,7 @@ export function StrategicIntelligence({ caseId, caseData: providedCaseData, clas
 
   const payerNameForQuery = caseData?.patient?.primary_payer || caseData?.case?.patient?.primary_payer
   const medicationNameForQuery = caseData?.medication?.medication_name || caseData?.case?.medication?.medication_name
-  const patientIdForQuery = caseData?.metadata?.source_patient_id || caseData?.case?.metadata?.source_patient_id
+  const patientIdForQuery = caseData?.metadata?.source_patient_id || caseData?.case?.metadata?.source_patient_id || caseData?.patient?.patient_id || caseData?.case?.patient?.patient_id
 
   const { data: digitizedPolicy } = useQuery({
     queryKey: QUERY_KEYS.policyDigitized(payerNameForQuery || '', medicationNameForQuery || ''),
