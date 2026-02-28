@@ -157,7 +157,7 @@ Scenario and health endpoints are defined directly in `backend/main.py`, not in 
 | `backend/agents/` | Intake, policy analyzer, strategy generator, action coordinator, recovery, strategic intelligence |
 | `backend/orchestrator/` | LangGraph workflow engine (state, transitions, node functions) |
 | `backend/services/` | Case, strategy, notification services |
-| `backend/reasoning/` | LLM gateway, policy reasoner, strategy scorer, Claude/Gemini/OpenAI clients, prompt loader |
+| `backend/reasoning/` | LLM gateway, policy reasoner, strategy scorer, feature extractor, Claude/Gemini/OpenAI clients, prompt loader |
 | `backend/mock_services/` | Mock payer gateways (Cigna, UHC, generic) + scenario management |
 | `backend/mcp/` | MCP client for NPI, ICD-10, CMS external APIs |
 | `backend/storage/` | Async SQLAlchemy ORM models, case repository, audit logger, waypoint writer |

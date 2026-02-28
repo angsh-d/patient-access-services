@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 import { QUERY_KEYS, ENDPOINTS, CACHE_TIMES } from '@/lib/constants'
 import type { GapCohortAnalysisData, GapAnalysis, GapDataStatus, DocumentationGap } from '@/types/coverage'
 
+
 // ── Fetcher ────────────────────────────────────────────────────────────
 
 async function fetchGapCohortAnalysis(caseId: string): Promise<GapCohortAnalysisData> {

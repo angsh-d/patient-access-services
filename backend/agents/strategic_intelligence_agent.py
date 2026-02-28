@@ -2978,6 +2978,7 @@ class StrategicIntelligenceAgent:
         }
 
 
+
 # Global instance
 _strategic_intelligence_agent: Optional[StrategicIntelligenceAgent] = None
 

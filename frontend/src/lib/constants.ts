@@ -32,7 +32,6 @@ export const ENDPOINTS = {
   // Cohort Analysis
   cohortAnalysis: (id: string) => `${API_BASE_URL}/cases/${id}/cohort-analysis`,
   gapCohortAnalysis: (id: string) => `${API_BASE_URL}/cases/${id}/gap-cohort-analysis`,
-
   // Policy Q&A Assistant
   policyQA: (id: string) => `${API_BASE_URL}/cases/${id}/policy-qa`,
 
